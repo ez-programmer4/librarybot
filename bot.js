@@ -169,12 +169,12 @@ bot.on("message", (msg) => {
     const category = msg.text.trim();
     const userLanguage = userLanguages[chatId];
 
-    // if (!userLanguage) {
-    //   return bot.sendMessage(
-    //     chatId,
-    //     `Please select a language first by typing /register.`
-    //   );
-    // }
+    if (!userLanguage) {
+      return bot.sendMessage(
+        chatId,
+        `Please select a language first by typing /register.`
+      );
+    }
 
     if (!books[userLanguage] || !books[userLanguage][category]) {
       return bot.sendMessage(
@@ -286,7 +286,7 @@ bot.onText(/\/reserve (\d+)/, (msg, match) => {
     `You have reserved "${reservedBook.title}". You can get it after isha salah.`
   );
   notifyLibrarian(
-    `Book Reserved:\nName: ${users[chatId].userName}\nPhone Number: ${users[chatId].phoneNumber}\nReserved Book: ${reservedBook.title}\nPickup Time: 3 o'clock`
+    `Book Reserved:\nName: ${users[chatId].userName}\nPhone Number: ${users[chatId].phoneNumber}\nReserved Book: ${reservedBook.title}\nPickup Time: after isha salah`
   );
 });
 
