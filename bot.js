@@ -283,7 +283,7 @@ bot.onText(/\/reserve (\d+)/, (msg, match) => {
 
   bot.sendMessage(
     chatId,
-    `You have reserved "${reservedBook.title}". You can get it at 3 o'clock.`
+    `You have reserved "${reservedBook.title}". You can get it after isha salah.`
   );
   notifyLibrarian(
     `Book Reserved:\nName: ${users[chatId].userName}\nPhone Number: ${users[chatId].phoneNumber}\nReserved Book: ${reservedBook.title}\nPickup Time: 3 o'clock`
