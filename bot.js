@@ -177,10 +177,10 @@ bot.on("message", (msg) => {
     }
 
     if (!books[userLanguage] || !books[userLanguage][category]) {
-      return bot.sendMessage(
-        chatId,
-        `Category "${category}" does not exist under ${userLanguage}.`
-      );
+      // return bot.sendMessage(
+      //   chatId,
+      //   `Category "${category}" does not exist under ${userLanguage}.`
+      // );
     }
 
     const availableBooks = books[userLanguage][category].filter(
