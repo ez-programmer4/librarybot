@@ -169,18 +169,18 @@ bot.on("message", (msg) => {
     const category = msg.text.trim();
     const userLanguage = userLanguages[chatId];
 
-    // if (!userLanguage) {
-    //   return bot.sendMessage(
-    //     chatId,
-    //     `Please select a language first by typing /register.`
-    //   );
-    // }
+    if (!userLanguage) {
+      return bot.sendMessage(
+        chatId,
+        `Please select a language first by typing /register.`
+      );
+    }
 
     if (!books[userLanguage] || !books[userLanguage][category]) {
-      // return bot.sendMessage(
-      //   chatId,
-      //   `Category "${category}" does not exist under ${userLanguage}.`
-      // );
+      return bot.sendMessage(
+        chatId,
+        `Category "${category}" does not exist under ${userLanguage}.`
+      );
     }
 
     const availableBooks = books[userLanguage][category].filter(
