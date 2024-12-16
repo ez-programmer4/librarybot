@@ -1,7 +1,6 @@
 {
   "name": "library-bot",
   "version": "1.0.0",
-  "description": "",
   "main": "index.js",
   "scripts": {
     "start": "node bot.js",
@@ -15,5 +14,6 @@
     "dotenv": "^16.4.7",
     "fs": "^0.0.1-security",
     "node-telegram-bot-api": "^0.66.0"
-  }
+  },
+  "description": ""
 }
