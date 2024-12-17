@@ -57,6 +57,15 @@ Welcome to the Library Booking Bot!
 
 As a librarian, you can manage book reservations.
 Please register to get started by typing /register.
+
+Available commands:
+- /register: Register your name and phone number.
+- /my_reservations: View your current reservations.
+- /cancel: Cancel your reservation.
+- /reserved_books: View all reserved books (librarian only).
+- /add_books [language, category, title]: Add new books (librarian only).
+- /reserve [book_id]: Reserve a book by its ID.
+- /help: Show this help message again.
   `;
   bot.sendMessage(chatId, welcomeMessage);
 });
@@ -121,19 +130,26 @@ bot.on("message", (msg) => {
       );
 
       // Ask for language selection
-      bot.sendMessage(chatId, "Please select a language:", {
-        reply_markup: {
-          keyboard: [["Arabic"], ["Amharic"], ["AfaanOromo"]],
-          one_time_keyboard: true,
-        },
-      });
+      askLanguageSelection(chatId);
     }
   } else if (["Arabic", "Amharic", "AfaanOromo"].includes(msg.text)) {
     handleLanguageSelection(chatId, msg.text);
+  } else if (msg.text === "/change_language") {
+    askLanguageSelection(chatId);
   } else {
     handleCategorySelection(chatId, msg.text);
   }
 });
+
+// Ask for language selection
+function askLanguageSelection(chatId) {
+  bot.sendMessage(chatId, "Please select a language:", {
+    reply_markup: {
+      keyboard: [["Arabic"], ["Amharic"], ["AfaanOromo"]],
+      one_time_keyboard: true,
+    },
+  });
+}
 
 // Handle language selection
 function handleLanguageSelection(chatId, language) {
