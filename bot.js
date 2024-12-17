@@ -1,7 +1,11 @@
 const TelegramBot = require("node-telegram-bot-api");
 const fs = require("fs");
 const path = require("path");
+const express = require("express");
 require("dotenv").config();
+const app = express();
+app.use(express.json());
+const port = process.rnv.PORT || 5000;
 
 // Replace with your bot's API token
 const token = process.env.TOKEN; // Update with your token
@@ -443,4 +447,8 @@ bot.on("polling_error", (error) => {
 
 bot.on("error", (error) => {
   console.error("Error occurred:", error);
+});
+
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
 });
