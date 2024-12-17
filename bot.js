@@ -5,7 +5,7 @@ const express = require("express");
 require("dotenv").config();
 const app = express();
 app.use(express.json());
-const port = process.rnv.PORT || 5000;
+const port = process.env.PORT || 5000;
 
 // Replace with your bot's API token
 const token = process.env.TOKEN; // Update with your token
