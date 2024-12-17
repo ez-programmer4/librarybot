@@ -10,8 +10,7 @@ const port = process.env.PORT || 5000;
 
 // Replace with your bot's API token
 const token = process.env.TOKEN; // Update with your token
-const bot = new TelegramBot(token, { polling: true });
-
+const bot = new TelegramBot(token); // No polling
 const librarianChatId = process.env.LIBRARIAN_CHAT_ID.trim(); // Set this to the logged chat ID
 
 // Book categories and reservations
@@ -447,6 +446,14 @@ bot.on("polling_error", (error) => {
 bot.on("error", (error) => {
   console.error("Error occurred:", error);
 });
+
+// Set the webhook URL
+const setWebhook = async () => {
+  const url = `https://librarybot-qx3c.onrender.com/webhook`; // Replace with your actual URL
+  await bot.setWebHook(url);
+};
+
+setWebhook().catch(console.error);
 
 // Start the Express server
 app.listen(port, () => {
