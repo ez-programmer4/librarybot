@@ -3,6 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const express = require("express");
 require("dotenv").config();
+
 const app = express();
 app.use(express.json());
 const port = process.env.PORT || 5000;
@@ -13,19 +14,11 @@ const bot = new TelegramBot(token, { polling: true });
 
 const librarianChatId = process.env.LIBRARIAN_CHAT_ID.trim(); // Set this to the logged chat ID
 
+// Book categories and reservations
 const books = {
-  Arabic: {
-    Philosophy: [],
-    Architecture: [],
-  },
-  Amharic: {
-    Philosophy: [],
-    Architecture: [],
-  },
-  AfaanOromo: {
-    Philosophy: [],
-    Architecture: [],
-  },
+  Arabic: { Philosophy: [], Architecture: [] },
+  Amharic: { Philosophy: [], Architecture: [] },
+  AfaanOromo: { Philosophy: [], Architecture: [] },
 };
 
 let reservations = {};
@@ -53,10 +46,8 @@ function loadReservations() {
 }
 
 // Load initial data
-const initialBooks = loadBooks();
-const initialReservations = loadReservations();
-Object.assign(books, initialBooks);
-Object.assign(reservations, initialReservations);
+Object.assign(books, loadBooks());
+Object.assign(reservations, loadReservations());
 
 // Start command
 bot.onText(/\/start/, (msg) => {
@@ -64,7 +55,7 @@ bot.onText(/\/start/, (msg) => {
   const welcomeMessage = `
 Welcome to the Library Booking Bot!
 
-As a librarian, you have access to special commands to manage book reservations.
+As a librarian, you can manage book reservations.
 Please register to get started by typing /register.
   `;
   bot.sendMessage(chatId, welcomeMessage);
@@ -97,17 +88,16 @@ bot.on("message", (msg) => {
     if (state.step === 1) {
       state.userName = msg.text;
       state.step = 2;
-      bot.sendMessage(chatId, "Please enter your phone number:");
+      bot.sendMessage(chatId, "Please enter your phone number (numbers only):");
     } else if (state.step === 2) {
       const phoneNumber = msg.text;
 
       // Validate phone number
       if (!/^[0-9]+$/.test(phoneNumber)) {
-        bot.sendMessage(
+        return bot.sendMessage(
           chatId,
           "Please enter a valid phone number (numbers only)."
         );
-        return;
       }
 
       const existingUser = Object.values(users).find(
@@ -121,13 +111,13 @@ bot.on("message", (msg) => {
         );
       }
 
-      // Save the user
+      // Save user data
       users[chatId] = { userName: state.userName, phoneNumber };
       delete registrationState[chatId];
 
       bot.sendMessage(
         chatId,
-        `Registration successful! Your Name: ${state.userName}, Phone Number: ${phoneNumber}`
+        `Registration successful! Welcome, ${state.userName}.`
       );
 
       // Ask for language selection
@@ -139,74 +129,69 @@ bot.on("message", (msg) => {
       });
     }
   } else if (["Arabic", "Amharic", "AfaanOromo"].includes(msg.text)) {
-    const language = msg.text;
-    userLanguages[chatId] = language;
-
-    // Ensure the language exists and has categories
-    if (!books[language]) {
-      return bot.sendMessage(
-        chatId,
-        `Language "${language}" is not recognized.`
-      );
-    }
-
-    const categories = Object.keys(books[language]);
-    if (categories.length === 0) {
-      return bot.sendMessage(
-        chatId,
-        `No categories available for ${language}.`
-      );
-    }
-
-    bot.sendMessage(
-      chatId,
-      `You selected ${language}. Please choose a category:`,
-      {
-        reply_markup: {
-          keyboard: categories.map((cat) => [cat]),
-          one_time_keyboard: true,
-        },
-      }
-    );
+    handleLanguageSelection(chatId, msg.text);
   } else {
-    // Handle category selection and book listing
-    const category = msg.text.trim();
-    const userLanguage = userLanguages[chatId];
-
-    if (!userLanguage) {
-      return bot.sendMessage(
-        chatId,
-        `Please select a language first by typing /register.`
-      );
-    }
-
-    if (!books[userLanguage] || !books[userLanguage][category]) {
-      return bot.sendMessage(
-        chatId,
-        `Category "${category}" does not exist under ${userLanguage}.`
-      );
-    }
-
-    const availableBooks = books[userLanguage][category].filter(
-      (book) => book.available
-    );
-
-    if (availableBooks.length === 0) {
-      return bot.sendMessage(
-        chatId,
-        `No books available in ${category} under ${userLanguage}.`
-      );
-    }
-
-    const bookList = availableBooks
-      .map((book) => `${book.id}. ${book.title}`)
-      .join("\n");
-    bot.sendMessage(
-      chatId,
-      `Available books in ${category}:\n${bookList}\n\nYou can reserve a book by typing /reserve [book_id].`
-    );
+    handleCategorySelection(chatId, msg.text);
   }
 });
+
+// Handle language selection
+function handleLanguageSelection(chatId, language) {
+  userLanguages[chatId] = language;
+
+  const categories = Object.keys(books[language]);
+  if (categories.length === 0) {
+    return bot.sendMessage(chatId, `No categories available for ${language}.`);
+  }
+
+  bot.sendMessage(
+    chatId,
+    `You selected ${language}. Please choose a category:`,
+    {
+      reply_markup: {
+        keyboard: categories.map((cat) => [cat]),
+        one_time_keyboard: true,
+      },
+    }
+  );
+}
+
+// Handle category selection and book listing
+function handleCategorySelection(chatId, category) {
+  const userLanguage = userLanguages[chatId];
+
+  if (!userLanguage) {
+    return bot.sendMessage(
+      chatId,
+      `Please select a language first by typing /register.`
+    );
+  }
+
+  if (!books[userLanguage] || !books[userLanguage][category]) {
+    return bot.sendMessage(
+      chatId,
+      `Category "${category}" does not exist under ${userLanguage}.`
+    );
+  }
+
+  const availableBooks = books[userLanguage][category].filter(
+    (book) => book.available
+  );
+  if (availableBooks.length === 0) {
+    return bot.sendMessage(
+      chatId,
+      `No books available in ${category} under ${userLanguage}.`
+    );
+  }
+
+  const bookList = availableBooks
+    .map((book) => `${book.id}. ${book.title}`)
+    .join("\n");
+  bot.sendMessage(
+    chatId,
+    `Available books in ${category}:\n${bookList}\nYou can reserve a book by typing /reserve [book_id].`
+  );
+}
 
 // Add multiple books
 bot.onText(/\/add_books (.+)/, (msg, match) => {
@@ -236,14 +221,14 @@ bot.onText(/\/add_books (.+)/, (msg, match) => {
 
     bot.sendMessage(
       chatId,
-      `Added "${bookTitle}" to the "${category}" category in "${language}".`
+      `Added "${bookTitle}" to "${category}" in "${language}".`
     );
   });
 
   fs.writeFileSync(booksFilePath, JSON.stringify(books, null, 2));
 });
 
-// Reserve a book for users
+// Reserve a book
 bot.onText(/\/reserve (\d+)/, (msg, match) => {
   const chatId = msg.chat.id;
   const bookId = parseInt(match[1], 10);
@@ -287,7 +272,7 @@ bot.onText(/\/reserve (\d+)/, (msg, match) => {
 
   bot.sendMessage(
     chatId,
-    `You have reserved "${reservedBook.title}". You can get it after isha salah.`
+    `You have successfully reserved "${reservedBook.title}". You can pick it up after isha salah.`
   );
   notifyLibrarian(
     `Book Reserved:\nName: ${users[chatId].userName}\nPhone Number: ${users[chatId].phoneNumber}\nReserved Book: ${reservedBook.title}\nPickup Time: after isha salah`
@@ -309,7 +294,6 @@ Your Reservation:
 - Phone Number: ${userReservation.phoneNumber}
 - Pickup Time: 3 o'clock
   `;
-
   bot.sendMessage(chatId, reservationDetails);
 });
 
@@ -420,7 +404,6 @@ bot.onText(/\/reserved_books/, (msg) => {
   const reservedList = allReservations
     .map(([userId, reservation]) => {
       const user = users[userId];
-      // Only return valid reservations
       if (user) {
         return `Name: ${user.userName}, Reserved Book: ${reservation.bookTitle}, Phone Number: ${reservation.phoneNumber}`;
       }
@@ -440,7 +423,7 @@ function notifyLibrarian(message) {
   bot.sendMessage(librarianChatId, message);
 }
 
-// Error handling
+// Error handling for polling
 bot.on("polling_error", (error) => {
   console.error("Polling error:", error);
 });
@@ -449,6 +432,7 @@ bot.on("error", (error) => {
   console.error("Error occurred:", error);
 });
 
+// Start the Express server
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
