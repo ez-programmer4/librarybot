@@ -270,17 +270,25 @@ bot.onText(/\/add_books (.+)/, (msg, match) => {
 });
 
 // Reserve a book
+// Reserve a book
 bot.onText(/\/reserve (\d+)/, (msg, match) => {
   const chatId = msg.chat.id;
-  const bookId = match[1]; // Keep bookId as a string
+  const bookId = match[1]; // Get book ID from the command
   const userLanguage = userLanguages[chatId];
+
+  if (!userLanguage) {
+    return bot.sendMessage(
+      chatId,
+      "You must select a language before reserving a book."
+    );
+  }
 
   let reservedBook;
   for (const category in books[userLanguage]) {
     reservedBook = books[userLanguage][category].find(
-      (book) => book.id === bookId // Compare as strings
+      (book) => book.id === bookId // Compare ID as string
     );
-    if (reservedBook) break;
+    if (reservedBook) break; // Exit loop if book is found
   }
 
   if (!reservedBook) {
@@ -301,7 +309,7 @@ bot.onText(/\/reserve (\d+)/, (msg, match) => {
     );
   }
 
-  reservedBook.available = false;
+  reservedBook.available = false; // Mark the book as reserved
 
   // Initialize user's reservations if not present
   if (!reservations[chatId]) {
