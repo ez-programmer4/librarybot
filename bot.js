@@ -170,6 +170,7 @@ function handleLanguageSelection(chatId, language) {
 }
 
 // Handle category selection and book listing
+// Handle category selection and book listing
 function handleCategorySelection(chatId, category) {
   const userLanguage = userLanguages[chatId];
 
@@ -190,6 +191,7 @@ function handleCategorySelection(chatId, category) {
   const availableBooks = books[userLanguage][category].filter(
     (book) => book.available
   );
+
   if (availableBooks.length === 0) {
     return bot.sendMessage(
       chatId,
@@ -200,12 +202,36 @@ function handleCategorySelection(chatId, category) {
   const bookList = availableBooks
     .map((book) => `${book.id}. ${book.title}`)
     .join("\n");
+
   bot.sendMessage(
     chatId,
     `Available books in ${category}:\n${bookList}\nYou can reserve a book by typing /reserve [book_id].`
   );
 }
 
+// Listen for category selection
+bot.on("message", (msg) => {
+  const chatId = msg.chat.id;
+
+  if (registrationState[chatId]) {
+    // ... existing registration handling
+  } else if (["Arabic", "Amharic", "AfaanOromo"].includes(msg.text)) {
+    handleLanguageSelection(chatId, msg.text);
+  } else if (userLanguages[chatId]) {
+    // Check if the message is a category selection
+    if (Object.keys(books[userLanguages[chatId]]).includes(msg.text)) {
+      handleCategorySelection(chatId, msg.text);
+    } else {
+      // If it's not a recognized category, let the user know
+      bot.sendMessage(
+        chatId,
+        `"${msg.text}" is not a valid category. Please select a category from the available options.`
+      );
+    }
+  } else if (msg.text === "/change_language") {
+    askLanguageSelection(chatId);
+  }
+});
 // Add multiple books
 bot.onText(/\/add_books (.+)/, (msg, match) => {
   const chatId = msg.chat.id;
