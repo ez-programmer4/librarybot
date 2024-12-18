@@ -271,6 +271,7 @@ bot.onText(/\/add_books (.+)/, (msg, match) => {
 
 // Reserve a book
 // Reserve a book
+// Reserve a book
 bot.onText(/\/reserve (\d+)/, (msg, match) => {
   const chatId = msg.chat.id;
   const bookId = match[1]; // Get book ID from the command
@@ -291,17 +292,14 @@ bot.onText(/\/reserve (\d+)/, (msg, match) => {
     if (reservedBook) break; // Exit loop if book is found
   }
 
+  // Debugging: Check if the book was found
+  console.log("Reserved Book:", reservedBook);
+
   if (!reservedBook) {
     return bot.sendMessage(chatId, `Book not available or does not exist.`);
   }
 
-  if (!users[chatId]) {
-    return bot.sendMessage(
-      chatId,
-      "You must register before reserving a book. Please type /register."
-    );
-  }
-
+  // Check if the book is already reserved
   if (!reservedBook.available) {
     return bot.sendMessage(
       chatId,
@@ -310,6 +308,7 @@ bot.onText(/\/reserve (\d+)/, (msg, match) => {
   }
 
   reservedBook.available = false; // Mark the book as reserved
+  console.log(`Book "${reservedBook.title}" marked as reserved.`); // Debugging message
 
   // Initialize user's reservations if not present
   if (!reservations[chatId]) {
