@@ -52,7 +52,7 @@ Object.assign(reservations, loadReservations());
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
   const welcomeMessage = `
-Welcome to the Library Booking Bot!
+Welcome welcome to the Library Booking Bot!
 
 As a librarian, you can manage book reservations.
 Please register to get started by typing /register.

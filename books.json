@@ -2,690 +2,681 @@
   "Arabic": {
     "سيرة": [
       {
-        "id": 1,
+        "id": "000",
         "title": "\"rehiql mekhtum\"",
         "available": true
       }
     ],
     "العقيدة": [
       {
-        "id": 1,
+        "id": "001",
         "title": "\"قاعدة النورانية\"",
         "available": true
       },
       {
-        "id": 2,
+        "id": "002",
         "title": "\"قاعدة البغدادية\"",
         "available": true
       },
       {
-        "id": 3,
+        "id": "003",
         "title": "\"تحفة السنية\"",
         "available": true
       },
       {
-        "id": 4,
+        "id": "004",
         "title": "\"رسالة الحجاب\"",
         "available": true
       },
       {
-        "id": 5,
+        "id": "005",
         "title": "\"هداية المستفيد\"",
         "available": true
       },
       {
-        "id": 6,
+        "id": "006",
         "title": "\"أبى شجاع\"",
         "available": true
       },
       {
-        "id": 7,
+        "id": "007",
         "title": "\"الأربعون النووية\"",
         "available": false
       },
       {
-        "id": 8,
+        "id": "008",
         "title": "\"الأصول الثلاثة\"",
         "available": true
       },
       {
-        "id": 9,
+        "id": "009",
         "title": "\"متن البيقونية\"",
         "available": true
       },
       {
-        "id": 10,
+        "id": "010",
         "title": "\"كتاب التوحيد(فوزان)\"",
         "available": true
       },
       {
-        "id": 11,
+        "id": "011",
         "title": "\"متن عقيدة الواسطية\"",
         "available": true
       },
       {
-        "id": 12,
+        "id": "012",
         "title": "\"خذ عقيدتك\"",
         "available": true
       },
       {
-        "id": 13,
+        "id": "013",
         "title": "\"متن عقيدة الطحاوية\"",
         "available": true
       },
       {
-        "id": 14,
+        "id": "014",
         "title": "\"كشف الشبهات\"",
         "available": true
       },
       {
-        "id": 15,
+        "id": "015",
         "title": "\"المختص المفيد\"",
         "available": true
       },
       {
-        "id": 16,
+        "id": "016",
         "title": "\"لمعة الإعتقاد\"",
         "available": true
       },
       {
-        "id": 17,
+        "id": "017",
         "title": "\"الإرشاد آلى صحيح الإعتقاد\"",
         "available": true
       }
     ],
     "الفقه": [
       {
-        "id": 1,
+        "id": "018",
         "title": "\"الدروس المهمة\"",
         "available": true
       },
       {
-        "id": 2,
+        "id": "019",
         "title": "\"المقدمة الحضرمية (بافضل)\"",
         "available": true
       },
       {
-        "id": 3,
+        "id": "020",
         "title": "\"متن الرحبية\"",
         "available": true
       },
       {
-        "id": 4,
+        "id": "021",
         "title": "\"رياض الصالحين\"",
         "available": true
       },
       {
-        "id": 5,
+        "id": "022",
         "title": "\"الورد المصطفى المختار\"",
         "available": true
       },
       {
-        "id": 6,
+        "id": "023",
         "title": "\"متن عقيدة التوحيد\"",
         "available": true
       },
       {
-        "id": 7,
+        "id": "024",
         "title": "\"فقه الإسلام\"",
         "available": true
       },
       {
-        "id": 8,
+        "id": "025",
         "title": "\"بدائع الفوائد(ابن القيم)\"",
         "available": true
       },
       {
-        "id": 9,
+        "id": "026",
         "title": "\"سنن ابن ماجه\"",
         "available": true
       },
       {
-        "id": 10,
+        "id": "027",
         "title": "\"شرح المهذب\"",
         "available": true
       },
       {
-        "id": 11,
+        "id": "028",
         "title": "\"الأجوبة المفيدة\"",
         "available": true
       },
       {
-        "id": 12,
+        "id": "029",
         "title": "\"فتح المجيد\"",
         "available": true
       },
       {
-        "id": 13,
+        "id": "030",
         "title": "\"منهاج الطالبين\"",
         "available": true
       },
       {
-        "id": 14,
+        "id": "031",
         "title": "\"شرح عقيدة الواسطية\"",
         "available": true
       },
       {
-        "id": 15,
+        "id": "032",
         "title": "\"بداية المجتهد\"",
         "available": true
       },
       {
-        "id": 16,
+        "id": "033",
         "title": "\"صفة صلاة النبي\"",
         "available": true
       },
       {
-        "id": 17,
+        "id": "034",
         "title": "\"عمدة الأحكام\"",
         "available": true
       },
       {
-        "id": 18,
+        "id": "035",
         "title": "\"فقه فى الأسماء الحسنى\"",
         "available": true
       },
       {
-        "id": 19,
+        "id": "036",
         "title": "\"كتاب المبسوط\"",
         "available": true
       }
     ],
     "الأخلاق": [
       {
-        "id": 1,
+        "id": "037",
         "title": "\"هذا الحبيب\"",
         "available": true
       },
       {
-        "id": 2,
+        "id": "038",
         "title": "\"فرقان\"",
         "available": true
       },
       {
-        "id": 3,
+        "id": "039",
         "title": "\"منهاج السالكين\"",
         "available": true
       },
       {
-        "id": 4,
+        "id": "040",
         "title": "\"قول السديد\"",
         "available": true
       },
       {
-        "id": 5,
+        "id": "041",
         "title": "\"ليلة الأول من ليلة العمر\"",
         "available": true
       },
       {
-        "id": 6,
+        "id": "042",
         "title": "\"كن سلفيا\"",
         "available": true
       },
       {
-        "id": 7,
+        "id": "043",
         "title": "\"مجموعة الصرف\"",
         "available": true
       }
     ],
     "التجويد": [
       {
-        "id": 1,
+        "id": "044",
         "title": "\"العلوم العربية\"",
         "available": true
       },
       {
-        "id": 2,
+        "id": "045",
         "title": "\"الملخص المفيد فى علم التجويد\"",
         "available": true
       },
       {
-        "id": 3,
+        "id": "046",
         "title": "\"شرح متن الورقات\"",
         "available": true
       }
     ]
   },
+
   "Amharic": {
     "አቂዳ": [
       {
-        "id": 1,
+        "id": "100",
         "title": "የ አማኞች ጋሻ",
         "available": true
       },
       {
-        "id": 2,
+        "id": "101",
         "title": "ከ አርሹ በላይ",
         "available": true
       },
       {
-        "id": 3,
+        "id": "102",
         "title": "አል በያን",
         "available": true
       },
       {
-        "id": 4,
+        "id": "103",
         "title": "ተውሂድ እና ሽርክ",
         "available": true
       },
       {
-        "id": 5,
+        "id": "104",
         "title": "አላህን ማወቅ",
         "available": true
       },
       {
-        "id": 6,
+        "id": "105",
         "title": "ስለ ተውሂድ ና ሽርክ",
         "available": true
       },
       {
-        "id": 7,
+        "id": "106",
         "title": "ተውሂድ ና ሽርክ",
         "available": true
       },
       {
-        "id": 8,
+        "id": "107",
         "title": "ከ ተውሂድ ኣድማስ",
         "available": true
       },
       {
-        "id": 9,
+        "id": "108",
         "title": "ለምን ተፈጠርን",
         "available": true
       },
       {
-        "id": 10,
+        "id": "109",
         "title": "ለምን ተፈጠርን",
         "available": true
       },
       {
-        "id": 11,
+        "id": "110",
         "title": "የ አቂዳ መሰረቶች",
         "available": true
       },
-
       {
-        "id": 12,
-        "title": " አላህን የ መውደድ ምስጢር",
+        "id": "111",
+        "title": "አላህን የ መውደድ ምስጢር",
         "available": true
       },
       {
-        "id": 13,
-        "title": "  የ ሙስሊም ኣቂዳ",
+        "id": "112",
+        "title": "የ ሙስሊም ኣቂዳ",
         "available": true
       },
       {
-        "id": 14,
-        "title": "  ኣህባሽ ከይት ወደ የት",
+        "id": "113",
+        "title": "ኣህባሽ ከይት ወደ የት",
         "available": true
       },
       {
-        "id": 15,
-        "title": " ኣህባሽ",
+        "id": "114",
+        "title": "ኣህባሽ",
         "available": true
       },
       {
-        "id": 16,
-        "title": " አውነቱ ዪህ ነው",
+        "id": "115",
+        "title": "አውነቱ ዪህ ነው",
         "available": true
       },
       {
-        "id": 17,
-        "title": " የ አስልምና አና የ ኢማን ማአዘናት",
+        "id": "116",
+        "title": "የ አስልምና አና የ ኢማን ማአዘናት",
         "available": true
       }
     ],
     "ሱሉክ": [
       {
-        "id": 1,
+        "id": "117",
         "title": "የ ምን ሃዘን",
         "available": true
       },
       {
-        "id": 2,
+        "id": "118",
         "title": "ይህች መንገዴ ነች",
         "available": true
       },
       {
-        "id": 3,
+        "id": "119",
         "title": "ቤታችንን ለ ማስተካከል የሚረዱ 40 ምክሮች",
         "available": true
       },
       {
-        "id": 4,
+        "id": "120",
         "title": "የ ምክር ስርአት በ ኢስላም ",
         "available": true
       },
       {
-        "id": 5,
+        "id": "121",
         "title": "የ ረሱል ሱናዎች",
         "available": true
       },
       {
-        "id": 6,
+        "id": "122",
         "title": "የ ሲኬት ቁልፎች",
         "available": true
       },
       {
-        "id": 7,
+        "id": "123",
         "title": "ኣስታውስ",
         "available": true
       },
       {
-        "id": 8,
+        "id": "124",
         "title": "የህሊና አረፍት",
         "available": true
       },
       {
-        "id": 10,
+        "id": "125",
         "title": "የ አላህ ወዳጆች",
         "available": true
       },
       {
-        "id": 11,
+        "id": "126",
         "title": "አላህን የ መውደድ ምስጢር",
         "available": true
       },
       {
-        "id": 12,
+        "id": "127",
         "title": "የ ምጥቀት ጎዳና",
         "available": true
       },
-
       {
-        "id": 13,
+        "id": "128",
         "title": "የ ስኬት ፍለግ",
         "available": true
       },
-
       {
-        "id": 14,
+        "id": "129",
         "title": "የ አዝነቱ ፈለግ",
         "available": true
       },
       {
-        "id": 15,
+        "id": "130",
         "title": "የ ሃጢያት በሺታና ህክምናው",
         "available": true
       },
       {
-        "id": 16,
+        "id": "131",
         "title": "ምላስ ና ኣደጋው",
         "available": true
       },
       {
-        "id": 17,
+        "id": "132",
         "title": "ወዴት መሀድ ይፈልጋሉ",
         "available": true
       },
       {
-        "id": 18,
+        "id": "133",
         "title": "ስህተት መመለስ",
         "available": true
       },
       {
-        "id": 19,
+        "id": "134",
         "title": "ሰኪና",
         "available": true
       },
       {
-        "id": 20,
+        "id": "135",
         "title": "ስህተት መመለስ",
         "available": true
       },
       {
-        "id": 21,
+        "id": "136",
         "title": "በ ዝሙት መዘመን",
         "available": true
       },
       {
-        "id": 22,
+        "id": "137",
         "title": "ታጋሾችን አበስራቸው",
         "available": true
       },
       {
-        "id": 23,
+        "id": "138",
         "title": "ኒፋቅ አና ሙናፊቆችህ",
         "available": true
       },
-
       {
-        "id": 24,
+        "id": "139",
         "title": "ደስ የሚል ጉዞ",
         "available": true
       },
-
       {
-        "id": 22,
-        "title": "ታጋሾችን አበስራቸው",
-        "available": true
-      },
-
-      {
-        "id": 23,
+        "id": "140",
         "title": "ራስዎን ነቁራን ይፈወሱ",
         "available": true
       },
       {
-        "id": 24,
+        "id": "141",
         "title": "ከ ብርሃን ነጸብራቅ ብርሃንን ለሚናፍቅ",
         "available": true
       },
       {
-        "id": 25,
+        "id": "142",
         "title": "በ ቁር አን ምዕድ",
         "available": true
       }
     ],
     "ሲራ/ታሪክ": [
       {
-        "id": 1,
+        "id": "143",
         "title": "የ በረሃው ማአበል",
         "available": true
       },
       {
-        "id": 2,
+        "id": "144",
         "title": "የ ሃበሻ አና የ ሃበሽዕች። ሞገስ በ ኢስልምና",
         "available": true
       },
       {
-        "id": 3,
+        "id": "145",
         "title": "4ቱ ከዋክብት",
         "available": true
       },
       {
-        "id": 4,
+        "id": "146",
         "title": "የ ነቢዩ ሙሃመድ ታሪክ",
         "available": true
       },
       {
-        "id": 5,
+        "id": "147",
         "title": "500 የ ነቢዩ ባህሪያት",
         "available": true
       },
       {
-        "id": 6,
+        "id": "148",
         "title": "40 ኣምት ያልሞላችው 40 ኣሊሞች",
         "available": true
       },
       {
-        "id": 7,
+        "id": "149",
         "title": "ሰለሃዲን ኣል ኣዩቢ",
         "available": true
       },
       {
-        "id": 8,
+        "id": "150",
         "title": "40 ኣምት ያልሞላችው 40 ኣሊሞች",
         "available": true
       },
       {
-        "id": 9,
+        "id": "151",
         "title": "ኡመር ኢብኑ ኣብዱል ኣዚዝ",
         "available": true
       },
       {
-        "id": 10,
+        "id": "152",
         "title": "የ መላዕክት ኣለም",
         "available": true
       }
     ],
     "ንጽጽር": [
       {
-        "id": 1,
+        "id": "153",
         "title": "አስልምና ስጋት ወይስ ተስፋ",
         "available": true
       },
       {
-        "id": 2,
+        "id": "154",
         "title": "ኢስላም",
         "available": true
       },
       {
-        "id": 3,
+        "id": "155",
         "title": "አስልምና አና ክርስትና",
         "available": true
       },
       {
-        "id": 4,
+        "id": "156",
         "title": "አየሱስ አውን ፈጣሪ ነውን",
         "available": true
       },
       {
-        "id": 5,
+        "id": "157",
         "title": "አውነቱ ዪህ ነው",
         "available": true
       },
       {
-        "id": 6,
+        "id": "158",
         "title": "አውነትን አንፈልግ ቀጥተኛውን መንገድ አንያዝ",
         "available": true
       },
       {
-        "id": 7,
+        "id": "159",
         "title": "ሙስሊም ያልሆኑ ሰአኦች ስለ አስልምና የሚጠይቋችው የተለመዱ ጥያቄዎች አና መልሶችችው",
         "available": true
       },
       {
-        "id": 8,
+        "id": "160",
         "title": "ከ 100 በላይ ጥያቄዎችህ ስለ አስልምና",
         "available": true
       },
       {
-        "id": 9,
+        "id": "161",
         "title": "አውነተኛው ና የ መጨረሻው መልዕክት",
         "available": true
       },
       {
-        "id": 10,
+        "id": "162",
         "title": "ክርስቶስ ማነው",
         "available": true
       },
       {
-        "id": 11,
+        "id": "163",
         "title": "ሙስኢሙ ምን ያስባሉ",
         "available": true
       },
       {
-        "id": 12,
+        "id": "164",
         "title": "ስለ ኢስላም ኣጭር ማብራሪያ",
         "available": true
       },
       {
-        "id": 13,
+        "id": "165",
         "title": "ቁር ኣንና ዘመናዊ ሳይንስ ይገጣጠማሉ ወይስ ይጋጫሉ",
         "available": true
       },
       {
-        "id": 13,
+        "id": "166",
         "title": "በ ሃይማኖት ማስገደድ የለም",
         "available": true
       }
     ]
   },
+
   "AfaanOromo": {
     "Kittaba": [
       {
-        "id": 1,
+        "id": 300,
         "title": "Ilaamummaan Walbari Eeganaa",
         "available": true
       },
       {
-        "id": 2,
+        "id": 301,
         "title": "Mootichaa fi Gooticha Urji Jaarraa 2ffaa",
         "available": true
       },
       {
-        "id": 3,
+        "id": 302,
         "title": "Oromummaa fi Islaamummaa",
         "available": true
       },
       {
-        "id": 4,
+        "id": 303,
         "title": "Barsiisa Seera Salaataatifi",
         "available": true
       },
       {
-        "id": 5,
+        "id": 304,
         "title": "Siiraa",
         "available": true
       },
       {
-        "id": 6,
+        "id": 305,
         "title": "Hangafa Gorsa Ol'aanaa Dhaloota Haarawaaf",
         "available": true
       },
       {
-        "id": 7,
+        "id": 306,
         "title": "Al Azkaar",
         "available": true
       },
       {
-        "id": 8,
+        "id": 307,
         "title": "Boqonna Sammuu",
         "available": true
       },
       {
-        "id": 9,
+        "id": 308,
         "title": "Gorsa Afurtama",
         "available": true
       },
       {
-        "id": 10,
+        "id": 309,
         "title": "Ahbaash",
         "available": true
       },
       {
-        "id": 11,
+        "id": 310,
         "title": "Furtuu Milki",
         "available": true
       },
       {
-        "id": 12,
+        "id": 311,
         "title": "Qananii Jannataa fi Ginqii Ibiddaa",
         "available": true
       },
       {
-        "id": 13,
+        "id": 312,
         "title": "Marii Kiristaana fi Muslimaa",
         "available": true
       },
       {
-        "id": 14,
+        "id": 313,
         "title": "Tawbachuunà",
         "available": true
       },
       {
-        "id": 15,
+        "id": 314,
         "title": "Gaafiwaan 1000 Wayee Islaamumma",
         "available": true
       },
       {
-        "id": 16,
+        "id": 315,
         "title": "Miidhaa Arrabaa",
         "available": true
       },
       {
-        "id": 17,
+        "id": 316,
         "title": "Qur'aanaa fi Saayinsii Ammayyuu Wal-simatu Moo Wal-himatu",
         "available": true
       }
