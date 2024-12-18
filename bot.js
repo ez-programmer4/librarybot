@@ -246,13 +246,13 @@ bot.onText(/\/add_books (.+)/, (msg, match) => {
 // Reserve a book
 bot.onText(/\/reserve (\d+)/, (msg, match) => {
   const chatId = msg.chat.id;
-  const bookId = parseInt(match[1], 10);
+  const bookId = match[1]; // Keep bookId as a string
   const userLanguage = userLanguages[chatId];
 
   let reservedBook;
   for (const category in books[userLanguage]) {
     reservedBook = books[userLanguage][category].find(
-      (book) => book.id === bookId
+      (book) => book.id === bookId // Compare as strings
     );
     if (reservedBook) break;
   }
@@ -293,7 +293,6 @@ bot.onText(/\/reserve (\d+)/, (msg, match) => {
     `Book Reserved:\nName: ${users[chatId].userName}\nPhone Number: ${users[chatId].phoneNumber}\nReserved Book: ${reservedBook.title}\nPickup Time: after isha salah`
   );
 });
-
 // View own reservations
 bot.onText(/\/my_reservations/, (msg) => {
   const chatId = msg.chat.id;
