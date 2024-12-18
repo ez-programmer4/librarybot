@@ -337,22 +337,29 @@ bot.onText(/\/reserve (\d+)/, (msg, match) => {
 // View own reservations
 bot.onText(/\/my_reservations/, (msg) => {
   const chatId = msg.chat.id;
-  const userReservations = reservations[chatId] || [];
+  let userReservations = reservations[chatId] || []; // Ensure it's an array
 
-  if (userReservations.length === 0) {
-    return bot.sendMessage(chatId, `You have no reservations.`);
+  console.log("User Reservations:", userReservations);
+  console.log("Type of userReservations:", typeof userReservations);
+
+  if (!Array.isArray(userReservations)) {
+    console.error("userReservations is not an array:", userReservations);
+    bot.sendMessage(chatId, "There was an error retrieving your reservations.");
+    return;
   }
 
-  let response = "Your Reservations:\n";
+  if (userReservations.length === 0) {
+    bot.sendMessage(chatId, "You currently have no reservations.");
+    return;
+  }
+
+  // Process and display reservations
+  let responseMessage = "Your reservations:\n";
   userReservations.forEach((reservation, index) => {
-    response += `\n${index + 1}. Book Title: "${
-      reservation.bookTitle
-    }"\nPhone Number: ${reservation.phoneNumber}\nPickup Time: ${
-      reservation.pickupTime
-    }\n`;
+    responseMessage += `${index + 1}. ${reservation.bookTitle}\n`; // Assuming reservation has a bookTitle property
   });
 
-  bot.sendMessage(chatId, response);
+  bot.sendMessage(chatId, responseMessage);
 });
 
 // Cancel a reservation by ID
