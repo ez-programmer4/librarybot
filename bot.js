@@ -52,7 +52,7 @@ Object.assign(reservations, loadReservations());
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
   const welcomeMessage = `
-Welcome welcome to the Library Booking Bot!
+Welcome to the Library Booking Bot!
 
 As a librarian, you can manage book reservations.
 Please register to get started by typing /register.
@@ -60,7 +60,7 @@ Please register to get started by typing /register.
 Available commands:
 - /register: Register your name and phone number.
 - /my_reservations: View your current reservations.
-- /cancel: Cancel your reservation.
+- /cancel_reservation [id]: Cancel your reservation by ID.
 - /reserved_books: View all reserved books (librarian only).
 - /add_books [language, category, title]: Add new books (librarian only).
 - /reserve [book_id]: Reserve a book by its ID.
@@ -135,8 +135,6 @@ bot.on("message", (msg) => {
     handleLanguageSelection(chatId, msg.text);
   } else if (msg.text === "/change_language") {
     askLanguageSelection(chatId);
-  } else {
-    handleCategorySelection(chatId, msg.text);
   }
 });
 
@@ -227,7 +225,9 @@ bot.onText(/\/add_books (.+)/, (msg, match) => {
       books[language][category] = [];
     }
 
-    const newBookId = books[language][category].length + 1;
+    const newBookId = (books[language][category].length + 1)
+      .toString()
+      .padStart(3, "0");
     books[language][category].push({
       id: newBookId,
       title: bookTitle,
@@ -276,12 +276,20 @@ bot.onText(/\/reserve (\d+)/, (msg, match) => {
   }
 
   reservedBook.available = false;
-  reservations[chatId] = {
+
+  // Initialize user's reservations if not present
+  if (!reservations[chatId]) {
+    reservations[chatId] = [];
+  }
+
+  // Add the reservation to the user's array
+  reservations[chatId].push({
     bookId: reservedBook.id,
     bookTitle: reservedBook.title,
     userName: users[chatId].userName,
     phoneNumber: users[chatId].phoneNumber,
-  };
+    pickupTime: "after isha salah",
+  });
 
   fs.writeFileSync(reservationsFilePath, JSON.stringify(reservations, null, 2));
 
@@ -293,65 +301,65 @@ bot.onText(/\/reserve (\d+)/, (msg, match) => {
     `Book Reserved:\nName: ${users[chatId].userName}\nPhone Number: ${users[chatId].phoneNumber}\nReserved Book: ${reservedBook.title}\nPickup Time: after isha salah`
   );
 });
+
 // View own reservations
 bot.onText(/\/my_reservations/, (msg) => {
   const chatId = msg.chat.id;
-  const userReservation = reservations[chatId];
+  const userReservations = reservations[chatId] || [];
 
-  if (!userReservation) {
+  if (userReservations.length === 0) {
     return bot.sendMessage(chatId, `You have no reservations.`);
   }
 
-  const reservationDetails = `
-Your Reservation:
-- Book Title: ${userReservation.bookTitle}
-- Phone Number: ${userReservation.phoneNumber}
-- Pickup Time: 3 o'clock
-  `;
-  bot.sendMessage(chatId, reservationDetails);
+  let response = "Your Reservations:\n";
+  userReservations.forEach((reservation, index) => {
+    response += `\n${index + 1}. Book Title: "${
+      reservation.bookTitle
+    }"\nPhone Number: ${reservation.phoneNumber}\nPickup Time: ${
+      reservation.pickupTime
+    }\n`;
+  });
+
+  bot.sendMessage(chatId, response);
 });
 
-// Cancel a reservation
-bot.onText(/\/cancel/, (msg) => {
+// Cancel a reservation by ID
+bot.onText(/\/cancel_reservation (\d+)/, (msg, match) => {
   const chatId = msg.chat.id;
-  const reservation = reservations[chatId];
+  const reservationIndex = parseInt(match[1], 10) - 1; // Convert to 0-based index
 
-  if (!reservation) {
-    return bot.sendMessage(chatId, `You have no reservations.`);
+  if (!reservations[chatId] || !reservations[chatId][reservationIndex]) {
+    return bot.sendMessage(chatId, "Invalid reservation ID.");
   }
 
-  const book = findBookById(reservation.bookId);
-  if (book) {
-    book.available = true;
-    delete reservations[chatId];
+  const canceledBook = reservations[chatId][reservationIndex];
 
-    fs.writeFileSync(
-      reservationsFilePath,
-      JSON.stringify(reservations, null, 2)
+  // Make the book available again
+  const userLanguage = userLanguages[chatId];
+  for (const category in books[userLanguage]) {
+    const book = books[userLanguage][category].find(
+      (b) => b.id === canceledBook.bookId
     );
-
-    bot.sendMessage(
-      chatId,
-      `Your reservation for "${book.title}" has been canceled.`
-    );
-    notifyLibrarian(
-      `Reservation Canceled:\nName: ${users[chatId].userName}\nPhone Number: ${users[chatId].phoneNumber}\nCanceled Book: ${book.title}`
-    );
+    if (book) {
+      book.available = true; // Mark the book as available again
+      break;
+    }
   }
+
+  // Remove the reservation
+  reservations[chatId].splice(reservationIndex, 1);
+  fs.writeFileSync(reservationsFilePath, JSON.stringify(reservations, null, 2));
+
+  bot.sendMessage(
+    chatId,
+    `You have successfully canceled the reservation for "${canceledBook.bookTitle}".`
+  );
 });
-
-// Helper function to find a book by its ID
-function findBookById(bookId) {
-  return Object.values(books)
-    .flatMap((lang) => Object.values(lang))
-    .flat()
-    .find((book) => book.id === bookId);
-}
 
 // Librarian command to reserve a book
 bot.onText(/\/librarian_reserve (\d+) (.+) (.+)/, (msg, match) => {
   const chatId = msg.chat.id;
-  const bookId = parseInt(match[1], 10);
+  const bookId = match[1];
   const userName = match[2].trim().toLowerCase();
   const phoneNumber = match[3];
 
@@ -377,12 +385,18 @@ bot.onText(/\/librarian_reserve (\d+) (.+) (.+)/, (msg, match) => {
     return bot.sendMessage(chatId, `User "${match[2]}" not found.`);
   }
 
-  reservations[userChatId] = {
+  // Initialize user's reservations if not present
+  if (!reservations[userChatId]) {
+    reservations[userChatId] = [];
+  }
+
+  reservations[userChatId].push({
     bookId: reservedBook.id,
     bookTitle: reservedBook.title,
     userName: users[userChatId].userName,
     phoneNumber: phoneNumber,
-  };
+    pickupTime: "after isha salah",
+  });
 
   reservedBook.available = false; // Mark book as reserved
 
@@ -416,13 +430,15 @@ bot.onText(/\/reserved_books/, (msg) => {
   }
 
   const reservedList = allReservations
-    .map(([userId, reservation]) => {
+    .map(([userId, userReservations]) => {
       const user = users[userId];
-      if (user) {
-        return `Name: ${user.userName}, Reserved Book: ${reservation.bookTitle}, Phone Number: ${reservation.phoneNumber}`;
-      }
-      return null;
+      return userReservations
+        .map((reservation) => {
+          return `Name: ${user.userName}, Reserved Book: ${reservation.bookTitle}, Phone Number: ${reservation.phoneNumber}`;
+        })
+        .join("\n");
     })
+    .flat()
     .filter((item) => item !== null);
 
   if (reservedList.length === 0) {
