@@ -273,8 +273,9 @@ bot.onText(/\/add_books (.+)/, (msg, match) => {
 // Reserve a book
 // Reserve a book
 bot.onText(/\/reserve (\d+)/, (msg, match) => {
+  // Initialize user's reservations if not present
   const chatId = msg.chat.id;
-  const bookId = match[1]; // Get book ID from the command
+  const bookId = match[1];
   const userLanguage = userLanguages[chatId];
 
   if (!userLanguage) {
@@ -287,20 +288,24 @@ bot.onText(/\/reserve (\d+)/, (msg, match) => {
   let reservedBook;
   for (const category in books[userLanguage]) {
     reservedBook = books[userLanguage][category].find(
-      (book) => book.id === bookId // Compare ID as string
+      (book) => book.id === bookId
     );
-    if (reservedBook) break; // Exit loop if book is found
+    if (reservedBook) break;
   }
 
   // Debugging: Check if the book was found
-  console.log("Reserved Book:", reservedBook);
+  console.log(`Attempting to reserve book with ID: ${bookId}`);
+  console.log(
+    `Current availability of book: ${
+      reservedBook ? reservedBook.available : "Not Found"
+    }`
+  );
 
   if (!reservedBook) {
     return bot.sendMessage(chatId, `Book not available or does not exist.`);
   }
 
   // Check if the book is already reserved
-  console.log(`Book availability before reserving: ${reservedBook.available}`);
   if (!reservedBook.available) {
     return bot.sendMessage(
       chatId,
@@ -309,10 +314,8 @@ bot.onText(/\/reserve (\d+)/, (msg, match) => {
   }
 
   // Mark the book as reserved
-  reservedBook.available = false; // This line marks the book as unavailable
-  console.log(`Book "${reservedBook.title}" marked as reserved.`); // Debugging message
-
-  // Initialize user's reservations if not present
+  reservedBook.available = false;
+  console.log(`Book "${reservedBook.title}" marked as reserved.`);
   if (!reservations[chatId]) {
     reservations[chatId] = [];
   }
