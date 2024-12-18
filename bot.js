@@ -300,6 +300,7 @@ bot.onText(/\/reserve (\d+)/, (msg, match) => {
   }
 
   // Check if the book is already reserved
+  console.log(`Book availability before reserving: ${reservedBook.available}`);
   if (!reservedBook.available) {
     return bot.sendMessage(
       chatId,
@@ -307,7 +308,8 @@ bot.onText(/\/reserve (\d+)/, (msg, match) => {
     );
   }
 
-  reservedBook.available = false; // Mark the book as reserved
+  // Mark the book as reserved
+  reservedBook.available = false; // This line marks the book as unavailable
   console.log(`Book "${reservedBook.title}" marked as reserved.`); // Debugging message
 
   // Initialize user's reservations if not present
