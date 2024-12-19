@@ -14,7 +14,7 @@ const bot = new TelegramBot(token); // No polling
 const librarianChatId = process.env.LIBRARIAN_CHAT_ID.trim(); // Set this to the logged chat ID
 
 // Book categories and reservations
-const books = {
+let books = {
   Arabic: { Philosophy: [], Architecture: [] },
   Amharic: { Philosophy: [], Architecture: [] },
   AfaanOromo: { Philosophy: [], Architecture: [] },
@@ -43,9 +43,11 @@ function loadReservations() {
   }
   return {};
 }
+
 function saveBooks() {
   fs.writeFileSync(booksFilePath, JSON.stringify(books, null, 2));
 }
+
 function saveReservations() {
   fs.writeFileSync(reservationsFilePath, JSON.stringify(reservations, null, 2));
 }
@@ -61,10 +63,6 @@ function findBookById(language, bookId) {
 // === Initialize Data ===
 books = loadBooks();
 reservations = loadReservations();
-
-// Load initial data
-// Object.assign(books, loadBooks());
-// Object.assign(reservations, loadReservations());
 
 // Start command
 bot.onText(/\/start/, (msg) => {
@@ -188,7 +186,6 @@ function handleLanguageSelection(chatId, language) {
 }
 
 // Handle category selection and book listing
-// Handle category selection and book listing
 function handleCategorySelection(chatId, category) {
   const userLanguage = userLanguages[chatId];
 
@@ -250,6 +247,7 @@ bot.on("message", (msg) => {
     askLanguageSelection(chatId);
   }
 });
+
 // Add multiple books
 bot.onText(/\/add_books (.+)/, (msg, match) => {
   const chatId = msg.chat.id;
@@ -284,11 +282,9 @@ bot.onText(/\/add_books (.+)/, (msg, match) => {
     );
   });
 
-  fs.writeFileSync(booksFilePath, JSON.stringify(books, null, 2));
+  saveBooks();
 });
 
-// Reserve a book
-// Reserve a book
 // Reserve a book
 bot.onText(/\/reserve (\d+)/, (msg, match) => {
   const chatId = msg.chat.id;
@@ -317,24 +313,19 @@ bot.onText(/\/my_reservations/, (msg) => {
   const chatId = msg.chat.id;
   let userReservations = reservations[chatId] || []; // Ensure it's an array
 
-  console.log("User Reservations:", userReservations);
-  console.log("Type of userReservations:", typeof userReservations);
-
   if (!Array.isArray(userReservations)) {
-    console.error("userReservations is not an array:", userReservations);
     bot.sendMessage(chatId, "There was an error retrieving your reservations.");
     return;
   }
 
   if (userReservations.length === 0) {
-    bot.sendMessage(chatId, "You currently have no reservations.");
-    return;
+    return bot.sendMessage(chatId, "You currently have no reservations.");
   }
 
   // Process and display reservations
   let responseMessage = "Your reservations:\n";
   userReservations.forEach((reservation, index) => {
-    responseMessage += `${index + 1}. ${reservation.bookTitle}\n`; // Assuming reservation has a bookTitle property
+    responseMessage += `${index + 1}. ${reservation.title}\n`; // Adjusted to use reservation.title
   });
 
   bot.sendMessage(chatId, responseMessage);
@@ -359,20 +350,20 @@ bot.onText(/\/cancel_reservation (\d+)/, (msg, match) => {
     );
     if (book) {
       book.available = true; // Mark the book as available again
-      console.log(`Book "${book.title}" availability restored.`);
       break; // Exit loop once the book is found
     }
   }
 
   // Remove the reservation
   reservations[chatId].splice(reservationIndex, 1);
-  fs.writeFileSync(reservationsFilePath, JSON.stringify(reservations, null, 2)); // Save updated reservations
+  saveReservations(); // Save updated reservations
 
   bot.sendMessage(
     chatId,
-    `You have successfully canceled the reservation for "${canceledBook.bookTitle}".`
+    `You have successfully canceled the reservation for "${canceledBook.title}".`
   );
 });
+
 // Librarian command to reserve a book
 bot.onText(/\/librarian_reserve (\d+) (.+) (.+)/, (msg, match) => {
   const chatId = msg.chat.id;
@@ -409,7 +400,7 @@ bot.onText(/\/librarian_reserve (\d+) (.+) (.+)/, (msg, match) => {
 
   reservations[userChatId].push({
     bookId: reservedBook.id,
-    bookTitle: reservedBook.title,
+    title: reservedBook.title,
     userName: users[userChatId].userName,
     phoneNumber: phoneNumber,
     pickupTime: "after isha salah",
@@ -417,7 +408,7 @@ bot.onText(/\/librarian_reserve (\d+) (.+) (.+)/, (msg, match) => {
 
   reservedBook.available = false; // Mark book as reserved
 
-  fs.writeFileSync(reservationsFilePath, JSON.stringify(reservations, null, 2));
+  saveReservations();
 
   bot.sendMessage(
     librarianChatId,
@@ -451,7 +442,7 @@ bot.onText(/\/reserved_books/, (msg) => {
       const user = users[userId];
       return userReservations
         .map((reservation) => {
-          return `Name: ${user.userName}, Reserved Book: ${reservation.bookTitle}, Phone Number: ${reservation.phoneNumber}`;
+          return `Name: ${user.userName}, Reserved Book: ${reservation.title}, Phone Number: ${reservation.phoneNumber}`;
         })
         .join("\n");
     })
@@ -490,6 +481,7 @@ app.post("/webhook", (req, res) => {
   bot.processUpdate(req.body);
   res.sendStatus(200); // Respond with a 200 OK
 });
+
 setWebhook().catch(console.error);
 
 // Start the Express server
