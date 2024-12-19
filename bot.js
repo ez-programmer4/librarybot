@@ -286,6 +286,7 @@ bot.onText(/\/add_books (.+)/, (msg, match) => {
 });
 
 // Reserve a book
+// Reserve a book
 bot.onText(/\/reserve (\d+)/, (msg, match) => {
   const chatId = msg.chat.id;
   const bookId = match[1];
@@ -300,14 +301,26 @@ bot.onText(/\/reserve (\d+)/, (msg, match) => {
     return bot.sendMessage(chatId, "Book not available.");
   }
 
+  // Ensure reservations[chatId] is initialized as an array
+  if (!Array.isArray(reservations[chatId])) {
+    reservations[chatId] = []; // Initialize if not an array
+  }
+
+  // Add the reservation
+  reservations[chatId].push({
+    bookId: book.id,
+    title: book.title,
+  });
+
+  // Mark the book as unavailable
   book.available = false;
-  reservations[chatId] = reservations[chatId] || [];
-  reservations[chatId].push({ bookId, title: book.title });
+
+  // Save the updated books and reservations
   saveBooks();
   saveReservations();
+
   bot.sendMessage(chatId, `You reserved "${book.title}".`);
 });
-
 // View own reservations
 bot.onText(/\/my_reservations/, (msg) => {
   const chatId = msg.chat.id;
