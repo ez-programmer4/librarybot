@@ -291,12 +291,73 @@ bot.onText(/\/add_books (.+)/, (msg, match) => {
 });
 
 // Reserve a book
+bot.onText(/\/reserve (\d+)/, (msg, match) => {
+  const chatId = msg.chat.id;
+  const bookId = match[1];
+  const userLanguage = userLanguages[chatId];
+
+  if (!userLanguage) {
+    return bot.sendMessage(chatId, "Select a language first using /register.");
+  }
+
+  const book = findBookById(userLanguage, bookId);
+  if (!book || !book.available) {
+    return bot.sendMessage(chatId, "Book not available.");
+  }
+
+  // Ensure reservations[chatId] is initialized as an array
+  if (!Array.isArray(reservations[chatId])) {
+    reservations[chatId] = []; // Initialize if not an array
+  }
+
+  // Add the reservation
+  reservations[chatId].push({
+    bookId: book.id,
+    title: book.title,
+  });
+
+  // Mark the book as unavailable
+  book.available = false;
+
+  // Save the updated books and reservations
+  saveBooks();
+  saveReservations();
+
+  bot.sendMessage(chatId, `You reserved "${book.title}".`);
+
+  // Notify the librarian about the reservation
+  notifyLibrarian(`User "${users[chatId].userName}" reserved "${book.title}".`);
+});
+
+// View own reservations
+bot.onText(/\/my_reservations/, (msg) => {
+  const chatId = msg.chat.id;
+  let userReservations = reservations[chatId] || []; // Ensure it's an array
+
+  if (!Array.isArray(userReservations)) {
+    bot.sendMessage(chatId, "There was an error retrieving your reservations.");
+    return;
+  }
+
+  if (userReservations.length === 0) {
+    return bot.sendMessage(chatId, "You currently have no reservations.");
+  }
+
+  // Process and display reservations
+  let responseMessage = "Your reservations:\n";
+  userReservations.forEach((reservation, index) => {
+    responseMessage += `${index + 1}. ${reservation.title}\n`; // Adjusted to use reservation.title
+  });
+
+  bot.sendMessage(chatId, responseMessage);
+});
+
+// Cancel a reservation by ID
 // Cancel a reservation by ID
 bot.onText(/\/cancel_reservation (\d+)/, (msg, match) => {
   const chatId = msg.chat.id;
   const reservationIndex = parseInt(match[1], 10) - 1; // Convert to 0-based index
 
-  // Check if the reservation exists
   if (!reservations[chatId] || !reservations[chatId][reservationIndex]) {
     return bot.sendMessage(chatId, "Invalid reservation ID.");
   }
@@ -325,130 +386,6 @@ bot.onText(/\/cancel_reservation (\d+)/, (msg, match) => {
     `User "${users[chatId].userName}" canceled reservation for "${canceledReservation.title}".`
   );
 });
-
-// Update reservation logic to include user information
-// Reserve a book
-bot.onText(/\/reserve (\d+)/, (msg, match) => {
-  const chatId = msg.chat.id;
-  const bookId = match[1]; // Get the book ID from the command
-  const userLanguage = userLanguages[chatId];
-
-  // Check if the user has selected a valid language
-  if (!userLanguage) {
-    return bot.sendMessage(chatId, "Select a language first using /register.");
-  }
-
-  // Find the book in the available list
-  const book = findBookById(userLanguage, bookId);
-  if (!book) {
-    return bot.sendMessage(chatId, `Book with ID ${bookId} not found.`);
-  }
-
-  if (!book.available) {
-    return bot.sendMessage(
-      chatId,
-      `The book "${book.title}" is not available for reservation.`
-    );
-  }
-
-  // Initialize user's reservations if not present
-  if (!reservations[chatId]) {
-    reservations[chatId] = []; // Initialize if not an array
-  }
-
-  // Save reservation with user info
-  reservations[chatId].push({
-    bookId: book.id,
-    title: book.title,
-    userName: users[chatId].userName, // Store user name
-    phoneNumber: users[chatId].phoneNumber, // Store phone number
-  });
-
-  // Mark the book as unavailable
-  book.available = false;
-
-  // Save the updated books and reservations
-  saveBooks();
-  saveReservations();
-
-  bot.sendMessage(chatId, `You have successfully reserved "${book.title}".`);
-
-  // Notify the librarian about the reservation
-  notifyLibrarian(`User "${users[chatId].userName}" reserved "${book.title}".`);
-});
-// View all reserved books
-bot.onText(/\/reserved_books/, (msg) => {
-  const chatId = msg.chat.id.toString();
-  const librarianChatIdStr = librarianChatId.toString().trim();
-
-  if (chatId !== librarianChatIdStr) {
-    return bot.sendMessage(
-      chatId,
-      `You do not have permission to view reserved books.`
-    );
-  }
-
-  const allReservations = Object.entries(reservations);
-  if (allReservations.length === 0) {
-    return bot.sendMessage(chatId, `No valid reservations found.`);
-  }
-
-  const reservedList = allReservations
-    .map(([userId, userReservations]) => {
-      const user = users[userId];
-
-      // Ensure userReservations is an array
-      if (!Array.isArray(userReservations)) {
-        console.error(
-          `Expected userReservations to be an array, but got:`,
-          userReservations
-        );
-        return null; // Handle the case where it's not an array
-      }
-
-      return userReservations
-        .map((reservation) => {
-          return `Name: ${user.userName}, Reserved Book: "${
-            reservation.title
-          }", Phone Number: ${user.phoneNumber || "N/A"}`;
-        })
-        .join("\n");
-    })
-    .flat()
-    .filter((item) => item !== null);
-
-  if (reservedList.length === 0) {
-    return bot.sendMessage(chatId, `No valid reservations found.`);
-  }
-
-  bot.sendMessage(chatId, `Reserved Books:\n${reservedList.join("\n")}`);
-});
-
-// View own reservations
-bot.onText(/\/my_reservations/, (msg) => {
-  const chatId = msg.chat.id;
-  let userReservations = reservations[chatId] || []; // Ensure it's an array
-
-  if (!Array.isArray(userReservations)) {
-    bot.sendMessage(chatId, "There was an error retrieving your reservations.");
-    return;
-  }
-
-  if (userReservations.length === 0) {
-    return bot.sendMessage(chatId, "You currently have no reservations.");
-  }
-
-  // Process and display reservations
-  let responseMessage = "Your reservations:\n";
-  userReservations.forEach((reservation, index) => {
-    responseMessage += `${index + 1}. ${reservation.title}\n`; // Adjusted to use reservation.title
-  });
-
-  bot.sendMessage(chatId, responseMessage);
-});
-
-// Cancel a reservation by ID
-// Cancel a reservation by ID
 
 // Librarian command to reserve a book
 bot.onText(/\/librarian_reserve (\d+) (.+) (.+)/, (msg, match) => {
@@ -507,6 +444,50 @@ bot.onText(/\/librarian_reserve (\d+) (.+) (.+)/, (msg, match) => {
 });
 
 // View all reserved books
+bot.onText(/\/reserved_books/, (msg) => {
+  const chatId = msg.chat.id.toString();
+  const librarianChatIdStr = librarianChatId.toString().trim();
+
+  if (chatId !== librarianChatIdStr) {
+    return bot.sendMessage(
+      chatId,
+      `You do not have permission to view reserved books.`
+    );
+  }
+
+  const allReservations = Object.entries(reservations);
+  if (allReservations.length === 0) {
+    return bot.sendMessage(chatId, `No valid reservations found.`);
+  }
+
+  const reservedList = allReservations
+    .map(([userId, userReservations]) => {
+      const user = users[userId];
+
+      // Ensure userReservations is an array
+      if (!Array.isArray(userReservations)) {
+        console.error(
+          `Expected userReservations to be an array, but got:`,
+          userReservations
+        );
+        return null; // Handle the case where it's not an array
+      }
+
+      return userReservations
+        .map((reservation) => {
+          return `Name: ${user.userName}, Reserved Book: ${reservation.title}, Phone Number: ${reservation.phoneNumber}`;
+        })
+        .join("\n");
+    })
+    .flat()
+    .filter((item) => item !== null);
+
+  if (reservedList.length === 0) {
+    return bot.sendMessage(chatId, `No valid reservations found.`);
+  }
+
+  bot.sendMessage(chatId, `Reserved Books:\n${reservedList.join("\n")}`);
+});
 
 // Helper function to notify the librarian
 function notifyLibrarian(message) {
