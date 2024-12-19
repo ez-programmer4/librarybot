@@ -421,6 +421,7 @@ bot.onText(/\/librarian_reserve (\d+) (.+) (.+)/, (msg, match) => {
 });
 
 // View all reserved books
+// View all reserved books
 bot.onText(/\/reserved_books/, (msg) => {
   const chatId = msg.chat.id.toString();
   const librarianChatIdStr = librarianChatId.toString().trim();
@@ -440,6 +441,16 @@ bot.onText(/\/reserved_books/, (msg) => {
   const reservedList = allReservations
     .map(([userId, userReservations]) => {
       const user = users[userId];
+
+      // Ensure userReservations is an array
+      if (!Array.isArray(userReservations)) {
+        console.error(
+          `Expected userReservations to be an array, but got:`,
+          userReservations
+        );
+        return null; // Handle the case where it's not an array
+      }
+
       return userReservations
         .map((reservation) => {
           return `Name: ${user.userName}, Reserved Book: ${reservation.title}, Phone Number: ${reservation.phoneNumber}`;
