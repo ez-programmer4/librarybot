@@ -31,20 +31,7 @@ const reservationsFilePath = path.join(__dirname, "reservations.json");
 function loadBooks() {
   if (fs.existsSync(booksFilePath)) {
     const data = fs.readFileSync(booksFilePath);
-    const booksData = JSON.parse(data);
-
-    // Ensure availability is set correctly
-    Object.values(booksData).forEach((categories) => {
-      Object.values(categories).forEach((booksList) => {
-        booksList.forEach((book) => {
-          if (book.available === undefined) {
-            book.available = true; // Default to available if not set
-          }
-        });
-      });
-    });
-
-    return booksData;
+    return JSON.parse(data);
   }
   return {};
 }
@@ -56,10 +43,28 @@ function loadReservations() {
   }
   return {};
 }
+function saveBooks() {
+  fs.writeFileSync(booksFilePath, JSON.stringify(books, null, 2));
+}
+function saveReservations() {
+  fs.writeFileSync(reservationsFilePath, JSON.stringify(reservations, null, 2));
+}
+
+function findBookById(language, bookId) {
+  for (const category in books[language]) {
+    const book = books[language][category].find((b) => b.id === bookId);
+    if (book) return book;
+  }
+  return null;
+}
+
+// === Initialize Data ===
+books = loadBooks();
+reservations = loadReservations();
 
 // Load initial data
-Object.assign(books, loadBooks());
-Object.assign(reservations, loadReservations());
+// Object.assign(books, loadBooks());
+// Object.assign(reservations, loadReservations());
 
 // Start command
 bot.onText(/\/start/, (msg) => {
@@ -291,49 +296,22 @@ bot.onText(/\/reserve (\d+)/, (msg, match) => {
   const userLanguage = userLanguages[chatId];
 
   if (!userLanguage) {
-    return bot.sendMessage(
-      chatId,
-      "You must select a language before reserving a book."
-    );
+    return bot.sendMessage(chatId, "Select a language first using /register.");
   }
 
-  let reservedBook;
-  for (const category in books[userLanguage]) {
-    reservedBook = books[userLanguage][category].find(
-      (book) => book.id === bookId
-    );
-    if (reservedBook) break;
+  const book = findBookById(userLanguage, bookId);
+  if (!book || !book.available) {
+    return bot.sendMessage(chatId, "Book not available.");
   }
 
-  console.log(`Attempting to reserve book with ID: ${bookId}`);
-  console.log(
-    `Current availability of book: ${
-      reservedBook ? reservedBook.available : "Not Found"
-    }`
-  );
-
-  if (!reservedBook) {
-    return bot.sendMessage(chatId, `Book not available or does not exist.`);
-  }
-
-  // Check if the book is already reserved
-  if (!reservedBook.available) {
-    return bot.sendMessage(
-      chatId,
-      `This book is currently reserved. Please choose another book.`
-    );
-  }
-
-  // Mark the book as reserved
-  reservedBook.available = false;
-  console.log(`Book "${reservedBook.title}" marked as reserved.`);
-
-  // Notify user of successful reservation
-  bot.sendMessage(
-    chatId,
-    `You have successfully reserved "${reservedBook.title}".`
-  );
+  book.available = false;
+  reservations[chatId] = reservations[chatId] || [];
+  reservations[chatId].push({ bookId, title: book.title });
+  saveBooks();
+  saveReservations();
+  bot.sendMessage(chatId, `You reserved "${book.title}".`);
 });
+
 // View own reservations
 bot.onText(/\/my_reservations/, (msg) => {
   const chatId = msg.chat.id;
