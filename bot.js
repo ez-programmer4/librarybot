@@ -353,6 +353,7 @@ bot.onText(/\/my_reservations/, (msg) => {
 });
 
 // Cancel a reservation by ID
+// Cancel a reservation by ID
 bot.onText(/\/cancel_reservation (\d+)/, (msg, match) => {
   const chatId = msg.chat.id;
   const reservationIndex = parseInt(match[1], 10) - 1; // Convert to 0-based index
@@ -361,18 +362,14 @@ bot.onText(/\/cancel_reservation (\d+)/, (msg, match) => {
     return bot.sendMessage(chatId, "Invalid reservation ID.");
   }
 
-  const canceledBook = reservations[chatId][reservationIndex];
+  const canceledReservation = reservations[chatId][reservationIndex];
 
   // Restore book availability
   const userLanguage = userLanguages[chatId];
-  for (const category in books[userLanguage]) {
-    const book = books[userLanguage][category].find(
-      (b) => b.id === canceledBook.bookId
-    );
-    if (book) {
-      book.available = true; // Mark the book as available again
-      break; // Exit loop once the book is found
-    }
+  const book = findBookById(userLanguage, canceledReservation.bookId);
+
+  if (book) {
+    book.available = true; // Mark the book as available again
   }
 
   // Remove the reservation
@@ -381,12 +378,12 @@ bot.onText(/\/cancel_reservation (\d+)/, (msg, match) => {
 
   bot.sendMessage(
     chatId,
-    `You have successfully canceled the reservation for "${canceledBook.title}".`
+    `You have successfully canceled the reservation for "${canceledReservation.title}".`
   );
 
   // Notify the librarian about the cancellation
   notifyLibrarian(
-    `User "${users[chatId].userName}" canceled reservation for "${canceledBook.title}".`
+    `User "${users[chatId].userName}" canceled reservation for "${canceledReservation.title}".`
   );
 });
 
