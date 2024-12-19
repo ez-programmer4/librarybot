@@ -327,18 +327,28 @@ bot.onText(/\/cancel_reservation (\d+)/, (msg, match) => {
 });
 
 // Update reservation logic to include user information
+// Reserve a book
 bot.onText(/\/reserve (\d+)/, (msg, match) => {
   const chatId = msg.chat.id;
-  const bookId = match[1];
+  const bookId = match[1]; // Get the book ID from the command
   const userLanguage = userLanguages[chatId];
 
+  // Check if the user has selected a valid language
   if (!userLanguage) {
     return bot.sendMessage(chatId, "Select a language first using /register.");
   }
 
+  // Find the book in the available list
   const book = findBookById(userLanguage, bookId);
-  if (!book || !book.available) {
-    return bot.sendMessage(chatId, "Book not available.");
+  if (!book) {
+    return bot.sendMessage(chatId, `Book with ID ${bookId} not found.`);
+  }
+
+  if (!book.available) {
+    return bot.sendMessage(
+      chatId,
+      `The book "${book.title}" is not available for reservation.`
+    );
   }
 
   // Initialize user's reservations if not present
@@ -361,12 +371,11 @@ bot.onText(/\/reserve (\d+)/, (msg, match) => {
   saveBooks();
   saveReservations();
 
-  bot.sendMessage(chatId, `You reserved "${book.title}".`);
+  bot.sendMessage(chatId, `You have successfully reserved "${book.title}".`);
 
   // Notify the librarian about the reservation
   notifyLibrarian(`User "${users[chatId].userName}" reserved "${book.title}".`);
 });
-
 // View all reserved books
 bot.onText(/\/reserved_books/, (msg) => {
   const chatId = msg.chat.id.toString();
