@@ -144,6 +144,11 @@ bot.on("message", (msg) => {
         `Registration successful! Welcome, ${state.userName}.`
       );
 
+      // Notify the librarian about the new registration
+      notifyLibrarian(
+        `New user registered: ${state.userName}, Phone: ${phoneNumber}`
+      );
+
       // Ask for language selection
       askLanguageSelection(chatId);
     }
@@ -286,7 +291,6 @@ bot.onText(/\/add_books (.+)/, (msg, match) => {
 });
 
 // Reserve a book
-// Reserve a book
 bot.onText(/\/reserve (\d+)/, (msg, match) => {
   const chatId = msg.chat.id;
   const bookId = match[1];
@@ -320,7 +324,11 @@ bot.onText(/\/reserve (\d+)/, (msg, match) => {
   saveReservations();
 
   bot.sendMessage(chatId, `You reserved "${book.title}".`);
+
+  // Notify the librarian about the reservation
+  notifyLibrarian(`User "${users[chatId].userName}" reserved "${book.title}".`);
 });
+
 // View own reservations
 bot.onText(/\/my_reservations/, (msg) => {
   const chatId = msg.chat.id;
@@ -374,6 +382,11 @@ bot.onText(/\/cancel_reservation (\d+)/, (msg, match) => {
   bot.sendMessage(
     chatId,
     `You have successfully canceled the reservation for "${canceledBook.title}".`
+  );
+
+  // Notify the librarian about the cancellation
+  notifyLibrarian(
+    `User "${users[chatId].userName}" canceled reservation for "${canceledBook.title}".`
   );
 });
 
@@ -433,7 +446,6 @@ bot.onText(/\/librarian_reserve (\d+) (.+) (.+)/, (msg, match) => {
   );
 });
 
-// View all reserved books
 // View all reserved books
 bot.onText(/\/reserved_books/, (msg) => {
   const chatId = msg.chat.id.toString();
