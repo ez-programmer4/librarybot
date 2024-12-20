@@ -358,9 +358,10 @@ bot.onText(/\/cancel_reservation (\d+)/, (msg, match) => {
   const chatId = msg.chat.id;
   const userReservationIndex = parseInt(match[1], 10);
   console.log("Before cancellation:", reservations[chatId]);
-  console.log(userReservationIndex);
+  console.log("User Reservation Index:", userReservationIndex);
 
-  if (!reservations[chatId]) {
+  // Check if the user has any reservations
+  if (!reservations[chatId] || !reservations[chatId][userReservationIndex]) {
     return bot.sendMessage(
       chatId,
       "Invalid reservation ID. Please check your reservations and try again."
@@ -383,11 +384,11 @@ bot.onText(/\/cancel_reservation (\d+)/, (msg, match) => {
   const book = findBookById(userLanguage, canceledReservation.bookId);
 
   if (book) {
-    book.available = true;
+    book.available = true; // Mark the book as available again
   }
 
-  reservations[chatId].splice(userReservationIndex, 1);
-  saveReservations();
+  reservations[chatId].splice(userReservationIndex, 1); // Remove the reservation
+  saveReservations(); // Save changes
 
   bot.sendMessage(
     chatId,
