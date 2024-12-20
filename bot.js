@@ -357,11 +357,15 @@ bot.onText(/\/my_reservations/, (msg) => {
 bot.onText(/\/cancel_reservation (\d+)/, (msg, match) => {
   const chatId = msg.chat.id;
   const userReservationIndex = parseInt(match[1], 10);
-  console.log("Before cancellation:", reservations[chatId]);
+  console.log("User Reservations:", reservations[chatId]);
   console.log("User Reservation Index:", userReservationIndex);
 
-  // Check if the user has any reservations
-  if (!reservations[chatId] || !reservations[chatId][userReservationIndex]) {
+  // Check if the user has any reservations and if the index is valid
+  if (
+    !reservations[chatId] ||
+    userReservationIndex < 0 ||
+    userReservationIndex >= reservations[chatId].length
+  ) {
     return bot.sendMessage(
       chatId,
       "Invalid reservation ID. Please check your reservations and try again."
