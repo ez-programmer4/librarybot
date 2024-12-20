@@ -357,6 +357,7 @@ bot.onText(/\/my_reservations/, (msg) => {
 bot.onText(/\/cancel_reservation (\d+)/, (msg, match) => {
   const chatId = msg.chat.id;
   const userReservationIndex = parseInt(match[1], 10) - 1;
+  console.log("Before cancellation:", reservations[chatId]);
 
   if (
     !reservations[chatId] ||
