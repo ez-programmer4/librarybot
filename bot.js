@@ -356,13 +356,20 @@ bot.onText(/\/my_reservations/, (msg) => {
 // Cancel a reservation by ID
 bot.onText(/\/cancel_reservation (\d+)/, (msg, match) => {
   const chatId = msg.chat.id;
-  const reservationIndex = parseInt(match[1], 10) - 1; // Convert to 0-based index
+  const userReservationIndex = parseInt(match[1], 10) - 1; // Convert to 0-based index
 
-  if (!reservations[chatId] || !reservations[chatId][reservationIndex]) {
-    return bot.sendMessage(chatId, "Invalid reservation ID.");
+  // Input validation: Check if user has reservations and the index is valid
+  if (
+    !reservations[chatId] ||
+    reservations[chatId].length <= userReservationIndex
+  ) {
+    return bot.sendMessage(
+      chatId,
+      "Invalid reservation ID. Please check your reservations and try again."
+    );
   }
 
-  const canceledReservation = reservations[chatId][reservationIndex];
+  const canceledReservation = reservations[chatId][userReservationIndex];
 
   // Restore book availability
   const userLanguage = userLanguages[chatId];
