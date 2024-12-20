@@ -356,9 +356,8 @@ bot.onText(/\/my_reservations/, (msg) => {
 // Cancel a reservation by ID
 bot.onText(/\/cancel_reservation (\d+)/, (msg, match) => {
   const chatId = msg.chat.id;
-  const userReservationIndex = parseInt(match[1], 10) - 1; // Convert to 0-based index
+  const userReservationIndex = parseInt(match[1], 10) - 1;
 
-  // Input validation: Check if user has reservations and the index is valid
   if (
     !reservations[chatId] ||
     reservations[chatId].length <= userReservationIndex
@@ -371,24 +370,31 @@ bot.onText(/\/cancel_reservation (\d+)/, (msg, match) => {
 
   const canceledReservation = reservations[chatId][userReservationIndex];
 
-  // Restore book availability
+  // Log the canceledReservation for debugging
+  console.log("Canceled Reservation:", canceledReservation);
+
+  if (!canceledReservation || !canceledReservation.bookId) {
+    return bot.sendMessage(
+      chatId,
+      "Invalid reservation data. Please try again."
+    );
+  }
+
   const userLanguage = userLanguages[chatId];
   const book = findBookById(userLanguage, canceledReservation.bookId);
 
   if (book) {
-    book.available = true; // Mark the book as available again
+    book.available = true;
   }
 
-  // Remove the reservation
-  reservations[chatId].splice(reservationIndex, 1);
-  saveReservations(); // Save updated reservations
+  reservations[chatId].splice(userReservationIndex, 1);
+  saveReservations();
 
   bot.sendMessage(
     chatId,
     `You have successfully canceled the reservation for "${canceledReservation.title}".`
   );
 
-  // Notify the librarian about the cancellation
   notifyLibrarian(
     `User "${users[chatId].userName}" canceled reservation for "${canceledReservation.title}".`
   );
