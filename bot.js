@@ -356,7 +356,7 @@ bot.onText(/\/my_reservations/, (msg) => {
 // Cancel a reservation by ID
 bot.onText(/\/cancel_reservation (\d+)/, (msg, match) => {
   const chatId = msg.chat.id;
-  const userReservationIndex = parseInt(match[1], 10);
+  const userReservationIndex = parseInt(match[1], 10) - 1; // Convert to 0-based index
   console.log("User Reservations:", reservations[chatId]);
   console.log("User Reservation Index:", userReservationIndex);
 
