@@ -253,7 +253,7 @@ bot.on("message", (msg) => {
   }
 });
 
-bot.onText(/\/add_books (\d+) (\w+) (.+) (.+)/, (msg, match) => {
+bot.onText(/\/add_books (\d+) (\w+) "(.+)" "(.+)"/, (msg, match) => {
   const chatId = msg.chat.id;
   const id = parseInt(match[1], 10);
   const language = match[2].trim();
