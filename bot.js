@@ -402,8 +402,6 @@ bot.onText(/\/cancel_reservation (\d+)/, (msg, match) => {
   );
 });
 
-const librarianChatId = process.env.LIBRARIAN_CHAT_ID.trim(); // Librarian's chat ID
-
 bot.onText(/\/librarian_reserve (\d+) (.+) (.+)/, (msg, match) => {
   const chatId = msg.chat.id;
   const bookId = match[1];
