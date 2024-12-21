@@ -67,6 +67,7 @@ reservations = loadReservations();
 // Start command
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
+  console.log(`start command from chatid:${chatId}`);
   const welcomeMessage = `
 Welcome to the Library Booking Bot!
 
