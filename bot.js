@@ -246,6 +246,61 @@ bot.on("message", (msg) => {
   }
 });
 
+// Handle change language command
+bot.onText(/\/change_language/, (msg) => {
+  const chatId = msg.chat.id;
+  askLanguageSelection(chatId);
+});
+
+// Ask for language selection
+function askLanguageSelection(chatId) {
+  bot.sendMessage(chatId, "Please select a language:", {
+    reply_markup: {
+      keyboard: [["Arabic"], ["Amharic"], ["AfaanOromo"]],
+      one_time_keyboard: true,
+    },
+  });
+}
+
+// Handle language selection
+function handleLanguageSelection(chatId, language) {
+  userLanguages[chatId] = language;
+
+  const categories = Object.keys(books[language]);
+  if (categories.length === 0) {
+    return bot.sendMessage(chatId, `No categories available for ${language}.`);
+  }
+
+  bot.sendMessage(
+    chatId,
+    `You selected ${language}. Please choose a category:`,
+    {
+      reply_markup: {
+        keyboard: categories.map((cat) => [cat]),
+        one_time_keyboard: true,
+      },
+    }
+  );
+}
+
+// Listen for category selection
+bot.on("message", (msg) => {
+  const chatId = msg.chat.id;
+
+  if (registrationState[chatId]) {
+    // ... existing registration handling
+  } else if (["Arabic", "Amharic", "AfaanOromo"].includes(msg.text)) {
+    handleLanguageSelection(chatId, msg.text);
+  } else if (userLanguages[chatId]) {
+    // Check for category selection
+    if (Object.keys(books[userLanguages[chatId]]).includes(msg.text)) {
+      handleCategorySelection(chatId, msg.text);
+    }
+  } else if (msg.text === "/change_language") {
+    askLanguageSelection(chatId);
+  }
+});
+
 // Load books when the application starts
 loadBooks();
 
