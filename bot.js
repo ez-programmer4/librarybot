@@ -253,41 +253,50 @@ bot.on("message", (msg) => {
   }
 });
 
-// Add multiple books
-bot.onText(/\/add_books (.+)/, (msg, match) => {
+bot.onText(/\/add_books (\d+) (\w+) (.+) (.+)/, (msg, match) => {
   const chatId = msg.chat.id;
-  const booksInput = match[1].trim().split(";");
+  const id = parseInt(match[1], 10);
+  const language = match[2].trim();
+  const category = match[3].trim();
+  const title = match[4].trim();
 
-  booksInput.forEach((bookEntry) => {
-    const [language, category, bookTitle] = bookEntry
-      .trim()
-      .split(",")
-      .map((s) => s.trim());
+  // Check if the language exists
+  if (!books[language]) {
+    return bot.sendMessage(chatId, `Language "${language}" does not exist.`);
+  }
 
-    if (!books[language]) {
-      return bot.sendMessage(chatId, `Language "${language}" does not exist.`);
-    }
-
-    if (!books[language][category]) {
-      books[language][category] = [];
-    }
-
-    const newBookId = (books[language][category].length + 1)
-      .toString()
-      .padStart(3, "0");
-    books[language][category].push({
-      id: newBookId,
-      title: bookTitle,
-      available: true,
-    });
-
-    bot.sendMessage(
+  // Check if the category exists within the language
+  if (!books[language][category]) {
+    return bot.sendMessage(
       chatId,
-      `Added "${bookTitle}" to "${category}" in "${language}".`
+      `Category "${category}" does not exist in "${language}".`
     );
-  });
+  }
 
-  saveBooks();
+  // Check if the ID already exists in the category
+  const existingBook = books[language][category].find((book) => book.id === id);
+  if (existingBook) {
+    return bot.sendMessage(
+      chatId,
+      `A book with ID ${id} already exists in ${category}.`
+    );
+  }
+
+  // Add the new book
+  const newBook = {
+    id: id,
+    title: title,
+    available: true,
+  };
+
+  books[language][category].push(newBook);
+
+  saveBooks(); // Function to save the updated books object
+
+  bot.sendMessage(
+    chatId,
+    `Book "${title}" added successfully in ${language} under ${category} with ID ${id}.`
+  );
 });
 
 // Reserve a book
