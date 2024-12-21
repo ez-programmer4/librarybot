@@ -349,6 +349,7 @@ bot.onText(/\/reserve (\d+)/, (msg, match) => {
   reservations[chatId].push({
     bookId: book.id,
     title: book.title,
+    pickupTime: "after isha salah",
   });
 
   // Mark the book as unavailable
@@ -358,7 +359,10 @@ bot.onText(/\/reserve (\d+)/, (msg, match) => {
   saveBooks();
   saveReservations();
 
-  bot.sendMessage(chatId, `You reserved "${book.title}".`);
+  bot.sendMessage(
+    chatId,
+    `You reserved "${book.title}". Pickup time: after isha salah. `
+  );
 
   // Notify the librarian about the reservation
   notifyLibrarian(`User "${users[chatId].userName}" reserved "${book.title}".`);
@@ -405,7 +409,9 @@ bot.onText(/\/my_reservations/, (msg) => {
   // Process and display reservations
   let responseMessage = "Your reservations (use the number to cancel):\n";
   userReservations.forEach((reservation, index) => {
-    responseMessage += `${index + 1}. ${reservation.title}\n`; // 1-based index
+    responseMessage += `${index + 1}. "${reservation.title}" - Pickup time: ${
+      reservation.pickupTime
+    }\n`; // Include pickup time
   });
 
   bot.sendMessage(chatId, responseMessage);
