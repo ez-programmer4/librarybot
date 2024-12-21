@@ -88,6 +88,7 @@ Available commands:
 // Registration logic
 let registrationState = {};
 
+// Registration logic
 bot.onText(/\/register/, (msg) => {
   const chatId = msg.chat.id;
 
@@ -152,10 +153,6 @@ bot.on("message", (msg) => {
       // Ask for language selection
       askLanguageSelection(chatId);
     }
-  } else if (["Arabic", "Amharic", "AfaanOromo"].includes(msg.text)) {
-    handleLanguageSelection(chatId, msg.text);
-  } else if (msg.text === "/change_language") {
-    askLanguageSelection(chatId);
   }
 });
 
@@ -190,7 +187,7 @@ function handleLanguageSelection(chatId, language) {
   );
 }
 
-// Handle category selection and book listing
+// Handle category selection
 function handleCategorySelection(chatId, category) {
   const userLanguage = userLanguages[chatId];
 
@@ -204,7 +201,7 @@ function handleCategorySelection(chatId, category) {
   if (!books[userLanguage] || !books[userLanguage][category]) {
     return bot.sendMessage(
       chatId,
-      `Category "${category}" does not exist under ${userLanguage}.`
+      `"${category}" is not a valid category. Please select a category from the available options.`
     );
   }
 
@@ -368,7 +365,35 @@ bot.onText(/\/reserve (\d+)/, (msg, match) => {
 });
 
 // View own reservations
-// View own reservations
+
+bot.onText(/\/help/, (msg) => {
+  const chatId = msg.chat.id;
+  const helpMessage = `
+Welcome to the Library Booking Bot!
+
+### Reservation Process
+1. **Start**: Type /start to begin.
+2. **Register**: Register your name and phone number by typing /register.
+3. **Select Language**: Choose a language (Arabic, Amharic, Afaan Oromo).
+4. **Select Category**: Choose a category of books.
+5. **Reserve a Book**: Type /reserve [book_id] to reserve a book.
+6. **View Reservations**: Use /my_reservations to see your current reservations.
+7. **Cancel Reservation**: Type /cancel_reservation [id] to cancel a reservation.
+8. **Change Language**: Type /change_language to select a different language.
+
+### Example Commands
+- **Register**: /register
+- **Select Language**: Arabic, Amharic, AfaanOromo
+- **Select Category**: Philosophy, Architecture
+- **Reserve a Book**: /reserve 317
+- **View Reservations**: /my_reservations
+- **Cancel Reservation**: /cancel_reservation 1
+- **Change Language**: /change_language
+
+If you have any questions, feel free to ask @IrshadComments_bot!
+  `;
+  bot.sendMessage(chatId, helpMessage);
+});
 bot.onText(/\/my_reservations/, (msg) => {
   const chatId = msg.chat.id;
   let userReservations = reservations[chatId] || []; // Ensure it's an array
