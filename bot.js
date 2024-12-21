@@ -402,7 +402,8 @@ bot.onText(/\/cancel_reservation (\d+)/, (msg, match) => {
   );
 });
 
-// Librarian command to reserve a book
+const librarianChatId = process.env.LIBRARIAN_CHAT_ID.trim(); // Librarian's chat ID
+
 bot.onText(/\/librarian_reserve (\d+) (.+) (.+)/, (msg, match) => {
   const chatId = msg.chat.id;
   const bookId = match[1];
@@ -424,47 +425,86 @@ bot.onText(/\/librarian_reserve (\d+) (.+) (.+)/, (msg, match) => {
     return bot.sendMessage(chatId, `Book not available or does not exist.`);
   }
 
-  // Check if the user is already registered
-  let userChatId = Object.keys(users).find(
-    (id) => users[id].userName.trim().toLowerCase() === userName.toLowerCase()
-  );
-
-  // If user is not found, create a new entry
-  if (!userChatId) {
-    userChatId = chatId; // Use the librarian's chat ID or generate a new one
-    users[userChatId] = {
+  // Bypass registration check if the user is the librarian
+  if (chatId === librarianChatId) {
+    // Directly reserve the book without checking registration
+    // Create a new user entry for logging purposes if needed
+    users[chatId] = {
       userName: userName,
       phoneNumber: phoneNumber,
     };
+
+    // Initialize user's reservations if not present
+    if (!Array.isArray(reservations[chatId])) {
+      reservations[chatId] = []; // Ensure it's initialized as an array
+    }
+
+    // Add the reservation
+    reservations[chatId].push({
+      bookId: reservedBook.id,
+      title: reservedBook.title,
+      userName: userName,
+      phoneNumber: phoneNumber,
+      pickupTime: "after isha salah",
+    });
+
+    reservedBook.available = false; // Mark book as reserved
+
+    // Save reservations
+    saveReservations();
+
+    bot.sendMessage(
+      librarianChatId,
+      `Librarian reserved "${reservedBook.title}" for "${userName}".`
+    );
+    bot.sendMessage(
+      chatId,
+      `You have reserved "${reservedBook.title}" by librarian.`
+    );
+  } else {
+    // Regular user logic (if needed)
+    // Check if user is registered and proceed accordingly
+    let userChatId = Object.keys(users).find(
+      (id) => users[id].userName.trim().toLowerCase() === userName.toLowerCase()
+    );
+
+    // If user is not found, create a new entry
+    if (!userChatId) {
+      userChatId = chatId; // Use the librarian's chat ID or generate a new one
+      users[userChatId] = {
+        userName: userName,
+        phoneNumber: phoneNumber,
+      };
+    }
+
+    // Initialize user's reservations if not present
+    if (!Array.isArray(reservations[userChatId])) {
+      reservations[userChatId] = []; // Ensure it's initialized as an array
+    }
+
+    // Add the reservation
+    reservations[userChatId].push({
+      bookId: reservedBook.id,
+      title: reservedBook.title,
+      userName: users[userChatId].userName,
+      phoneNumber: phoneNumber,
+      pickupTime: "after isha salah",
+    });
+
+    reservedBook.available = false; // Mark book as reserved
+
+    // Save reservations
+    saveReservations();
+
+    bot.sendMessage(
+      librarianChatId,
+      `Librarian reserved "${reservedBook.title}" for "${users[userChatId].userName}".`
+    );
+    bot.sendMessage(
+      userChatId,
+      `You have reserved "${reservedBook.title}" by librarian.`
+    );
   }
-
-  // Initialize user's reservations if not present
-  if (!Array.isArray(reservations[userChatId])) {
-    reservations[userChatId] = []; // Ensure it's initialized as an array
-  }
-
-  // Add the reservation
-  reservations[userChatId].push({
-    bookId: reservedBook.id,
-    title: reservedBook.title,
-    userName: users[userChatId].userName,
-    phoneNumber: phoneNumber,
-    pickupTime: "after isha salah",
-  });
-
-  reservedBook.available = false; // Mark book as reserved
-
-  // Save reservations
-  saveReservations();
-
-  bot.sendMessage(
-    librarianChatId,
-    `Librarian reserved "${reservedBook.title}" for "${users[userChatId].userName}".`
-  );
-  bot.sendMessage(
-    userChatId,
-    `You have reserved "${reservedBook.title}" by librarian.`
-  );
 });
 
 // View all reserved books
