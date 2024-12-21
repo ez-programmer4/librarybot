@@ -67,7 +67,6 @@ reservations = loadReservations();
 // Start command
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
-  console.log(`start command from chatid:${chatId}`);
   const welcomeMessage = `
 Welcome to the Library Booking Bot!
 
@@ -254,6 +253,9 @@ bot.on("message", (msg) => {
   }
 });
 
+// Load books when the application starts
+loadBooks();
+
 bot.onText(/\/add_books (\d+) (\w+) "(.+)" "(.+)"/, (msg, match) => {
   const chatId = msg.chat.id;
   const id = parseInt(match[1], 10);
@@ -261,12 +263,10 @@ bot.onText(/\/add_books (\d+) (\w+) "(.+)" "(.+)"/, (msg, match) => {
   const category = match[3].trim();
   const title = match[4].trim();
 
-  // Check if the language exists
   if (!books[language]) {
     return bot.sendMessage(chatId, `Language "${language}" does not exist.`);
   }
 
-  // Check if the category exists within the language
   if (!books[language][category]) {
     return bot.sendMessage(
       chatId,
@@ -274,7 +274,6 @@ bot.onText(/\/add_books (\d+) (\w+) "(.+)" "(.+)"/, (msg, match) => {
     );
   }
 
-  // Check if the ID already exists in the category
   const existingBook = books[language][category].find((book) => book.id === id);
   if (existingBook) {
     return bot.sendMessage(
@@ -283,15 +282,9 @@ bot.onText(/\/add_books (\d+) (\w+) "(.+)" "(.+)"/, (msg, match) => {
     );
   }
 
-  // Add the new book
-  const newBook = {
-    id: id,
-    title: title,
-    available: true,
-  };
-
+  const newBook = { id: id, title: title, available: true };
   books[language][category].push(newBook);
-  saveBooks(); // Function to save the updated books object
+  saveBooks(); // Save the updated books object
 
   bot.sendMessage(
     chatId,
@@ -299,19 +292,16 @@ bot.onText(/\/add_books (\d+) (\w+) "(.+)" "(.+)"/, (msg, match) => {
   );
 });
 
-// Remove book command
 bot.onText(/\/remove_book (\w+) (\w+) (\d+)/, (msg, match) => {
   const chatId = msg.chat.id;
   const language = match[1].trim();
   const category = match[2].trim();
   const id = parseInt(match[3], 10);
 
-  // Check if the language exists
   if (!books[language]) {
     return bot.sendMessage(chatId, `Language "${language}" does not exist.`);
   }
 
-  // Check if the category exists within the language
   if (!books[language][category]) {
     return bot.sendMessage(
       chatId,
@@ -319,7 +309,6 @@ bot.onText(/\/remove_book (\w+) (\w+) (\d+)/, (msg, match) => {
     );
   }
 
-  // Find the book by ID
   const bookIndex = books[language][category].findIndex(
     (book) => book.id === id
   );
@@ -330,9 +319,8 @@ bot.onText(/\/remove_book (\w+) (\w+) (\d+)/, (msg, match) => {
     );
   }
 
-  // Remove the book from the array
   books[language][category].splice(bookIndex, 1);
-  saveBooks(); // Function to save the updated books object
+  saveBooks(); // Save the updated books object
 
   bot.sendMessage(
     chatId,
