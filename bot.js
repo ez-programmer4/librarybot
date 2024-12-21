@@ -298,6 +298,47 @@ bot.onText(/\/add_books (\d+) (\w+) "(.+)" "(.+)"/, (msg, match) => {
     `Book "${title}" added successfully in ${language} under ${category} with ID ${id}.`
   );
 });
+bot.onText(/\/remove_book (\w+) (\w+) (\d+)/, (msg, match) => {
+  const chatId = msg.chat.id;
+  const language = match[1].trim();
+  const category = match[2].trim();
+  const id = parseInt(match[3], 10);
+
+  // Check if the language exists
+  if (!books[language]) {
+    return bot.sendMessage(chatId, `Language "${language}" does not exist.`);
+  }
+
+  // Check if the category exists within the language
+  if (!books[language][category]) {
+    return bot.sendMessage(
+      chatId,
+      `Category "${category}" does not exist in "${language}".`
+    );
+  }
+
+  // Find the book by ID
+  const bookIndex = books[language][category].findIndex(
+    (book) => book.id === id
+  );
+  if (bookIndex === -1) {
+    return bot.sendMessage(
+      chatId,
+      `No book found with ID ${id} in category "${category}".`
+    );
+  }
+
+  // Remove the book from the array
+  books[language][category].splice(bookIndex, 1);
+
+  // Save the updated books object
+  saveBooks(); // Function to save the updated books object
+
+  bot.sendMessage(
+    chatId,
+    `Book with ID ${id} has been removed from category "${category}" in ${language}.`
+  );
+});
 
 // Reserve a book
 bot.onText(/\/reserve (\d+)/, (msg, match) => {
