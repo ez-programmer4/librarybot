@@ -439,8 +439,8 @@ bot.onText(/\/librarian_reserve (\d+) (.+) (.+)/, (msg, match) => {
   }
 
   // Initialize user's reservations if not present
-  if (!reservations[userChatId]) {
-    reservations[userChatId] = [];
+  if (!Array.isArray(reservations[userChatId])) {
+    reservations[userChatId] = []; // Ensure it's initialized as an array
   }
 
   // Add the reservation
@@ -454,6 +454,7 @@ bot.onText(/\/librarian_reserve (\d+) (.+) (.+)/, (msg, match) => {
 
   reservedBook.available = false; // Mark book as reserved
 
+  // Save reservations
   saveReservations();
 
   bot.sendMessage(
