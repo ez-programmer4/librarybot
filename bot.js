@@ -68,9 +68,10 @@ reservations = loadReservations();
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
   const welcomeMessage = `
-Welcome to the Library Booking Bot! 📚
+
 
 السلام عليكم ورحمة الله وبركاته
+Welcome to the Library Booking Bot! 📚
 Please register to get started by typing /register.
 
 For a list of all commands and guidance, type /help.
@@ -235,10 +236,10 @@ bot.on("message", (msg) => {
       handleCategorySelection(chatId, msg.text);
     } else {
       // If it's not a recognized category, let the user know
-      bot.sendMessage(
-        chatId,
-        `"${msg.text}" is not a valid category. Please select a category from the available options.`
-      );
+      // bot.sendMessage(
+      //   chatId,
+      //   `"${msg.text}" is not a valid category. Please select a category from the available options.`
+      // );
     }
   } else if (msg.text === "/change_language") {
     askLanguageSelection(chatId);
@@ -337,7 +338,7 @@ bot.onText(/\/reserve (\d+)/, (msg, match) => {
 
   // Ensure reservations[chatId] is initialized as an array
   if (!Array.isArray(reservations[chatId])) {
-    reservations[chatId] = []; // Initialize if not an array
+    reservations[chatId] = [];
   }
 
   // Add the reservation
@@ -356,13 +357,15 @@ bot.onText(/\/reserve (\d+)/, (msg, match) => {
 
   bot.sendMessage(
     chatId,
-    `You reserved "${book.title}". Pickup time: after isha salah. `
+    `You reserved "${book.title}". Pickup time: after isha salah.`
   );
 
-  // Notify the librarian about the reservation
-  notifyLibrarian(`User "${users[chatId].userName}" reserved "${book.title}".`);
+  // Notify the librarian about the reservation including user phone number
+  const userPhone = users[chatId]?.phoneNumber || "N/A"; // Get user's phone number
+  notifyLibrarian(
+    `User "${users[chatId].userName}" reserved "${book.title}". Phone: ${userPhone}`
+  );
 });
-
 // View own reservations
 
 bot.onText(/\/help/, (msg) => {
@@ -408,8 +411,10 @@ bot.onText(/\/my_reservations/, (msg) => {
       reservation.pickupTime
     }\n`; // Include pickup time
   });
-
-  bot.sendMessage(chatId, responseMessage);
+  bot.sendMessage(
+    chatId,
+    responseMessage`Available books in ${category}:\n${bookList}\nYou can reserve a book by typing /reserve [book_id].`
+  );
 });
 
 // Cancel a reservation by ID
