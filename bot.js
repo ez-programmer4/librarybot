@@ -68,20 +68,15 @@ reservations = loadReservations();
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
   const welcomeMessage = `
-Welcome to the Library Booking Bot!
+Welcome to the Library Booking Bot! 📚
 
-As a librarian, you can manage book reservations.
+السلام عليكم ورحمة الله وبركاته
 Please register to get started by typing /register.
 
-Available commands:
-- /register: Register your name and phone number.
-- /my_reservations: View your current reservations.
-- /cancel_reservation [id]: Cancel your reservation by ID.
-- /reserved_books: View all reserved books (librarian only).
-- /add_books [language, category, title]: Add new books (librarian only).
-- /reserve [book_id]: Reserve a book by its ID.
-- /help: Show this help message again.
-  `;
+For a list of all commands and guidance, type /help.
+
+KJUMJ IRSHAD LIBRARY-1445
+`;
   bot.sendMessage(chatId, welcomeMessage);
 });
 
@@ -198,12 +193,12 @@ function handleCategorySelection(chatId, category) {
     );
   }
 
-  if (!books[userLanguage] || !books[userLanguage][category]) {
-    return bot.sendMessage(
-      chatId,
-      `"${category}" is not a valid category. Please select a category from the available options.`
-    );
-  }
+  // if (!books[userLanguage] || !books[userLanguage][category]) {
+  //   return bot.sendMessage(
+  //     chatId,
+  //     `"${category}" is not a valid category. Please select a category from the available options.`
+  //   );
+  // }
 
   const availableBooks = books[userLanguage][category].filter(
     (book) => book.available
