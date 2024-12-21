@@ -290,7 +290,6 @@ bot.onText(/\/add_books (\d+) (\w+) "(.+)" "(.+)"/, (msg, match) => {
   };
 
   books[language][category].push(newBook);
-
   saveBooks(); // Function to save the updated books object
 
   bot.sendMessage(
@@ -298,6 +297,8 @@ bot.onText(/\/add_books (\d+) (\w+) "(.+)" "(.+)"/, (msg, match) => {
     `Book "${title}" added successfully in ${language} under ${category} with ID ${id}.`
   );
 });
+
+// Remove book command
 bot.onText(/\/remove_book (\w+) (\w+) (\d+)/, (msg, match) => {
   const chatId = msg.chat.id;
   const language = match[1].trim();
@@ -330,8 +331,6 @@ bot.onText(/\/remove_book (\w+) (\w+) (\d+)/, (msg, match) => {
 
   // Remove the book from the array
   books[language][category].splice(bookIndex, 1);
-
-  // Save the updated books object
   saveBooks(); // Function to save the updated books object
 
   bot.sendMessage(
