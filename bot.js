@@ -473,14 +473,16 @@ bot.onText(/\/my_reservations/, (msg) => {
   }
 
   // Process and display reservations
-  let cancelbook = " ❌ to cnacel /cancel_reservation [book_no]";
+  let cancelBookMessage = "❌ To cancel, use: /cancel_reservation [book_no]";
   let responseMessage = "➡️ Your reservations (use the number to cancel):\n";
   userReservations.forEach((reservation, index) => {
-    responseMessage += `${index + 1}. " 📚 ${
+    responseMessage += `${index + 1}. 📚 "${
       reservation.title
-    }" - Pickup time: ${reservation.pickupTime}\n`; // Include pickup time
+    }" - Pickup time: ${reservation.pickupTime}, Phone: ${
+      reservation.phoneNumber
+    }\n`; // Include pickup time and phone number
   });
-  bot.sendMessage(chatId, ` ${responseMessage} /n ${cancelbook}`);
+  bot.sendMessage(chatId, `${responseMessage}\n${cancelBookMessage}`);
 });
 
 // Cancel a reservation by ID
@@ -607,7 +609,7 @@ bot.onText(/\/librarian_reserve (\d+) (.+) (.+)/, (msg, match) => {
 
   // If the librarian is reserving the book
   if (chatId === librarianChatId) {
-    // Ensure the user entry exists for logging purposes
+    // Find or create the user entry
     let userChatId = Object.keys(users).find(
       (id) => users[id].userName.trim().toLowerCase() === userName.toLowerCase()
     );
@@ -619,6 +621,9 @@ bot.onText(/\/librarian_reserve (\d+) (.+) (.+)/, (msg, match) => {
         userName: userName,
         phoneNumber: phoneNumber,
       };
+    } else {
+      // Update the phone number if user already exists
+      users[userChatId].phoneNumber = phoneNumber;
     }
 
     // Initialize reservations for the user if not already present
@@ -631,7 +636,7 @@ bot.onText(/\/librarian_reserve (\d+) (.+) (.+)/, (msg, match) => {
       bookId: reservedBook.id,
       title: reservedBook.title,
       userName: users[userChatId].userName,
-      phoneNumber: phoneNumber,
+      phoneNumber: phoneNumber, // Ensure phone number is stored
       pickupTime: "after isha salah",
     });
 
@@ -648,16 +653,16 @@ bot.onText(/\/librarian_reserve (\d+) (.+) (.+)/, (msg, match) => {
     );
     bot.sendMessage(
       userChatId,
-      `You have reserved "${reservedBook.title}" by librarian.`
+      `You have reserved "${reservedBook.title}" by librarian. Phone: ${phoneNumber}`
     );
   }
 });
-
 // View all reserved books
 bot.onText(/\/reserved_books/, (msg) => {
   const chatId = msg.chat.id.toString();
   const librarianChatIdStr = librarianChatId.toString().trim();
 
+  // Check if the user is the librarian
   if (chatId !== librarianChatIdStr) {
     return bot.sendMessage(
       chatId,
@@ -683,19 +688,20 @@ bot.onText(/\/reserved_books/, (msg) => {
         return null; // Handle the case where it's not an array
       }
 
-      return userReservations
-        .map((reservation) => {
-          return `Name: ${user.userName}, Reserved Book: ${reservation.title}, Phone Number: ${reservation.phoneNumber}`;
-        })
-        .join("\n");
+      // Format reservations for each user
+      return userReservations.map((reservation) => {
+        return `Name: ${user.userName}, Reserved Book: "${reservation.title}", Phone Number: ${reservation.phoneNumber}`;
+      });
     })
     .flat()
     .filter((item) => item !== null);
 
+  // Check if we have any valid reservations to display
   if (reservedList.length === 0) {
     return bot.sendMessage(chatId, `No valid reservations found.`);
   }
 
+  // Send the list of reserved books
   bot.sendMessage(chatId, `Reserved Books:\n${reservedList.join("\n")}`);
 });
 
