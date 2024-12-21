@@ -398,7 +398,12 @@ If you have any questions, feel free to ask @IrshadComments_bot!
 });
 bot.onText(/\/my_reservations/, (msg) => {
   const chatId = msg.chat.id;
-  let userReservations = reservations[chatId] || []; // Ensure it's an array
+  let userReservations = reservations[chatId];
+
+  // Ensure it's an array
+  if (!Array.isArray(userReservations)) {
+    userReservations = []; // Default to an empty array if it's not
+  }
 
   if (userReservations.length === 0) {
     return bot.sendMessage(chatId, "You currently have no reservations.");
