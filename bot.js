@@ -411,10 +411,7 @@ bot.onText(/\/my_reservations/, (msg) => {
       reservation.pickupTime
     }\n`; // Include pickup time
   });
-  bot.sendMessage(
-    chatId,
-    responseMessage`Available books in ${category}:\n${bookList}\nYou can reserve a book by typing /reserve [book_id].`
-  );
+  bot.sendMessage(chatId, responseMessage);
 });
 
 // Cancel a reservation by ID
