@@ -15,9 +15,9 @@ const librarianChatId = process.env.LIBRARIAN_CHAT_ID.trim(); // Set this to the
 
 // Book categories and reservations
 let books = {
-  Arabic: { Philosophy: [], Architecture: [] },
-  Amharic: { Philosophy: [], Architecture: [] },
-  AfaanOromo: { Philosophy: [], Architecture: [] },
+  Arabic: { aqida: [], fiqh: [] },
+  Amharic: { aqida: [], fiqh: [] },
+  AfaanOromo: { aqida: [], fiqh: [] },
 };
 
 let reservations = {};
@@ -69,14 +69,17 @@ bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
   const welcomeMessage = `
 
+•┈┈••✦📖✦••┈┈••✦📖✦••┈┈•
+السلام عليكم ورحمة الله وبركاته 
 
-السلام عليكم ورحمة الله وبركاته
-Welcome to the Library Booking Bot! 📚
+Welcome to the KJUMJ IRSHAD Library Booking Bot! 📚
 Please register to get started by typing /register.
 
 For a list of all commands and guidance, type /help.
 
 KJUMJ IRSHAD LIBRARY-1445
+
+•┈┈••✦📖✦••┈┈••✦📖✦••┈┈•
 `;
   bot.sendMessage(chatId, welcomeMessage);
 });
@@ -109,7 +112,10 @@ bot.on("message", (msg) => {
     if (state.step === 1) {
       state.userName = msg.text;
       state.step = 2;
-      bot.sendMessage(chatId, "Please enter your phone number (numbers only):");
+      bot.sendMessage(
+        chatId,
+        "Please enter your phone number (numbers only) 09xxxxxxxx:"
+      );
     } else if (state.step === 2) {
       const phoneNumber = msg.text;
 
@@ -138,7 +144,7 @@ bot.on("message", (msg) => {
 
       bot.sendMessage(
         chatId,
-        `Registration successful! Welcome, ${state.userName}.`
+        `✓ Registration successful! Welcome, ${state.userName}.`
       );
 
       // Notify the librarian about the new registration
@@ -154,12 +160,16 @@ bot.on("message", (msg) => {
 
 // Ask for language selection
 function askLanguageSelection(chatId) {
-  bot.sendMessage(chatId, "Please select a language:", {
-    reply_markup: {
-      keyboard: [["Arabic"], ["Amharic"], ["AfaanOromo"]],
-      one_time_keyboard: true,
-    },
-  });
+  bot.sendMessage(
+    chatId,
+    "ቋንቋ ይምረጡ||Mee afaan tokko filadhaa ||Please select a language || اختر لغة",
+    {
+      reply_markup: {
+        keyboard: [["Arabic"], ["Amharic"], ["AfaanOromo"]],
+        one_time_keyboard: true,
+      },
+    }
+  );
 }
 
 // Handle language selection
@@ -218,7 +228,7 @@ function handleCategorySelection(chatId, category) {
 
   bot.sendMessage(
     chatId,
-    `Available books in ${category}:\n${bookList}\nYou can reserve a book by typing /reserve [book_id].`
+    `Available books in ${category}:\n${bookList}\nYou can reserve a book by typing /reserve [book_id]. `
   );
 }
 
@@ -253,35 +263,35 @@ bot.onText(/\/change_language/, (msg) => {
 });
 
 // Ask for language selection
-function askLanguageSelection(chatId) {
-  bot.sendMessage(chatId, "Please select a language:", {
-    reply_markup: {
-      keyboard: [["Arabic"], ["Amharic"], ["AfaanOromo"]],
-      one_time_keyboard: true,
-    },
-  });
-}
+// function askLanguageSelection(chatId) {
+//   bot.sendMessage(chatId, "Please select a language:", {
+//     reply_markup: {
+//       keyboard: [["Arabic"], ["Amharic"], ["AfaanOromo"]],
+//       one_time_keyboard: true,
+//     },
+//   });
+// }
 
-// Handle language selection
-function handleLanguageSelection(chatId, language) {
-  userLanguages[chatId] = language;
+// // Handle language selection
+// function handleLanguageSelection(chatId, language) {
+//   userLanguages[chatId] = language;
 
-  const categories = Object.keys(books[language]);
-  if (categories.length === 0) {
-    return bot.sendMessage(chatId, `No categories available for ${language}.`);
-  }
+//   const categories = Object.keys(books[language]);
+//   if (categories.length === 0) {
+//     return bot.sendMessage(chatId, `No categories available for ${language}.`);
+//   }
 
-  bot.sendMessage(
-    chatId,
-    `You selected ${language}. Please choose a category:`,
-    {
-      reply_markup: {
-        keyboard: categories.map((cat) => [cat]),
-        one_time_keyboard: true,
-      },
-    }
-  );
-}
+//   bot.sendMessage(
+//     chatId,
+//     `You selected ${language}. Please choose a category:`,
+//     {
+//       reply_markup: {
+//         keyboard: categories.map((cat) => [cat]),
+//         one_time_keyboard: true,
+//       },
+//     }
+//   );
+// }
 
 // Listen for category selection
 bot.on("message", (msg) => {
@@ -412,13 +422,13 @@ bot.onText(/\/reserve (\d+)/, (msg, match) => {
 
   bot.sendMessage(
     chatId,
-    `You reserved "${book.title}". Pickup time: after isha salah.`
+    `📚 You reserved "${book.title}".\n Pickup time: after isha salah.`
   );
 
   // Notify the librarian about the reservation including user phone number
   const userPhone = users[chatId]?.phoneNumber || "N/A"; // Get user's phone number
   notifyLibrarian(
-    `User "${users[chatId].userName}" reserved "${book.title}". Phone: ${userPhone}`
+    `User "${users[chatId].userName}"\n reserved "${book.title}". \n Phone: ${userPhone}`
   );
 });
 // View own reservations
@@ -440,11 +450,11 @@ Welcome to the Library Booking Bot!
 
 ### Example Commands
 - **Register**: /register
-- **Select Language**: Arabic, Amharic, AfaanOromo
-- **Select Category**: Philosophy, Architecture
+- **Select Language**: Arabic, Amharic, Afaan Oromo
+- **Select Category**: العقيدة...
 - **Reserve a Book**: /reserve 317
 - **View Reservations**: /my_reservations
-- **Cancel Reservation**: /cancel_reservation 1
+- **Cancel Reservation**: /cancel_reservation 143
 - **Change Language**: /change_language
 
 If you have any questions, feel free to ask @IrshadComments_bot!
@@ -465,18 +475,16 @@ bot.onText(/\/my_reservations/, (msg) => {
   }
 
   // Process and display reservations
-  let responseMessage = "Your reservations (use the number to cancel):\n";
+  let cancelbook = " ❌ to cnacel /cancel_reservation [book_no]";
+  let responseMessage = "➡️ Your reservations (use the number to cancel):\n";
   userReservations.forEach((reservation, index) => {
-    responseMessage += `${index + 1}. "${reservation.title}" - Pickup time: ${
-      reservation.pickupTime
-    }\n`; // Include pickup time
+    responseMessage += `${index + 1}. " 📚 ${
+      reservation.title
+    }" - Pickup time: ${reservation.pickupTime}\n`; // Include pickup time
   });
-  bot.sendMessage(chatId, responseMessage);
+  bot.sendMessage(chatId, ` ${responseMessage} /n ${cancelbook}`);
 });
 
-// Cancel a reservation by ID
-// Cancel a reservation by ID
-// Cancel a reservation by ID
 // Cancel a reservation by ID
 bot.onText(/\/cancel_reservation (\d+)/, (msg, match) => {
   const chatId = msg.chat.id;
@@ -527,6 +535,55 @@ bot.onText(/\/cancel_reservation (\d+)/, (msg, match) => {
     `User "${users[chatId].userName}" canceled reservation for "${canceledReservation.title}".`
   );
 });
+// Cancel a reservation by user and book ID
+bot.onText(/\/librarian_cancel_reservation (\d+) (.+)/, (msg, match) => {
+  const chatId = msg.chat.id;
+  const bookId = match[1];
+  const userName = match[2].trim();
+
+  // Find the user based on the username
+  const userChatId = Object.keys(users).find(
+    (id) => users[id].userName.trim().toLowerCase() === userName.toLowerCase()
+  );
+
+  if (!userChatId || !reservations[userChatId]) {
+    return bot.sendMessage(
+      chatId,
+      `User "${userName}" not found or has no reservations.`
+    );
+  }
+
+  const reservationIndex = reservations[userChatId].findIndex(
+    (reservation) => reservation.bookId === bookId
+  );
+
+  if (reservationIndex === -1) {
+    return bot.sendMessage(
+      chatId,
+      `No reservation found for book ID ${bookId} for user "${userName}".`
+    );
+  }
+
+  const canceledReservation = reservations[userChatId][reservationIndex];
+  const userLanguage = userLanguages[userChatId];
+  const book = findBookById(userLanguage, canceledReservation.bookId);
+
+  if (book) {
+    book.available = true; // Mark the book as available again
+  }
+
+  reservations[userChatId].splice(reservationIndex, 1); // Remove the reservation
+  saveReservations(); // Save changes
+
+  bot.sendMessage(
+    chatId,
+    `You have successfully canceled the reservation for "${canceledReservation.title}" for user "${userName}".`
+  );
+
+  notifyLibrarian(
+    `Librarian canceled reservation for "${canceledReservation.title}" for user "${userName}".`
+  );
+});
 
 bot.onText(/\/librarian_reserve (\d+) (.+) (.+)/, (msg, match) => {
   const chatId = msg.chat.id;
@@ -534,7 +591,8 @@ bot.onText(/\/librarian_reserve (\d+) (.+) (.+)/, (msg, match) => {
   const userName = match[2].trim();
   const phoneNumber = match[3].trim();
 
-  let reservedBook;
+  // Find the book by ID across all languages and categories
+  let reservedBook = null;
   for (const language in books) {
     for (const category in books[language]) {
       reservedBook = books[language][category].find(
@@ -549,64 +607,28 @@ bot.onText(/\/librarian_reserve (\d+) (.+) (.+)/, (msg, match) => {
     return bot.sendMessage(chatId, `Book not available or does not exist.`);
   }
 
-  // Bypass registration check if the user is the librarian
+  // If the librarian is reserving the book
   if (chatId === librarianChatId) {
-    // Directly reserve the book without checking registration
-    // Create a new user entry for logging purposes if needed
-    users[chatId] = {
-      userName: userName,
-      phoneNumber: phoneNumber,
-    };
-
-    // Initialize user's reservations if not present
-    if (!Array.isArray(reservations[chatId])) {
-      reservations[chatId] = []; // Ensure it's initialized as an array
-    }
-
-    // Add the reservation
-    reservations[chatId].push({
-      bookId: reservedBook.id,
-      title: reservedBook.title,
-      userName: userName,
-      phoneNumber: phoneNumber,
-      pickupTime: "after isha salah",
-    });
-
-    reservedBook.available = false; // Mark book as reserved
-
-    // Save reservations
-    saveReservations();
-
-    bot.sendMessage(
-      librarianChatId,
-      `Librarian reserved "${reservedBook.title}" for "${userName}".`
-    );
-    bot.sendMessage(
-      chatId,
-      `You have reserved "${reservedBook.title}" by librarian.`
-    );
-  } else {
-    // Regular user logic (if needed)
-    // Check if user is registered and proceed accordingly
+    // Ensure the user entry exists for logging purposes
     let userChatId = Object.keys(users).find(
       (id) => users[id].userName.trim().toLowerCase() === userName.toLowerCase()
     );
 
-    // If user is not found, create a new entry
     if (!userChatId) {
-      userChatId = chatId; // Use the librarian's chat ID or generate a new one
+      // Create a new user entry if not found
+      userChatId = chatId; // Use librarian's chat ID for logging
       users[userChatId] = {
         userName: userName,
         phoneNumber: phoneNumber,
       };
     }
 
-    // Initialize user's reservations if not present
+    // Initialize reservations for the user if not already present
     if (!Array.isArray(reservations[userChatId])) {
-      reservations[userChatId] = []; // Ensure it's initialized as an array
+      reservations[userChatId] = [];
     }
 
-    // Add the reservation
+    // Add reservation details
     reservations[userChatId].push({
       bookId: reservedBook.id,
       title: reservedBook.title,
@@ -615,11 +637,13 @@ bot.onText(/\/librarian_reserve (\d+) (.+) (.+)/, (msg, match) => {
       pickupTime: "after isha salah",
     });
 
-    reservedBook.available = false; // Mark book as reserved
+    // Mark the book as reserved
+    reservedBook.available = false;
 
-    // Save reservations
+    // Save updated reservations
     saveReservations();
 
+    // Notify both librarian and user
     bot.sendMessage(
       librarianChatId,
       `Librarian reserved "${reservedBook.title}" for "${users[userChatId].userName}".`
