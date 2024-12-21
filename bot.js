@@ -406,8 +406,8 @@ bot.onText(/\/cancel_reservation (\d+)/, (msg, match) => {
 bot.onText(/\/librarian_reserve (\d+) (.+) (.+)/, (msg, match) => {
   const chatId = msg.chat.id;
   const bookId = match[1];
-  const userName = match[2].trim().toLowerCase();
-  const phoneNumber = match[3];
+  const userName = match[2].trim();
+  const phoneNumber = match[3].trim();
 
   let reservedBook;
   for (const language in books) {
@@ -424,11 +424,18 @@ bot.onText(/\/librarian_reserve (\d+) (.+) (.+)/, (msg, match) => {
     return bot.sendMessage(chatId, `Book not available or does not exist.`);
   }
 
-  const userChatId = Object.keys(users).find(
-    (id) => users[id].userName.trim().toLowerCase() === userName
+  // Check if the user is already registered
+  let userChatId = Object.keys(users).find(
+    (id) => users[id].userName.trim().toLowerCase() === userName.toLowerCase()
   );
+
+  // If user is not found, create a new entry
   if (!userChatId) {
-    return bot.sendMessage(chatId, `User "${match[2]}" not found.`);
+    userChatId = chatId; // Use the librarian's chat ID or generate a new one
+    users[userChatId] = {
+      userName: userName,
+      phoneNumber: phoneNumber,
+    };
   }
 
   // Initialize user's reservations if not present
@@ -436,6 +443,7 @@ bot.onText(/\/librarian_reserve (\d+) (.+) (.+)/, (msg, match) => {
     reservations[userChatId] = [];
   }
 
+  // Add the reservation
   reservations[userChatId].push({
     bookId: reservedBook.id,
     title: reservedBook.title,
