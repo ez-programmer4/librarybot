@@ -53,11 +53,21 @@ function saveReservations() {
 }
 
 function findBookById(language, bookId) {
-  for (const category in books[language]) {
-    const book = books[language][category].find((b) => b.id === bookId);
-    if (book) return book;
+  // Ensure the language exists in the books object
+  if (!books[language]) {
+    return null;
   }
-  return null;
+
+  // Iterate through each category in the specified language
+  for (const category in books[language]) {
+    // Find the book with the matching ID in the current category
+    const book = books[language][category].find(
+      (b) => b.id === parseInt(bookId, 10)
+    );
+    if (book) return book; // Return the book if found
+  }
+
+  return null; // Return null if no book is found
 }
 
 // === Initialize Data ===
@@ -174,6 +184,7 @@ function askLanguageSelection(chatId) {
 
 // Handle language selection
 function handleLanguageSelection(chatId, language) {
+  console.log(language);
   userLanguages[chatId] = language;
 
   const categories = Object.keys(books[language]);
@@ -389,6 +400,8 @@ bot.onText(/\/reserve (\d+)/, (msg, match) => {
   const chatId = msg.chat.id;
   const bookId = match[1];
   const userLanguage = userLanguages[chatId];
+  console.log("User Language:", userLanguage);
+  console.log("Book ID:", bookId);
 
   if (!userLanguage) {
     return bot.sendMessage(chatId, "Select a language first using /register.");
