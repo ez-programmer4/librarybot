@@ -411,49 +411,30 @@ bot.onText(/\/remove_book (\w+) (\w+) (\d+)/, (msg, match) => {
 bot.onText(/\/reserve (\d+)/, (msg, match) => {
   const chatId = msg.chat.id;
   const bookId = match[1];
-  const userLanguage = userLanguages[chatId];
-
-  console.log("User Language:", userLanguage);
-  console.log("Book ID:", bookId);
-
-  if (!userLanguage) {
+  const language = userLanguages[chatId];
+  if (!language)
     return bot.sendMessage(chatId, "Select a language first using /register.");
-  }
-
-  const book = findBookById(userLanguage, bookId);
-  console.log("Found Book:", book);
-
+  const book = findBookById(language, bookId);
   if (!book || !book.available) {
     return bot.sendMessage(chatId, "Book not available.");
   }
-
-  // Initialize reservations for the user
-  if (!Array.isArray(reservations[chatId])) {
-    reservations[chatId] = [];
-  }
-
-  // Add the reservation
+  if (!reservations[chatId]) reservations[chatId] = [];
   reservations[chatId].push({
-    bookId: book.id,
+    bookId,
     title: book.title,
     pickupTime: "after isha salah",
   });
-
-  // Mark the book as unavailable
   book.available = false;
-
-  // Save the updated books and reservations
-  saveBooks();
-  saveReservations();
-
+  saveJSON(booksFilePath, books);
+  saveJSON(reservationsFilePath, reservations);
   bot.sendMessage(
     chatId,
-    `📚 You reserved "${book.title}".\nPickup time: after isha salah.`
+    `📚 Reserved: "${book.title}". Pickup time: after isha salah.`
   );
-
-  const userPhone = users[chatId]?.phoneNumber || "N/A"; // Get user's phone number
   notifyLibrarian(
-    `User "${users[chatId].userName}"\nreserved "${book.title}".\nPhone: ${userPhone}`
+    `Reservation: "${book.title}" by ${
+      users[chatId]?.userName || "Unknown User"
+    }`
   );
 });
 // View own reservations
