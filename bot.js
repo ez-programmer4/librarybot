@@ -551,9 +551,9 @@ bot.onText(/\/cancel_reservation (\d+)/, (msg, match) => {
 });
 // Cancel a reservation by user and book ID
 bot.onText(/\/librarian_cancel_reservation (\d+) (.+)/, (msg, match) => {
-  const chatId = msg.chat.id;
-  const bookId = match[1];
-  const userName = match[2].trim();
+  const chatId = msg.chat.id; // ID of the librarian's chat
+  const bookId = match[1]; // Extracted book ID
+  const userName = match[2].trim(); // Extracted username
 
   // Find the user based on the username
   const userChatId = Object.keys(users).find(
@@ -567,6 +567,7 @@ bot.onText(/\/librarian_cancel_reservation (\d+) (.+)/, (msg, match) => {
     );
   }
 
+  // Find the reservation index for the specified book ID
   const reservationIndex = reservations[userChatId].findIndex(
     (reservation) => reservation.bookId === bookId
   );
@@ -586,7 +587,8 @@ bot.onText(/\/librarian_cancel_reservation (\d+) (.+)/, (msg, match) => {
     book.available = true; // Mark the book as available again
   }
 
-  reservations[userChatId].splice(reservationIndex, 1); // Remove the reservation
+  // Remove the reservation
+  reservations[userChatId].splice(reservationIndex, 1);
   saveReservations(); // Save changes
 
   bot.sendMessage(
@@ -600,21 +602,21 @@ bot.onText(/\/librarian_cancel_reservation (\d+) (.+)/, (msg, match) => {
 });
 
 bot.onText(/\/librarian_reserve (\d+) (.+) (.+)/, (msg, match) => {
-  const chatId = msg.chat.id;
-  const bookId = match[1];
-  const userName = match[2].trim();
-  const phoneNumber = match[3].trim();
+  const chatId = msg.chat.id; // ID of the librarian's chat
+  const bookId = match[1]; // Extracted book ID
+  const userName = match[2].trim(); // Extracted username
+  const phoneNumber = match[3].trim(); // Extracted phone number
 
   // Find the book by ID across all languages and categories
   let reservedBook = null;
   for (const language in books) {
     for (const category in books[language]) {
       reservedBook = books[language][category].find(
-        (book) => book.id === bookId
+        (book) => book.id === parseInt(bookId, 10) // Ensure the ID is an integer
       );
-      if (reservedBook) break;
+      if (reservedBook) break; // Break if book is found
     }
-    if (reservedBook) break;
+    if (reservedBook) break; // Break if book is found
   }
 
   if (!reservedBook) {
