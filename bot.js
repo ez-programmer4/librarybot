@@ -70,19 +70,16 @@ function saveReservations() {
 }
 
 function findBookById(language, bookId) {
-  console.log("Searching for book ID:", bookId, "in language:", language);
+  if (!books[language]) {
+    return null;
+  }
   for (const category in books[language]) {
-    console.log("Checking category:", category);
     const book = books[language][category].find(
       (b) => b.id === parseInt(bookId, 10)
     );
-    if (book) {
-      console.log("Found book:", book);
-      return book;
-    }
+    if (book) return book;
   }
-  console.log("Book not found.");
-  return null;
+  return null; // Return null if no book is found
 }
 
 // === Initialize Data ===
