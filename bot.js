@@ -70,21 +70,19 @@ function saveReservations() {
 }
 
 function findBookById(language, bookId) {
-  // Ensure the language exists in the books object
-  if (!books[language]) {
-    return null;
-  }
-
-  // Iterate through each category in the specified language
+  console.log("Searching for book ID:", bookId, "in language:", language);
   for (const category in books[language]) {
-    // Find the book with the matching ID in the current category
+    console.log("Checking category:", category);
     const book = books[language][category].find(
       (b) => b.id === parseInt(bookId, 10)
     );
-    if (book) return book; // Return the book if found
+    if (book) {
+      console.log("Found book:", book);
+      return book;
+    }
   }
-
-  return null; // Return null if no book is found
+  console.log("Book not found.");
+  return null;
 }
 
 // === Initialize Data ===
@@ -417,6 +415,7 @@ bot.onText(/\/reserve (\d+)/, (msg, match) => {
   const chatId = msg.chat.id;
   const bookId = match[1];
   const userLanguage = userLanguages[chatId];
+
   console.log("User Language:", userLanguage);
   console.log("Book ID:", bookId);
 
@@ -425,12 +424,13 @@ bot.onText(/\/reserve (\d+)/, (msg, match) => {
   }
 
   const book = findBookById(userLanguage, bookId);
-  console.log(book);
+  console.log("Found Book:", book);
+
   if (!book || !book.available) {
     return bot.sendMessage(chatId, "Book not available.");
   }
 
-  // Ensure reservations[chatId] is initialized as an array
+  // Initialize reservations for the user
   if (!Array.isArray(reservations[chatId])) {
     reservations[chatId] = [];
   }
@@ -451,13 +451,12 @@ bot.onText(/\/reserve (\d+)/, (msg, match) => {
 
   bot.sendMessage(
     chatId,
-    `📚 You reserved "${book.title}".\n Pickup time: after isha salah.`
+    `📚 You reserved "${book.title}".\nPickup time: after isha salah.`
   );
 
-  // Notify the librarian about the reservation including user phone number
   const userPhone = users[chatId]?.phoneNumber || "N/A"; // Get user's phone number
   notifyLibrarian(
-    `User "${users[chatId].userName}"\n reserved "${book.title}". \n Phone: ${userPhone}`
+    `User "${users[chatId].userName}"\nreserved "${book.title}".\nPhone: ${userPhone}`
   );
 });
 // View own reservations
