@@ -395,6 +395,7 @@ bot.onText(/\/reserve (\d+)/, (msg, match) => {
   }
 
   const book = findBookById(userLanguage, bookId);
+  console.log(book);
   if (!book || !book.available) {
     return bot.sendMessage(chatId, "Book not available.");
   }
@@ -690,7 +691,7 @@ bot.onText(/\/reserved_books/, (msg) => {
 
       // Format reservations for each user
       return userReservations.map((reservation) => {
-        return `Name: ${user.userName}, Reserved Book: "${reservation.title}", Phone Number: ${reservation.phoneNumber}`;
+        return `Name: ${user.userName}, Reserved Book: "${reservation.title}", Phone Number: ${user.phoneNumber}`;
       });
     })
     .flat()
