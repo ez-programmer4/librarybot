@@ -44,12 +44,29 @@ function loadReservations() {
   return {};
 }
 
+// Function to save books to a JSON file
 function saveBooks() {
-  fs.writeFileSync(booksFilePath, JSON.stringify(books, null, 2));
+  fs.writeFile("books.json", JSON.stringify(books, null, 2), (err) => {
+    if (err) {
+      console.error("Error saving books:", err);
+    } else {
+      console.log("Books saved successfully.");
+    }
+  });
 }
 
 function saveReservations() {
-  fs.writeFileSync(reservationsFilePath, JSON.stringify(reservations, null, 2));
+  fs.writeFile(
+    "reservations.json",
+    JSON.stringify(reservations, null, 2),
+    (err) => {
+      if (err) {
+        console.error("Error saving reservations:", err);
+      } else {
+        console.log("Reservations saved successfully.");
+      }
+    }
+  );
 }
 
 function findBookById(language, bookId) {
