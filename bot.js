@@ -411,32 +411,70 @@ bot.onText(/\/remove_book (\w+) (\w+) (\d+)/, (msg, match) => {
 bot.onText(/\/reserve (\d+)/, (msg, match) => {
   const chatId = msg.chat.id;
   const bookId = match[1];
+
+  // Check if the user has selected a language
   const language = userLanguages[chatId];
-  if (!language)
-    return bot.sendMessage(chatId, "Select a language first using /register.");
-  const book = findBookById(language, bookId);
-  if (!book || !book.available) {
-    return bot.sendMessage(chatId, "Book not available.");
+  if (!language) {
+    return bot.sendMessage(
+      chatId,
+      "Please select a language first using /register."
+    );
   }
-  if (!reservations[chatId]) reservations[chatId] = [];
+
+  // Find the book by its ID
+  const book = findBookById(language, bookId);
+  if (!book) {
+    return bot.sendMessage(chatId, `No book found with ID ${bookId}.`);
+  }
+
+  // Check if the book is available
+  if (!book.available) {
+    return bot.sendMessage(
+      chatId,
+      `Sorry, the book "${book.title}" is already reserved.`
+    );
+  }
+
+  // Initialize reservations array for the user if not present
+  if (!Array.isArray(reservations[chatId])) {
+    reservations[chatId] = [];
+  }
+
+  // Add the reservation
   reservations[chatId].push({
-    bookId,
+    bookId: book.id,
     title: book.title,
     pickupTime: "after isha salah",
   });
+
+  // Mark the book as reserved
   book.available = false;
-  saveJSON(booksFilePath, books);
-  saveJSON(reservationsFilePath, reservations);
-  bot.sendMessage(
-    chatId,
-    `📚 Reserved: "${book.title}". Pickup time: after isha salah.`
-  );
-  notifyLibrarian(
-    `Reservation: "${book.title}" by ${
-      users[chatId]?.userName || "Unknown User"
-    }`
-  );
+
+  // Save updated data to JSON files
+  try {
+    saveJSON(booksFilePath, books);
+    saveJSON(reservationsFilePath, reservations);
+
+    // Notify the user and librarian
+    bot.sendMessage(
+      chatId,
+      `📚 Successfully reserved: "${book.title}".\nPickup time: after isha salah.`
+    );
+
+    const userName = users[chatId]?.userName || "Unknown User";
+    const phoneNumber = users[chatId]?.phoneNumber || "N/A";
+    notifyLibrarian(
+      `Reservation:\n- Book: "${book.title}"\n- Reserved by: ${userName}\n- Phone: ${phoneNumber}`
+    );
+  } catch (error) {
+    console.error("Error saving reservation:", error);
+    bot.sendMessage(
+      chatId,
+      "An error occurred while reserving the book. Please try again."
+    );
+  }
 });
+
 // View own reservations
 
 bot.onText(/\/help/, (msg) => {
