@@ -425,7 +425,7 @@ bot.onText(/\/reserve (\d+)/, (msg, match) => {
     );
   }
 
-  // Find the book by its ID
+  // Find the book in the selected language
   const book = findBookById(language, bookId);
   if (!book) {
     console.log(`No book found with ID ${bookId} in language ${language}.`);
@@ -460,12 +460,13 @@ bot.onText(/\/reserve (\d+)/, (msg, match) => {
     saveBooks(); // Save the updated books object
     saveReservations(); // Save the updated reservations object
 
-    // Notify the user and librarian
+    // Notify the user
     bot.sendMessage(
       chatId,
       `📚 Successfully reserved: "${book.title}".\nPickup time: after isha salah.`
     );
 
+    // Notify the librarian
     const userName = users[chatId]?.userName || "Unknown User";
     const phoneNumber = users[chatId]?.phoneNumber || "N/A";
     notifyLibrarian(
