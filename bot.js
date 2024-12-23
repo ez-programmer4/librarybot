@@ -81,7 +81,6 @@ function findBookById(language, bookId) {
   }
   return null; // Return null if no book is found
 }
-
 // === Initialize Data ===
 books = loadBooks();
 reservations = loadReservations();
