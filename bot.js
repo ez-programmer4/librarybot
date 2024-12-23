@@ -412,6 +412,11 @@ bot.onText(/\/reserve (\d+)/, (msg, match) => {
   const chatId = msg.chat.id;
   const bookId = match[1];
 
+  console.log(
+    `User ${chatId} is attempting to reserve book with ID: ${bookId}`
+  );
+
+  // Check if the user has selected a language
   const language = userLanguages[chatId];
   if (!language) {
     return bot.sendMessage(
@@ -420,11 +425,14 @@ bot.onText(/\/reserve (\d+)/, (msg, match) => {
     );
   }
 
+  // Find the book by its ID
   const book = findBookById(language, bookId);
   if (!book) {
+    console.log(`No book found with ID ${bookId} in language ${language}.`);
     return bot.sendMessage(chatId, `No book found with ID ${bookId}.`);
   }
 
+  // Check if the book is available
   if (!book.available) {
     return bot.sendMessage(
       chatId,
@@ -432,25 +440,44 @@ bot.onText(/\/reserve (\d+)/, (msg, match) => {
     );
   }
 
+  // Initialize reservations array for the user if not present
   if (!Array.isArray(reservations[chatId])) {
     reservations[chatId] = [];
   }
 
+  // Add the reservation
   reservations[chatId].push({
     bookId: book.id,
     title: book.title,
     pickupTime: "after isha salah",
   });
 
-  book.available = false; // Mark the book as reserved
+  // Mark the book as reserved
+  book.available = false;
 
-  saveReservations(); // Save updated reservations
-  saveBooks(); // Save updated books
+  // Save updated data to JSON files
+  try {
+    saveBooks(); // Save the updated books object
+    saveReservations(); // Save the updated reservations object
 
-  bot.sendMessage(
-    chatId,
-    `📚 Successfully reserved: "${book.title}". Pickup time: after isha salah.`
-  );
+    // Notify the user and librarian
+    bot.sendMessage(
+      chatId,
+      `📚 Successfully reserved: "${book.title}".\nPickup time: after isha salah.`
+    );
+
+    const userName = users[chatId]?.userName || "Unknown User";
+    const phoneNumber = users[chatId]?.phoneNumber || "N/A";
+    notifyLibrarian(
+      `Reservation:\n- Book: "${book.title}"\n- Reserved by: ${userName}\n- Phone: ${phoneNumber}`
+    );
+  } catch (error) {
+    console.error("Error saving reservation:", error);
+    bot.sendMessage(
+      chatId,
+      "An error occurred while reserving the book. Please try again."
+    );
+  }
 });
 // View own reservations
 
