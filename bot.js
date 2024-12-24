@@ -111,48 +111,50 @@ function showMainMenu(chatId) {
   const menuMessage = "Please choose an option:";
   const options = {
     reply_markup: {
-      inline_keyboard: [
-        [
-          { text: "Register", callback_data: "register" },
-          { text: "My Reservations", callback_data: "my_reservations" },
-        ],
-        [
-          { text: "Change Language", callback_data: "change_language" },
-          { text: "Help", callback_data: "help" },
-        ],
-        [{ text: "Exit", callback_data: "exit" }],
+      keyboard: [
+        [{ text: "Register" }, { text: "My Reservations" }],
+        [{ text: "Change Language" }, { text: "Help" }],
+        [{ text: "Exit" }],
       ],
+      one_time_keyboard: true, // Hide the keyboard after selection
+      resize_keyboard: true, // Resize to fit the buttons
     },
   };
 
   bot.sendMessage(chatId, menuMessage, options);
 }
-bot.on("callback_query", (callbackQuery) => {
-  const chatId = callbackQuery.message.chat.id;
-  const action = callbackQuery.data;
 
-  switch (action) {
-    case "register":
+// Handle user selections from the main menu
+bot.on("message", (msg) => {
+  const chatId = msg.chat.id;
+  const text = msg.text;
+
+  switch (text) {
+    case "Register":
       bot.sendMessage(chatId, "Please enter your full name:");
       break;
-    case "my_reservations":
-      // Logic to show user's reservations
+    case "My Reservations":
       showUserReservations(chatId);
       break;
-    case "change_language":
+    case "Change Language":
       askLanguageSelection(chatId);
       break;
-    case "help":
+    case "Help":
       displayHelp(chatId);
       break;
-    case "exit":
+    case "Exit":
       bot.sendMessage(
         chatId,
         "Thank you for using the bot! Type /start to return."
       );
       break;
     default:
-      bot.sendMessage(chatId, "Invalid option. Please try again.");
+      // Handle any other messages or commands
+      if (text.startsWith("/")) {
+        // Handle commands as usual
+      } else {
+        bot.sendMessage(chatId, "Invalid option. Please choose from the menu.");
+      }
   }
 });
 
@@ -186,7 +188,6 @@ If you need further assistance, feel free to ask!
   `;
   bot.sendMessage(chatId, helpMessage);
 }
-
 // Registration logic
 let registrationState = {};
 
