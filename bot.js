@@ -501,13 +501,11 @@ bot.onText(/\/reserve (\d+)/, (msg, match) => {
       `📚 Successfully reserved: "${book.title}".\nPickup time: after isha salah.\nTo return to the main menu, type /back_to_menu.`
     );
 
-    // Return to the main menu
-
     // Notify the librarian
     const userName = users[chatId]?.userName || "Unknown User";
     const phoneNumber = users[chatId]?.phoneNumber || "N/A";
     notifyLibrarian(
-      `Reservation:\n- Book: "${book.title}"\n- Reserved by: ${userName}\n- Phone: ${phoneNumber}`
+      `Reservation:\n- Book: "${book.title}"\n- Book ID: ${book.id}\n- Reserved by: ${userName}\n- Phone: ${phoneNumber}`
     );
   } catch (error) {
     console.error("Error saving reservation:", error);
