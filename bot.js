@@ -78,7 +78,7 @@ function findBookById(language, bookId) {
   for (const category in books[language]) {
     console.log(`Checking category: ${category}`);
     const book = books[language][category].find(
-      (b) => b.id === parseInt(bookId, 10)
+      (b) => b.id == parseInt(bookId, 10)
     );
     if (book) {
       console.log(`Found book: ${book.title}`);

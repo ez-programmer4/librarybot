@@ -590,87 +590,87 @@
   "AfaanOromo": {
     "Kittaba": [
       {
-        "id": 300,
+        "id": "300",
         "title": "Ilaamummaan Walbari Eeganaa",
         "available": true
       },
       {
-        "id": 301,
+        "id": "301",
         "title": "Mootichaa fi Gooticha Urji Jaarraa 2ffaa",
         "available": true
       },
       {
-        "id": 302,
+        "id": "302",
         "title": "Oromummaa fi Islaamummaa",
         "available": true
       },
       {
-        "id": 303,
+        "id": "303",
         "title": "Barsiisa Seera Salaataatifi",
         "available": true
       },
       {
-        "id": 304,
+        "id": "304",
         "title": "Siiraa",
         "available": true
       },
       {
-        "id": 305,
+        "id": "305",
         "title": "Hangafa Gorsa Ol'aanaa Dhaloota Haarawaaf",
         "available": true
       },
       {
-        "id": 306,
+        "id": "306",
         "title": "Al Azkaar",
         "available": true
       },
       {
-        "id": 307,
+        "id": "307",
         "title": "Boqonna Sammuu",
         "available": true
       },
       {
-        "id": 308,
+        "id": "308",
         "title": "Gorsa Afurtama",
         "available": true
       },
       {
-        "id": 309,
+        "id": "309",
         "title": "Ahbaash",
         "available": true
       },
       {
-        "id": 310,
+        "id": "310",
         "title": "Furtuu Milki",
         "available": true
       },
       {
-        "id": 311,
+        "id": "311",
         "title": "Qananii Jannataa fi Ginqii Ibiddaa",
         "available": true
       },
       {
-        "id": 312,
+        "id": "312",
         "title": "Marii Kiristaana fi Muslimaa",
         "available": true
       },
       {
-        "id": 313,
+        "id": "313",
         "title": "Tawbachuunà",
         "available": true
       },
       {
-        "id": 314,
+        "id": "314",
         "title": "Gaafiwaan 1000 Wayee Islaamumma",
         "available": true
       },
       {
-        "id": 315,
+        "id": "315",
         "title": "Miidhaa Arrabaa",
         "available": true
       },
       {
-        "id": 316,
+        "id": "316",
         "title": "Qur'aanaa fi Saayinsii Ammayyuu Wal-simatu Moo Wal-himatu",
         "available": true
       }
