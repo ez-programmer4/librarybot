@@ -260,6 +260,7 @@ function handleCategorySelection(chatId, category) {
   const availableBooks = books[userLanguage][category].filter(
     (book) => book.available
   );
+
   if (availableBooks.length === 0) {
     return bot.sendMessage(
       chatId,
@@ -267,20 +268,15 @@ function handleCategorySelection(chatId, category) {
     );
   }
 
-  // Check if we have already sent the available books message
-  const previousMessageKey = `${chatId}-${category}`;
-  if (!reservations[previousMessageKey]) {
-    const bookList = availableBooks
-      .map((book) => `${book.id}. "${book.title}"`)
-      .join("\n");
-    bot.sendMessage(
-      chatId,
-      `Available books in ${category}:\n${bookList}\nYou can reserve a book by typing /reserve [book_id].`
-    );
+  // Always send the available books list
+  const bookList = availableBooks
+    .map((book) => `${book.id}. "${book.title}"`)
+    .join("\n");
 
-    // Mark that we've sent this message
-    reservations[previousMessageKey] = true;
-  }
+  bot.sendMessage(
+    chatId,
+    `Available books in ${category}:\n${bookList}\nYou can reserve a book by typing /reserve [book_id].`
+  );
 }
 
 // Listen for category selection
