@@ -312,6 +312,10 @@ bot.onText(/\/change_language/, (msg) => {
   const chatId = msg.chat.id;
   askLanguageSelection(chatId);
 });
+bot.onText(/\/back_to_menu/, (msg) => {
+  const chatId = msg.chat.id;
+  askLanguageSelection(chatId);
+});
 
 // Ask for language selection
 // function askLanguageSelection(chatId) {
@@ -494,7 +498,7 @@ bot.onText(/\/reserve (\d+)/, (msg, match) => {
     // Notify the user
     bot.sendMessage(
       chatId,
-      `📚 Successfully reserved: "${book.title}".\nPickup time: after isha salah.`
+      `📚 Successfully reserved: "${book.title}".\nPickup time: after isha salah.\nTo return to the main menu, type /back_to_menu.`
     );
 
     // Return to the main menu
