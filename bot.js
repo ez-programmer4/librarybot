@@ -413,7 +413,7 @@ bot.onText(/\/reserve (\d+)/, (msg, match) => {
   const bookId = match[1];
 
   console.log(
-    `User ${chatId} is attempting to reserve book with ID: ${bookId}`
+    `User  ${chatId} is attempting to reserve book with ID: ${bookId}`
   );
 
   // Check if the user has selected a language
