@@ -106,17 +106,17 @@ For a list of all commands and guidance, type /help.
   });
 });
 
-// Show main menu
 function showMainMenu(chatId) {
   const menuMessage = "Please choose an option:";
   const options = {
     reply_markup: {
       keyboard: [
+        [{ text: "Menu" }], // Add the Menu button here
         [{ text: "Register" }, { text: "My Reservations" }],
         [{ text: "Change Language" }, { text: "Help" }],
         [{ text: "Exit" }],
       ],
-      one_time_keyboard: true, // Hide the keyboard after selection
+      one_time_keyboard: false, // Keep the keyboard open
       resize_keyboard: true, // Resize to fit the buttons
     },
   };
@@ -130,6 +130,9 @@ bot.on("message", (msg) => {
   const text = msg.text;
 
   switch (text) {
+    case "Menu":
+      showMainMenu(chatId); // Show the main menu again
+      break;
     case "Register":
       bot.sendMessage(chatId, "Please enter your full name:");
       break;
@@ -149,7 +152,6 @@ bot.on("message", (msg) => {
       );
       break;
     default:
-      // Handle any other messages or commands
       if (text.startsWith("/")) {
         // Handle commands as usual
       } else {
