@@ -423,13 +423,12 @@ bot.onText(/\/remove_book (\w+) (\w+) (\d+)/, (msg, match) => {
 
 // Reserve a book
 // Reserve a book
-// Reserve a book
 bot.onText(/\/reserve (\d+)/, (msg, match) => {
   const chatId = msg.chat.id;
   const bookId = match[1];
 
   console.log(
-    `User  ${chatId} is attempting to reserve book with ID: ${bookId}`
+    `User ${chatId} is attempting to reserve book with ID: ${bookId}`
   );
 
   // Check if the user has selected a language
@@ -481,6 +480,8 @@ bot.onText(/\/reserve (\d+)/, (msg, match) => {
       chatId,
       `📚 Successfully reserved: "${book.title}".\nPickup time: after isha salah.`
     );
+
+    // Return to the main menu
     showMainMenu(chatId);
 
     // Notify the librarian
@@ -794,25 +795,4 @@ setWebhook().catch(console.error);
 // Start the Express server
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
-});
-bot.on("message", (msg) => {
-  const chatId = msg.chat.id;
-
-  if (msg.text.startsWith("/")) {
-    if (
-      ![
-        "/start",
-        "/register",
-        "/help",
-        "/my_reservations",
-        "/change_language",
-        "/exit",
-      ].includes(msg.text)
-    ) {
-      bot.sendMessage(
-        chatId,
-        "Invalid command. Please use /help to see available commands."
-      );
-    }
-  }
 });
