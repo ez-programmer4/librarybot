@@ -70,15 +70,22 @@ function saveReservations() {
 }
 
 function findBookById(language, bookId) {
+  console.log(`Searching for book ID ${bookId} in language ${language}`);
   if (!books[language]) {
+    console.log(`No books found for language: ${language}`);
     return null;
   }
   for (const category in books[language]) {
+    console.log(`Checking category: ${category}`);
     const book = books[language][category].find(
       (b) => b.id === parseInt(bookId, 10)
     );
-    if (book) return book;
+    if (book) {
+      console.log(`Found book: ${book.title}`);
+      return book;
+    }
   }
+  console.log(`No book found with ID ${bookId}`);
   return null; // Return null if no book is found
 }
 // === Initialize Data ===
@@ -406,6 +413,7 @@ bot.onText(/\/remove_book (\w+) (\w+) (\d+)/, (msg, match) => {
   );
 });
 
+// Reserve a book
 // Reserve a book
 // Reserve a book
 bot.onText(/\/reserve (\d+)/, (msg, match) => {
