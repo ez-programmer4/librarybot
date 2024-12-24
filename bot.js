@@ -96,21 +96,29 @@ reservations = loadReservations();
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
   const welcomeMessage = `
-
-•┈┈••✦📖✦••┈┈••✦📖✦••┈┈•
-السلام عليكم ورحمة الله وبركاته 
-
 Welcome to the KJUMJ IRSHAD Library Booking Bot! 📚
 Please register to get started by typing /register.
 
 For a list of all commands and guidance, type /help.
-
-KJUMJ IRSHAD LIBRARY-1445
-
-•┈┈••✦📖✦••┈┈••✦📖✦••┈┈•
 `;
-  bot.sendMessage(chatId, welcomeMessage);
+  bot.sendMessage(chatId, welcomeMessage).then(() => {
+    showMainMenu(chatId);
+  });
 });
+
+// Show main menu
+function showMainMenu(chatId) {
+  const menuMessage = `
+Please choose an option:
+1. /register - Register your name and phone number.
+2. /my_reservations - View your current reservations.
+3. /change_language - Change your selected language.
+4. /help - Get assistance with commands.
+5. /exit - Exit the bot.
+
+Please select a command.`;
+  bot.sendMessage(chatId, menuMessage);
+}
 
 // Registration logic
 let registrationState = {};
@@ -473,6 +481,7 @@ bot.onText(/\/reserve (\d+)/, (msg, match) => {
       chatId,
       `📚 Successfully reserved: "${book.title}".\nPickup time: after isha salah.`
     );
+    showMainMenu(chatId);
 
     // Notify the librarian
     const userName = users[chatId]?.userName || "Unknown User";
@@ -495,29 +504,17 @@ bot.onText(/\/help/, (msg) => {
   const helpMessage = `
 Welcome to the Library Booking Bot!
 
-### Reservation Process
-1. **Start**: Type /start to begin.
-2. **Register**: Register your name and phone number by typing /register.
-3. **Select Language**: Choose a language (Arabic, Amharic, Afaan Oromo).
-4. **Select Category**: Choose a category of books.
-5. **Reserve a Book**: Type /reserve [book_id] to reserve a book.
-6. **View Reservations**: Use /my_reservations to see your current reservations.
-7. **Cancel Reservation**: Type /cancel_reservation [id] to cancel a reservation.
-8. **Change Language**: Type /change_language to select a different language.
-
-### Example Commands
-- **Register**: /register
-- **Select Language**: Arabic, Amharic, Afaan Oromo
-- **Select Category**: العقيدة...
-- **Reserve a Book**: /reserve 317
-- **View Reservations**: /my_reservations
-- **Cancel Reservation**: /cancel_reservation 143
-- **Change Language**: /change_language
-
-If you have any questions, feel free to ask @IrshadComments_bot!
+### Commands
+- **/start**: Start the bot and view the welcome message.
+- **/register**: Register your name and phone number.
+- **/my_reservations**: View your current reservations.
+- **/change_language**: Change your selected language.
+- **/help**: Get assistance with commands.
+- **/exit**: Exit the bot.
   `;
   bot.sendMessage(chatId, helpMessage);
 });
+
 bot.onText(/\/my_reservations/, (msg) => {
   const chatId = msg.chat.id;
   let userReservations = reservations[chatId];
@@ -797,4 +794,25 @@ setWebhook().catch(console.error);
 // Start the Express server
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
+});
+bot.on("message", (msg) => {
+  const chatId = msg.chat.id;
+
+  if (msg.text.startsWith("/")) {
+    if (
+      ![
+        "/start",
+        "/register",
+        "/help",
+        "/my_reservations",
+        "/change_language",
+        "/exit",
+      ].includes(msg.text)
+    ) {
+      bot.sendMessage(
+        chatId,
+        "Invalid command. Please use /help to see available commands."
+      );
+    }
+  }
 });
