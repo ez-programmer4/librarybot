@@ -101,64 +101,10 @@ Please register to get started by typing /register.
 
 For a list of all commands and guidance, type /help.
 `;
-  bot.sendMessage(chatId, welcomeMessage).then(() => {
-    showMainMenu(chatId);
-  });
+  bot.sendMessage(chatId, welcomeMessage).then(() => {});
 });
-
-function showMainMenu(chatId) {
-  const menuMessage = "Please choose an option:";
-  const options = {
-    reply_markup: {
-      keyboard: [
-        [{ text: "Menu" }], // Add the Menu button here
-        [{ text: "Register" }, { text: "My Reservations" }],
-        [{ text: "Change Language" }, { text: "Help" }],
-        [{ text: "Exit" }],
-      ],
-      one_time_keyboard: false, // Keep the keyboard open
-      resize_keyboard: true, // Resize to fit the buttons
-    },
-  };
-
-  bot.sendMessage(chatId, menuMessage, options);
-}
 
 // Handle user selections from the main menu
-bot.on("message", (msg) => {
-  const chatId = msg.chat.id;
-  const text = msg.text;
-
-  switch (text) {
-    case "Menu":
-      showMainMenu(chatId); // Show the main menu again
-      break;
-    case "Register":
-      bot.sendMessage(chatId, "Please enter your full name:");
-      break;
-    case "My Reservations":
-      showUserReservations(chatId);
-      break;
-    case "Change Language":
-      askLanguageSelection(chatId);
-      break;
-    case "Help":
-      displayHelp(chatId);
-      break;
-    case "Exit":
-      bot.sendMessage(
-        chatId,
-        "Thank you for using the bot! Type /start to return."
-      );
-      break;
-    default:
-      if (text.startsWith("/")) {
-        // Handle commands as usual
-      } else {
-        bot.sendMessage(chatId, "Invalid option. Please choose from the menu.");
-      }
-  }
-});
 
 // Function to display user reservations
 function showUserReservations(chatId) {
@@ -552,7 +498,6 @@ bot.onText(/\/reserve (\d+)/, (msg, match) => {
     );
 
     // Return to the main menu
-    showMainMenu(chatId);
 
     // Notify the librarian
     const userName = users[chatId]?.userName || "Unknown User";
