@@ -108,16 +108,83 @@ For a list of all commands and guidance, type /help.
 
 // Show main menu
 function showMainMenu(chatId) {
-  const menuMessage = `
-Please choose an option:
-1. /register - Register your name and phone number.
-2. /my_reservations - View your current reservations.
-3. /change_language - Change your selected language.
-4. /help - Get assistance with commands.
-5. /exit - Exit the bot.
+  const menuMessage = "Please choose an option:";
+  const options = {
+    reply_markup: {
+      inline_keyboard: [
+        [
+          { text: "Register", callback_data: "register" },
+          { text: "My Reservations", callback_data: "my_reservations" },
+        ],
+        [
+          { text: "Change Language", callback_data: "change_language" },
+          { text: "Help", callback_data: "help" },
+        ],
+        [{ text: "Exit", callback_data: "exit" }],
+      ],
+    },
+  };
 
-Please select a command.`;
-  bot.sendMessage(chatId, menuMessage);
+  bot.sendMessage(chatId, menuMessage, options);
+}
+bot.on("callback_query", (callbackQuery) => {
+  const chatId = callbackQuery.message.chat.id;
+  const action = callbackQuery.data;
+
+  switch (action) {
+    case "register":
+      bot.sendMessage(chatId, "Please enter your full name:");
+      break;
+    case "my_reservations":
+      // Logic to show user's reservations
+      showUserReservations(chatId);
+      break;
+    case "change_language":
+      askLanguageSelection(chatId);
+      break;
+    case "help":
+      displayHelp(chatId);
+      break;
+    case "exit":
+      bot.sendMessage(
+        chatId,
+        "Thank you for using the bot! Type /start to return."
+      );
+      break;
+    default:
+      bot.sendMessage(chatId, "Invalid option. Please try again.");
+  }
+});
+
+// Function to display user reservations
+function showUserReservations(chatId) {
+  const userReservations = reservations[chatId] || [];
+  if (userReservations.length === 0) {
+    bot.sendMessage(chatId, "You have no reservations.");
+    return;
+  }
+
+  const reservationList = userReservations
+    .map((res) => `- "${res.title}" (Pickup: ${res.pickupTime})`)
+    .join("\n");
+
+  bot.sendMessage(chatId, `Your Reservations:\n${reservationList}`);
+}
+
+// Function to display help
+function displayHelp(chatId) {
+  const helpMessage = `
+Welcome to the Library Booking Bot! Here are the commands you can use:
+
+- Register: Register your name and phone number.
+- My Reservations: View your current reservations.
+- Change Language: Change your selected language.
+- Help: Get assistance with commands.
+- Exit: Exit the bot.
+
+If you need further assistance, feel free to ask!
+  `;
+  bot.sendMessage(chatId, helpMessage);
 }
 
 // Registration logic
