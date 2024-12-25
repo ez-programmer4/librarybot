@@ -683,6 +683,8 @@ bot.onText(/\/librarian_reserve (\d+) (.+) (.+)/, (msg, match) => {
     return bot.sendMessage(chatId, `Book not available or does not exist.`);
   }
 
+  console.log(chatId);
+  console.log(librarianChatId);
   // Ensure the librarian is the one reserving the book
   if (chatId === librarianChatId) {
     // Find or create the user entry
