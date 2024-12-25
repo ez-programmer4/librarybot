@@ -672,7 +672,7 @@ bot.onText(/\/librarian_reserve (\d+) (.+) (.+)/, (msg, match) => {
   for (const language in books) {
     for (const category in books[language]) {
       reservedBook = books[language][category].find(
-        (book) => book.id === parseInt(bookId, 10)
+        (book) => book.id == parseInt(bookId, 10)
       );
       if (reservedBook) break; // Break if book is found
     }
