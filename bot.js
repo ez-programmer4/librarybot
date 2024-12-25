@@ -672,7 +672,7 @@ bot.onText(/\/librarian_reserve (\d+) (.+) (.+)/, (msg, match) => {
   for (const language in books) {
     for (const category in books[language]) {
       reservedBook = books[language][category].find(
-        (book) => book.id === parseInt(bookId, 10) // Ensure the ID is an integer
+        (book) => book.id === parseInt(bookId, 10)
       );
       if (reservedBook) break; // Break if book is found
     }
@@ -707,6 +707,14 @@ bot.onText(/\/librarian_reserve (\d+) (.+) (.+)/, (msg, match) => {
     // Initialize reservations for the user if not already present
     if (!Array.isArray(reservations[userChatId])) {
       reservations[userChatId] = [];
+    }
+
+    // Check if the book is available
+    if (!reservedBook.available) {
+      return bot.sendMessage(
+        chatId,
+        `The book "${reservedBook.title}" is already reserved.`
+      );
     }
 
     // Add reservation details
