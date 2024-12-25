@@ -681,76 +681,85 @@ bot.onText(/\/librarian_reserve (\d+) (.+) (.+)/, (msg, match) => {
 
   // Check if the book was found
   if (!reservedBook) {
+    console.log(`Book with ID ${bookId} not found.`);
     return bot.sendMessage(chatId, `Book not available or does not exist.`);
   }
 
-  console.log(`Chat ID: ${chatId}, Librarian Chat ID: ${librarianChatId}`);
-
   // Ensure the librarian is the one reserving the book
-  if (chatId === librarianChatId) {
-    // Find or create the user entry
-    let userChatId = Object.keys(users).find(
-      (id) => users[id].userName.trim().toLowerCase() === userName.toLowerCase()
-    );
-
-    if (!userChatId) {
-      // Create a new user entry if not found
-      userChatId = chatId; // Use librarian's chat ID for logging
-      users[userChatId] = {
-        userName: userName,
-        phoneNumber: phoneNumber,
-      };
-      console.log(`New user created: ${userName} with phone: ${phoneNumber}`);
-    } else {
-      // Update the phone number if user already exists
-      users[userChatId].phoneNumber = phoneNumber;
-      console.log(`Updated phone number for user: ${userName}`);
-    }
-
-    // Initialize reservations for the user if not already present
-    if (!Array.isArray(reservations[userChatId])) {
-      reservations[userChatId] = [];
-    }
-
-    // Check if the book is available
-    if (!reservedBook.available) {
-      return bot.sendMessage(
-        chatId,
-        `The book "${reservedBook.title}" is already reserved.`
-      );
-    }
-
-    // Add reservation details
-    reservations[userChatId].push({
-      bookId: reservedBook.id,
-      title: reservedBook.title,
-      userName: users[userChatId].userName,
-      phoneNumber: phoneNumber, // Ensure phone number is stored
-      pickupTime: "after isha salah",
-    });
-
-    // Mark the book as reserved
-    reservedBook.available = false;
-
-    // Save updated reservations
-    saveReservations();
-
-    // Notify both librarian and user
-    bot.sendMessage(
-      librarianChatId,
-      `Librarian reserved "${reservedBook.title}" for "${users[userChatId].userName}".`
-    );
-    bot.sendMessage(
-      userChatId,
-      `You have reserved "${reservedBook.title}" by librarian. Phone: ${phoneNumber}`
-    );
-    console.log(`Reservation successful for book: ${reservedBook.title}`);
-  } else {
+  if (chatId !== librarianChatId) {
     return bot.sendMessage(
       chatId,
       `You do not have permission to reserve books.`
     );
   }
+
+  // Check if the book is already reserved
+  if (!reservedBook.available) {
+    console.log(`The book "${reservedBook.title}" is already reserved.`);
+    return bot.sendMessage(
+      chatId,
+      `The book "${reservedBook.title}" is already reserved.`
+    );
+  }
+
+  // Find or create the user entry
+  let userChatId = Object.keys(users).find(
+    (id) => users[id].userName.trim().toLowerCase() === userName.toLowerCase()
+  );
+
+  if (!userChatId) {
+    // Create a new user entry if not found
+    userChatId = chatId; // Use librarian's chat ID for logging
+    users[userChatId] = {
+      userName: userName,
+      phoneNumber: phoneNumber,
+    };
+    console.log(`New user created: ${userName} with phone: ${phoneNumber}`);
+  } else {
+    // Update the phone number if user already exists
+    users[userChatId].phoneNumber = phoneNumber;
+    console.log(`Updated phone number for user: ${userName}`);
+  }
+
+  // Initialize reservations for the user if not already present
+  if (!Array.isArray(reservations[userChatId])) {
+    reservations[userChatId] = [];
+  }
+
+  // Add reservation details
+  reservations[userChatId].push({
+    bookId: reservedBook.id,
+    title: reservedBook.title,
+    userName: users[userChatId].userName,
+    phoneNumber: phoneNumber, // Ensure phone number is stored
+    pickupTime: "after isha salah",
+  });
+
+  // Mark the book as reserved
+  reservedBook.available = false;
+
+  // Save updated reservations and handle potential errors
+  try {
+    saveReservations();
+    console.log(`Reservations saved successfully.`);
+  } catch (error) {
+    console.error(`Error saving reservations: ${error.message}`);
+    return bot.sendMessage(
+      chatId,
+      `An error occurred while saving reservations.`
+    );
+  }
+
+  // Notify both librarian and user
+  bot.sendMessage(
+    librarianChatId,
+    `Librarian reserved "${reservedBook.title}" for "${users[userChatId].userName}".`
+  );
+  bot.sendMessage(
+    userChatId,
+    `You have reserved "${reservedBook.title}" by librarian. Phone: ${phoneNumber}`
+  );
+  console.log(`Reservation successful for book: ${reservedBook.title}`);
 });
 // View all reserved books
 bot.onText(/\/reserved_books/, (msg) => {
