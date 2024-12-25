@@ -663,6 +663,10 @@ bot.onText(/\/librarian_reserve (\d+) (.+) (.+)/, (msg, match) => {
   const userName = match[2].trim(); // Extracted username
   const phoneNumber = match[3].trim(); // Extracted phone number
 
+  console.log(
+    `Librarian ${chatId} is attempting to reserve book ID: ${bookId} for user: ${userName}, Phone: ${phoneNumber}`
+  );
+
   // Find the book by ID across all languages and categories
   let reservedBook = null;
   for (const language in books) {
@@ -679,7 +683,7 @@ bot.onText(/\/librarian_reserve (\d+) (.+) (.+)/, (msg, match) => {
     return bot.sendMessage(chatId, `Book not available or does not exist.`);
   }
 
-  // If the librarian is reserving the book
+  // Ensure the librarian is the one reserving the book
   if (chatId === librarianChatId) {
     // Find or create the user entry
     let userChatId = Object.keys(users).find(
@@ -693,9 +697,11 @@ bot.onText(/\/librarian_reserve (\d+) (.+) (.+)/, (msg, match) => {
         userName: userName,
         phoneNumber: phoneNumber,
       };
+      console.log(`New user created: ${userName} with phone: ${phoneNumber}`);
     } else {
       // Update the phone number if user already exists
       users[userChatId].phoneNumber = phoneNumber;
+      console.log(`Updated phone number for user: ${userName}`);
     }
 
     // Initialize reservations for the user if not already present
@@ -726,6 +732,12 @@ bot.onText(/\/librarian_reserve (\d+) (.+) (.+)/, (msg, match) => {
     bot.sendMessage(
       userChatId,
       `You have reserved "${reservedBook.title}" by librarian. Phone: ${phoneNumber}`
+    );
+    console.log(`Reservation successful for book: ${reservedBook.title}`);
+  } else {
+    return bot.sendMessage(
+      chatId,
+      `You do not have permission to reserve books.`
     );
   }
 });
