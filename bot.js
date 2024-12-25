@@ -679,7 +679,7 @@ bot.onText(/\/librarian_reserve (\d+) (.+) (.+)/, (msg, match) => {
     if (reservedBook) break; // Break if book is found
   }
 
-  if (!reservedBook) {
+  if (reservedBook) {
     return bot.sendMessage(chatId, `Book not available or does not exist.`);
   }
 
