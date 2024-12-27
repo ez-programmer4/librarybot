@@ -3,7 +3,8 @@ const fs = require("fs");
 const path = require("path");
 const express = require("express");
 require("dotenv").config();
-
+const mongoose = require("mongoose");
+const { User, Book, Reservation } = require("./models");
 const app = express();
 app.use(express.json());
 const port = process.env.PORT || 5000;
@@ -91,6 +92,17 @@ function findBookById(language, bookId) {
 // === Initialize Data ===
 books = loadBooks();
 reservations = loadReservations();
+mongoose
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    console.log("MongoDB connected!");
+  })
+  .catch((err) => {
+    console.error("MongoDB connection error:", err);
+  });
 
 // Start command
 bot.onText(/\/start/, (msg) => {
@@ -145,10 +157,10 @@ let registrationState = {};
 bot.onText(/\/register/, (msg) => {
   const chatId = msg.chat.id;
 
-  if (users[chatId]) {
+  if (registrationState[chatId]) {
     return bot.sendMessage(
       chatId,
-      `You are already registered as ${users[chatId].userName}.`
+      "You are already in the registration process."
     );
   }
 
@@ -156,61 +168,33 @@ bot.onText(/\/register/, (msg) => {
   bot.sendMessage(chatId, "Please enter your full name:");
 });
 
-// Handle user responses based on registration state
-bot.on("message", (msg) => {
+// Handle the user's response for their name
+bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
 
-  if (registrationState[chatId]) {
-    const state = registrationState[chatId];
+  if (registrationState[chatId] && registrationState[chatId].step === 1) {
+    const userName = msg.text;
+    const phoneNumber = chatId.toString(); // Use chatId as phoneNumber for this example
 
-    if (state.step === 1) {
-      state.userName = msg.text;
-      state.step = 2;
-      bot.sendMessage(
-        chatId,
-        "Please enter your phone number (numbers only) 09xxxxxxxx:"
-      );
-    } else if (state.step === 2) {
-      const phoneNumber = msg.text;
+    const user = await addUser(chatId, userName, phoneNumber);
+    bot.sendMessage(
+      chatId,
+      `✓ Registration successful! Welcome, ${user.userName}.`
+    );
 
-      // Validate phone number
-      if (!/^[0-9]+$/.test(phoneNumber)) {
-        return bot.sendMessage(
-          chatId,
-          "Please enter a valid phone number (numbers only)."
-        );
-      }
-
-      const existingUser = Object.values(users).find(
-        (user) => user.phoneNumber === phoneNumber
-      );
-      if (existingUser) {
-        delete registrationState[chatId];
-        return bot.sendMessage(
-          chatId,
-          `This phone number is already registered by ${existingUser.userName}.`
-        );
-      }
-
-      // Save user data
-      users[chatId] = { userName: state.userName, phoneNumber };
-      delete registrationState[chatId];
-
-      bot.sendMessage(
-        chatId,
-        `✓ Registration successful! Welcome, ${state.userName}.`
-      );
-
-      // Notify the librarian about the new registration
-      notifyLibrarian(
-        `New user registered: ${state.userName}, Phone: ${phoneNumber}`
-      );
-
-      // Ask for language selection
-      askLanguageSelection(chatId);
-    }
+    // Clean up the registration state
+    delete registrationState[chatId];
   }
 });
+
+async function addUser(chatId, userName, phoneNumber) {
+  let user = await User.findOne({ phoneNumber });
+  if (!user) {
+    user = new User({ userName, phoneNumber });
+    await user.save();
+  }
+  return user;
+}
 
 // Ask for language selection
 function askLanguageSelection(chatId) {
@@ -367,13 +351,14 @@ bot.on("message", (msg) => {
 // Load books when the application starts
 loadBooks();
 
-bot.onText(/\/add_books (\d+) (\w+) "(.+)" "(.+)"/, (msg, match) => {
+bot.onText(/\/add_books (\d+) (\w+) "(.+)" "(.+)"/, async (msg, match) => {
   const chatId = msg.chat.id;
   const id = parseInt(match[1], 10);
   const language = match[2].trim();
   const category = match[3].trim();
   const title = match[4].trim();
 
+  // Assuming books is a predefined object with languages and categories
   if (!books[language]) {
     return bot.sendMessage(chatId, `Language "${language}" does not exist.`);
   }
@@ -385,24 +370,16 @@ bot.onText(/\/add_books (\d+) (\w+) "(.+)" "(.+)"/, (msg, match) => {
     );
   }
 
-  const existingBook = books[language][category].find((book) => book.id === id);
+  const existingBook = await Book.findOne({ id });
   if (existingBook) {
-    return bot.sendMessage(
-      chatId,
-      `A book with ID ${id} already exists in ${category}.`
-    );
+    return bot.sendMessage(chatId, `A book with ID ${id} already exists.`);
   }
 
-  const newBook = { id: id, title: title, available: true };
-  books[language][category].push(newBook);
-  saveBooks(); // Save the updated books object
+  const newBook = new Book({ id, title, available: true, language, category });
+  await newBook.save();
 
-  bot.sendMessage(
-    chatId,
-    `Book "${title}" added successfully in ${language} under ${category} with ID ${id}.`
-  );
+  return bot.sendMessage(chatId, `Book "${title}" added successfully.`);
 });
-
 bot.onText(/\/remove_book (\w+) (\w+) (\d+)/, (msg, match) => {
   const chatId = msg.chat.id;
   const language = match[1].trim();
@@ -441,78 +418,42 @@ bot.onText(/\/remove_book (\w+) (\w+) (\d+)/, (msg, match) => {
 
 // Reserve a book
 // Reserve a book
-bot.onText(/\/reserve (\d+)/, (msg, match) => {
+bot.onText(/\/reserve (\d+)/, async (msg, match) => {
   const chatId = msg.chat.id;
   const bookId = match[1];
 
-  console.log(
-    `User ${chatId} is attempting to reserve book with ID: ${bookId}`
-  );
-
-  // Check if the user has selected a language
-  const language = userLanguages[chatId];
-  if (!language) {
+  const user = await User.findOne({ phoneNumber: chatId });
+  if (!user) {
     return bot.sendMessage(
       chatId,
-      "Please select a language first using /register."
+      "You need to register first using /register."
     );
   }
 
-  // Find the book in the selected language
-  const book = findBookById(language, bookId);
-  if (!book) {
-    console.log(`No book found with ID ${bookId} in language ${language}.`);
-    return bot.sendMessage(chatId, `No book found with ID ${bookId}.`);
-  }
-
-  // Check if the book is available
-  if (!book.available) {
+  const book = await Book.findOne({ id: bookId });
+  if (!book || !book.available) {
     return bot.sendMessage(
       chatId,
-      `Sorry, the book "${book.title}" is already reserved.`
+      `Sorry, the book with ID ${bookId} is not available.`
     );
   }
 
-  // Initialize reservations array for the user if not present
-  if (!Array.isArray(reservations[chatId])) {
-    reservations[chatId] = [];
-  }
-
-  // Add the reservation
-  reservations[chatId].push({
-    bookId: book.id,
-    title: book.title,
+  const reservation = new Reservation({
+    userId: user._id,
+    bookId: book._id,
     pickupTime: "after isha salah",
   });
 
-  // Mark the book as reserved
-  book.available = false;
+  await reservation.save();
+  book.available = false; // Mark the book as reserved
+  await book.save();
 
-  // Save updated data to JSON files
-  try {
-    saveBooks(); // Save the updated books object
-    saveReservations(); // Save the updated reservations object
-
-    // Notify the user
-    bot.sendMessage(
-      chatId,
-      `📚 Successfully reserved: "${book.title}".\nPickup time: after isha salah.\nTo return to the main menu, type /back_to_menu.`
-    );
-
-    // Notify the librarian
-    const userName = users[chatId]?.userName || "Unknown User";
-    const phoneNumber = users[chatId]?.phoneNumber || "N/A";
-    notifyLibrarian(
-      `Reservation:\n- Book: "${book.title}"\n- Book ID: ${book.id}\n- Reserved by: ${userName}\n- Phone: ${phoneNumber}`
-    );
-  } catch (error) {
-    console.error("Error saving reservation:", error);
-    bot.sendMessage(
-      chatId,
-      "An error occurred while reserving the book. Please try again."
-    );
-  }
+  return bot.sendMessage(
+    chatId,
+    `Successfully reserved: "${book.title}". Pickup time: after isha salah.`
+  );
 });
+
 // View own reservations
 
 bot.onText(/\/help/, (msg) => {
