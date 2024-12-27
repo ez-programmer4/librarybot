@@ -49,7 +49,7 @@ function loadReservations() {
 function saveBooks() {
   fs.writeFile("books.json", JSON.stringify(books, null, 2), (err) => {
     if (err) {
-      console.error("Error saving books:", err);
+      console.error("Error saving book:", err);
     } else {
       console.log("Books saved successfully.");
     }
