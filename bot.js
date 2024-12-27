@@ -210,7 +210,7 @@ async function addUser(chatId, userName, phoneNumber) {
   }
   return user;
 }
-Ask for language selection
+// Ask for language selection
 function askLanguageSelection(chatId) {
   bot.sendMessage(
     chatId,
