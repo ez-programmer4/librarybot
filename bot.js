@@ -153,39 +153,51 @@ If you need further assistance, feel free to ask!
 // Registration logic
 let registrationState = {};
 
-// Registration logic
 bot.onText(/\/register/, (msg) => {
   const chatId = msg.chat.id;
-
-  if (registrationState[chatId]) {
+  if (registrationState[chatId])
     return bot.sendMessage(
       chatId,
       "You are already in the registration process."
     );
-  }
 
   registrationState[chatId] = { step: 1 };
   bot.sendMessage(chatId, "Please enter your full name:");
 });
 
-// Handle the user's response for their name
 bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
 
-  if (registrationState[chatId] && registrationState[chatId].step === 1) {
+  if (registrationState[chatId]?.step === 1) {
     const userName = msg.text;
     const phoneNumber = chatId.toString(); // Use chatId as phoneNumber for this example
 
-    const user = await addUser(chatId, userName, phoneNumber);
-    bot.sendMessage(
-      chatId,
-      `✓ Registration successful! Welcome, ${user.userName}.`
-    );
-
-    // Clean up the registration state
-    delete registrationState[chatId];
+    try {
+      const user = await addUser(chatId, userName, phoneNumber);
+      bot.sendMessage(
+        chatId,
+        `✓ Registration successful! Welcome, ${user.userName}.`
+      );
+      delete registrationState[chatId]; // Clean up the registration state
+    } catch (error) {
+      console.error("Error adding user:", error);
+      bot.sendMessage(
+        chatId,
+        "There was an error during registration. Please try again."
+      );
+    }
   }
 });
+
+// Add user function
+async function addUser(chatId, userName, phoneNumber) {
+  let user = await User.findOne({ phoneNumber });
+  if (!user) {
+    user = new User({ userName, phoneNumber });
+    await user.save();
+  }
+  return user;
+}
 
 async function addUser(chatId, userName, phoneNumber) {
   let user = await User.findOne({ phoneNumber });
