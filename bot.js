@@ -97,7 +97,7 @@ bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
   const welcomeMessage = `
   ================---==============
-Welcome to the KJUMJ IRSHAD Library 1445 Booking Bot! 📚
+Welcome to the KJUMJ IRSHAD Library Booking Bot! 📚
 Please register to get started by typing /register.
 
 For a list of all commands and guidance, type /help.
@@ -824,26 +824,22 @@ bot.on("polling_error", (error) => {
 bot.on("error", (error) => {
   console.error("Error occurred:", error);
 });
-console.log(`Bot is running...`);
+
+// Set the webhook URL
+const setWebhook = async () => {
+  const url = `https://librarybot-qx3c.onrender.com/webhook`; // Replace with your actual URL
+  await bot.setWebHook(url);
+};
+
+app.post("/webhook", (req, res) => {
+  console.log("Webhook received:", req.body); // Log incoming updates
+  bot.processUpdate(req.body);
+  res.sendStatus(200); // Respond with a 200 OK
+});
+
+setWebhook().catch(console.error);
+
+// Start the Express server
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
-
-// Set the webhook URL
-// const setWebhook = async () => {
-//   const url = `https://librarybot-qx3c.onrender.com/webhook`; // Replace with your actual URL
-//   await bot.setWebHook(url);
-// };
-
-// app.post("/webhook", (req, res) => {
-//   console.log("Webhook received:", req.body); // Log incoming updates
-//   bot.processUpdate(req.body);
-//   res.sendStatus(200); // Respond with a 200 OK
-// });
-
-// setWebhook().catch(console.error);
-
-// // Start the Express server
-// app.listen(port, () => {
-//   console.log(`Server is running on port ${port}`);
-// });
