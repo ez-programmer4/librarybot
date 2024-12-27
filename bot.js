@@ -180,12 +180,24 @@ bot.onText(/\/register/, (msg) => {
 bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
 
+  // Step 1: Capture the user's name
   if (registrationState[chatId]?.step === 1) {
     const userName = msg.text;
-    const phoneNumber = chatId.toString(); // Use chatId as phoneNumber for this example
+    registrationState[chatId].userName = userName; // Store the name
+    registrationState[chatId].step = 2; // Move to the next step
+    return bot.sendMessage(chatId, "Please enter your phone number:");
+  }
+
+  // Step 2: Capture the user's phone number
+  if (registrationState[chatId]?.step === 2) {
+    const phoneNumber = msg.text; // Capture the phone number from user input
 
     try {
-      const user = await addUser(chatId, userName, phoneNumber);
+      const user = await addUser(
+        chatId,
+        registrationState[chatId].userName,
+        phoneNumber
+      );
       bot.sendMessage(
         chatId,
         `✓ Registration successful! Welcome, ${user.userName}.`
