@@ -13,6 +13,21 @@ const port = process.env.PORT || 5000;
 const token = process.env.TOKEN; // Update with your token
 const bot = new TelegramBot(token); // No polling
 const librarianChatId = process.env.LIBRARIAN_CHAT_ID.trim(); // Set this to the logged chat ID
+async function connectToDatabase() {
+  try {
+    await mongoose.connect(process.env.MONGO_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 25000,
+    });
+    console.log("MongoDB connected!");
+  } catch (error) {
+    console.error("MongoDB connection error:", error);
+    setTimeout(connectToDatabase, 5000); // Retry after 5 seconds
+  }
+}
+
+connectToDatabase();
 
 // Book categories and reservations
 let books = {
@@ -92,18 +107,6 @@ function findBookById(language, bookId) {
 // === Initialize Data ===
 books = loadBooks();
 reservations = loadReservations();
-mongoose
-  .connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    serverSelectionTimeoutMS: 25000,
-  })
-  .then(() => {
-    console.log("MongoDB connected!");
-  })
-  .catch((err) => {
-    console.error("MongoDB connection error:", err);
-  });
 
 // Start command
 bot.onText(/\/start/, (msg) => {
