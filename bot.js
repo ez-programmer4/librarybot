@@ -201,8 +201,11 @@ async function isCategory(category) {
 bot.onText(/\/reserve (\d+)/, async (msg, match) => {
   const chatId = msg.chat.id;
   const bookId = match[1];
-  const user = await User.findOne({ phoneNumber: chatId });
-  console.log(user);
+
+  // Use chatId to find the user
+  const user = await User.findOne({ chatId }); // Change this line
+  console.log(user); // This will help debug if the user is found
+
   if (!user) {
     return bot.sendMessage(
       chatId,
@@ -210,6 +213,7 @@ bot.onText(/\/reserve (\d+)/, async (msg, match) => {
     );
   }
 
+  // Find the book by its ID
   const book = await Book.findOne({ id: bookId });
   if (!book || !book.available) {
     return bot.sendMessage(
@@ -218,6 +222,7 @@ bot.onText(/\/reserve (\d+)/, async (msg, match) => {
     );
   }
 
+  // Create a new reservation
   const reservation = new Reservation({
     userId: user._id,
     bookId: book._id,
@@ -225,7 +230,7 @@ bot.onText(/\/reserve (\d+)/, async (msg, match) => {
   });
 
   await reservation.save();
-  book.available = false;
+  book.available = false; // Mark the book as unavailable
   await book.save();
 
   // Notify librarian about the new reservation
