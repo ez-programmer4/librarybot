@@ -203,6 +203,7 @@ bot.onText(/\/reserve (\d+)/, async (msg, match) => {
   const bookId = match[1];
 
   // Use chatId to find the user
+  console.log(User);
   const user = await User.findOne({ chatId }); // Change this line
   console.log(user); // This will help debug if the user is found
 
