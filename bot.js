@@ -377,40 +377,62 @@ bot.on("message", (msg) => {
 // Load books when the application starts
 loadBooks();
 
-bot.onText(/\/add_books (\d+) (\w+) "(.+)" "(.+)"/, async (msg, match) => {
+bot.onText(/\/add_books (.+)/, async (msg, match) => {
   const chatId = msg.chat.id;
-  const id = parseInt(match[1], 10);
-  const language = match[2].trim();
-  const category = match[3].trim();
-  const title = match[4].trim();
+  const entries = match[1].split(";").map((entry) => entry.trim());
 
-  // Check if the language exists
-  if (!books[language]) {
-    return bot.sendMessage(chatId, `Language "${language}" does not exist.`);
+  for (const entry of entries) {
+    const parts = entry.match(/^(\d+) (\w+) "(.+)" "(.+)"$/);
+    if (!parts) {
+      await bot.sendMessage(
+        chatId,
+        `Invalid format for entry: "${entry}". Ensure it follows the format: /add_books <id> <language> "<category>" "<title>".`
+      );
+      continue; // Skip to the next entry
+    }
+
+    const id = parseInt(parts[1], 10);
+    const language = parts[2].trim();
+    const category = parts[3].trim();
+    const title = parts[4].trim();
+
+    // Check if the language exists
+    if (!books[language]) {
+      await bot.sendMessage(chatId, `Language "${language}" does not exist.`);
+      continue; // Skip to the next entry
+    }
+
+    // Check if the category exists
+    if (!books[language][category]) {
+      await bot.sendMessage(
+        chatId,
+        `Category "${category}" does not exist in "${language}".`
+      );
+      continue; // Skip to the next entry
+    }
+
+    // Check for existing book ID
+    const existingBook = await Book.findOne({ id });
+    if (existingBook) {
+      await bot.sendMessage(chatId, `A book with ID ${id} already exists.`);
+      continue; // Skip to the next entry
+    }
+
+    // Create new book and save it
+    const newBook = new Book({
+      id,
+      title,
+      available: true,
+      language,
+      category,
+    });
+    await newBook.save();
+
+    // Add book to the in-memory structure
+    books[language][category].push({ id, title, available: true });
+
+    await bot.sendMessage(chatId, `Book "${title}" added successfully.`);
   }
-
-  // Check if the category exists
-  if (!books[language][category]) {
-    return bot.sendMessage(
-      chatId,
-      `Category "${category}" does not exist in "${language}".`
-    );
-  }
-
-  // Check for existing book ID
-  const existingBook = await Book.findOne({ id });
-  if (existingBook) {
-    return bot.sendMessage(chatId, `A book with ID ${id} already exists.`);
-  }
-
-  // Create new book and save it
-  const newBook = new Book({ id, title, available: true, language, category });
-  await newBook.save();
-
-  // Add book to the in-memory structure
-  books[language][category].push({ id, title, available: true });
-
-  return bot.sendMessage(chatId, `Book "${title}" added successfully.`);
 });
 bot.onText(/\/remove_book (\w+) (\w+) (\d+)/, (msg, match) => {
   const chatId = msg.chat.id;
