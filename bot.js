@@ -18,7 +18,7 @@ const librarianChatId = process.env.LIBRARIAN_CHAT_ID.trim(); // Set this to the
 let books = {
   Arabic: { aqida: [], fiqh: [] },
   Amharic: { aqida: [], fiqh: [] },
-  AfaanOromo: { aqida: [], fiqh: [] },
+  AfaanOromo: { kittaba: [], aqida: [], fiqh: [] },
 };
 
 let reservations = {};
@@ -384,11 +384,12 @@ bot.onText(/\/add_books (\d+) (\w+) "(.+)" "(.+)"/, async (msg, match) => {
   const category = match[3].trim();
   const title = match[4].trim();
 
-  // Assuming books is a predefined object with languages and categories
+  // Check if the language exists
   if (!books[language]) {
     return bot.sendMessage(chatId, `Language "${language}" does not exist.`);
   }
 
+  // Check if the category exists
   if (!books[language][category]) {
     return bot.sendMessage(
       chatId,
@@ -396,13 +397,18 @@ bot.onText(/\/add_books (\d+) (\w+) "(.+)" "(.+)"/, async (msg, match) => {
     );
   }
 
+  // Check for existing book ID
   const existingBook = await Book.findOne({ id });
   if (existingBook) {
     return bot.sendMessage(chatId, `A book with ID ${id} already exists.`);
   }
 
+  // Create new book and save it
   const newBook = new Book({ id, title, available: true, language, category });
   await newBook.save();
+
+  // Add book to the in-memory structure
+  books[language][category].push({ id, title, available: true });
 
   return bot.sendMessage(chatId, `Book "${title}" added successfully.`);
 });
