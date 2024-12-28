@@ -48,6 +48,8 @@ bot.onText(/\/start/, (msg) => {
 let registrationState = {};
 
 // Registration logic
+// Registration logic
+// Registration logic
 bot.onText(/\/register/, async (msg) => {
   const chatId = msg.chat.id;
   const user = await User.findOne({ phoneNumber: chatId });
@@ -59,7 +61,7 @@ bot.onText(/\/register/, async (msg) => {
     );
   }
 
-  registrationState[chatId] = { step: 1 };
+  registrationState[chatId] = { step: 1 }; // Step 1: Getting full name
   bot.sendMessage(chatId, "Please enter your full name:");
 });
 
@@ -67,7 +69,16 @@ bot.onText(/\/register/, async (msg) => {
 bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
 
-  if (registrationState[chatId]?.step === 2) {
+  if (registrationState[chatId]?.step === 1) {
+    // User has entered their full name
+    const userName = msg.text;
+
+    // Move to the next step
+    registrationState[chatId].userName = userName; // Save the user's name
+    registrationState[chatId].step = 2; // Step 2: Getting phone number
+    bot.sendMessage(chatId, "Please enter your phone number:");
+  } else if (registrationState[chatId]?.step === 2) {
+    // User has entered their phone number
     const phoneNumber = msg.text;
     const user = await addUser(
       chatId,
@@ -84,7 +95,7 @@ bot.on("message", async (msg) => {
       chatId,
       `✓ Registration successful! Welcome, ${user.userName}.`
     );
-    delete registrationState[chatId];
+    delete registrationState[chatId]; // Clear the registration state
   }
 });
 
