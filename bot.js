@@ -105,7 +105,7 @@ bot.on("message", async (msg) => {
 async function addUser(chatId, userName, phoneNumber) {
   let user = await User.findOne({ phoneNumber });
   if (!user) {
-    user = new User({ userName, phoneNumber });
+    user = new User({ userName, phoneNumber, chatId });
     await user.save();
   }
   return user;
@@ -202,7 +202,7 @@ bot.onText(/\/reserve (\d+)/, async (msg, match) => {
   const chatId = msg.chat.id;
   const bookId = match[1];
   const user = await User.findOne({ phoneNumber: chatId });
-
+  console.log(user);
   if (!user) {
     return bot.sendMessage(
       chatId,
