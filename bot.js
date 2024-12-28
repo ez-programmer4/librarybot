@@ -203,14 +203,14 @@ bot.onText(/\/reserve (\d+)/, async (msg, match) => {
   const bookId = match[1];
 
   // Use chatId to find the user
-  const user = await User.findOne({ chatId });
+  // const user = await User.findOne({ chatId });
 
-  if (!user) {
-    return bot.sendMessage(
-      chatId,
-      "You need to register first using /register."
-    );
-  }
+  // if (!user) {
+  //   return bot.sendMessage(
+  //     chatId,
+  //     "You need to register first using /register."
+  //   );
+  // }
 
   // Find the book by its ID
   const book = await Book.findOne({ id: bookId });
