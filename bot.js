@@ -56,7 +56,7 @@ async function notifyLibrarian(message) {
 // Registration logic
 bot.onText(/\/register/, async (msg) => {
   const chatId = msg.chat.id;
-  const user = await User.findOne({ phoneNumber: chatId });
+  const user = await User.findOne({ chatId }); // Use chatId to find the user
 
   if (user) {
     return bot.sendMessage(
@@ -203,9 +203,7 @@ bot.onText(/\/reserve (\d+)/, async (msg, match) => {
   const bookId = match[1];
 
   // Use chatId to find the user
-  console.log(User);
-  const user = await User.findOne({ chatId }); // Change this line
-  console.log(user); // This will help debug if the user is found
+  const user = await User.findOne({ chatId });
 
   if (!user) {
     return bot.sendMessage(
