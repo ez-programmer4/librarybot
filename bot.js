@@ -128,6 +128,7 @@ bot.on("message", async (msg) => {
 });
 
 // Handle category selection
+// Handle language selection and category listing
 async function handleLanguageSelection(chatId, language) {
   // Fetch categories from the database
   const categories = await Book.distinct("category", { language });
@@ -145,6 +146,49 @@ async function handleLanguageSelection(chatId, language) {
       },
     }
   );
+}
+
+// Handle category selection and list books
+bot.on("message", async (msg) => {
+  const chatId = msg.chat.id;
+
+  if (registrationState[chatId]) {
+    // Handle registration process...
+  } else if (["Arabic", "Amharic", "AfaanOromo"].includes(msg.text)) {
+    await handleLanguageSelection(chatId, msg.text);
+  } else if (await isCategory(msg.text)) {
+    // When a category is selected
+    const selectedCategory = msg.text;
+    const books = await Book.find({
+      category: selectedCategory,
+      available: true,
+    });
+
+    if (books.length === 0) {
+      return bot.sendMessage(
+        chatId,
+        `No available books in the category "${selectedCategory}".`
+      );
+    }
+
+    // Format the list of books
+    const bookList = books
+      .map((book) => `- "${book.title}" (ID: ${book.id})`)
+      .join("\n");
+
+    bot.sendMessage(
+      chatId,
+      `Available books in "${selectedCategory}":\n${bookList}\n\nTo reserve a book, type /reserve <ID>.`
+    );
+  } else if (msg.text === "/change_language") {
+    askLanguageSelection(chatId);
+  }
+});
+
+// Function to check if the message is a valid category
+async function isCategory(category) {
+  const categories = await Book.distinct("category");
+  return categories.includes(category);
 }
 
 // Handle book listing and reservation
