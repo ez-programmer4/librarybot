@@ -48,7 +48,11 @@ bot.onText(/\/start/, (msg) => {
 let registrationState = {};
 
 // Registration logic
-// Registration logic
+// Add this function to your code
+async function notifyLibrarian(message) {
+  await bot.sendMessage(librarianChatId, message);
+}
+
 // Registration logic
 bot.onText(/\/register/, async (msg) => {
   const chatId = msg.chat.id;
@@ -70,16 +74,14 @@ bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
 
   if (registrationState[chatId]?.step === 1) {
-    // User has entered their full name
-    const userName = msg.text;
+    const userName = msg.text; // User entered full name
 
     // Move to the next step
     registrationState[chatId].userName = userName; // Save the user's name
     registrationState[chatId].step = 2; // Step 2: Getting phone number
     bot.sendMessage(chatId, "Please enter your phone number:");
   } else if (registrationState[chatId]?.step === 2) {
-    // User has entered their phone number
-    const phoneNumber = msg.text;
+    const phoneNumber = msg.text; // User entered phone number
     const user = await addUser(
       chatId,
       registrationState[chatId].userName,
