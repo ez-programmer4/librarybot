@@ -47,12 +47,15 @@ bot.onText(/\/start/, (msg) => {
 // Registration logic
 let registrationState = {};
 
-bot.onText(/\/register/, (msg) => {
+// Registration logic
+bot.onText(/\/register/, async (msg) => {
   const chatId = msg.chat.id;
-  if (registrationState[chatId]) {
+  const user = await User.findOne({ phoneNumber: chatId });
+
+  if (user) {
     return bot.sendMessage(
       chatId,
-      "You are already in the registration process."
+      `You are already registered as ${user.userName}.`
     );
   }
 
@@ -60,37 +63,28 @@ bot.onText(/\/register/, (msg) => {
   bot.sendMessage(chatId, "Please enter your full name:");
 });
 
+// When a user completes registration
 bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
 
-  // Step 1: Capture the user's name
-  if (registrationState[chatId]?.step === 1) {
-    registrationState[chatId].userName = msg.text;
-    registrationState[chatId].step = 2;
-    return bot.sendMessage(chatId, "Please enter your phone number:");
-  }
-
-  // Step 2: Capture the user's phone number
   if (registrationState[chatId]?.step === 2) {
     const phoneNumber = msg.text;
-    try {
-      const user = await addUser(
-        chatId,
-        registrationState[chatId].userName,
-        phoneNumber
-      );
-      bot.sendMessage(
-        chatId,
-        `✓ Registration successful! Welcome, ${user.userName}.`
-      );
-      delete registrationState[chatId];
-    } catch (error) {
-      console.error("Error adding user:", error);
-      bot.sendMessage(
-        chatId,
-        "There was an error during registration. Please try again."
-      );
-    }
+    const user = await addUser(
+      chatId,
+      registrationState[chatId].userName,
+      phoneNumber
+    );
+
+    // Notify librarian about the new registration
+    await notifyLibrarian(
+      `New registration: ${user.userName}, Phone: ${phoneNumber}`
+    );
+
+    bot.sendMessage(
+      chatId,
+      `✓ Registration successful! Welcome, ${user.userName}.`
+    );
+    delete registrationState[chatId];
   }
 });
 
@@ -191,12 +185,11 @@ async function isCategory(category) {
   return categories.includes(category);
 }
 
-// Handle book listing and reservation
 bot.onText(/\/reserve (\d+)/, async (msg, match) => {
   const chatId = msg.chat.id;
   const bookId = match[1];
-
   const user = await User.findOne({ phoneNumber: chatId });
+
   if (!user) {
     return bot.sendMessage(
       chatId,
@@ -221,6 +214,11 @@ bot.onText(/\/reserve (\d+)/, async (msg, match) => {
   await reservation.save();
   book.available = false;
   await book.save();
+
+  // Notify librarian about the new reservation
+  await notifyLibrarian(
+    `New reservation by ${user.userName} for "${book.title}".`
+  );
 
   return bot.sendMessage(
     chatId,
