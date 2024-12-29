@@ -206,7 +206,9 @@ bot.onText(/\/reserve (\d+)/, async (msg, match) => {
   const bookId = match[1];
   console.log(`User ${chatId} requested to reserve book ID: ${bookId}`);
 
-  const user = await User.findOne({ chatId });
+  // Ensure chatId is correctly looked up
+  const user = await User.findOne({ chatId: chatId });
+  console.log("User object:", user);
   if (!user) {
     console.log(`User ${chatId} is not registered.`);
     return bot.sendMessage(
