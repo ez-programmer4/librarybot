@@ -287,6 +287,159 @@ bot.onText(/\/add_books (.+)/, async (msg, match) => {
   }
 });
 
+bot.onText(/\/view_reservations/, async (msg) => {
+  const chatId = msg.chat.id;
+  if (!isLibrarian(chatId)) {
+    return bot.sendMessage(
+      chatId,
+      "You do not have permission to use this command."
+    );
+  }
+
+  const reservations = await Reservation.find().populate("userId bookId");
+  if (reservations.length === 0) {
+    return bot.sendMessage(chatId, "There are no reservations.");
+  }
+
+  const reservationList = reservations
+    .map(
+      (res) =>
+        `User: ${res.userId.userName}, Book: "${res.bookId.title}", Pickup Time: ${res.pickupTime}`
+    )
+    .join("\n");
+
+  bot.sendMessage(chatId, `Current Reservations:\n${reservationList}`);
+});
+bot.onText(/\/librarian_add_reservation (.+) (.+) (.+)/, async (msg, match) => {
+  const chatId = msg.chat.id;
+  if (!isLibrarian(chatId)) {
+    return bot.sendMessage(
+      chatId,
+      "You do not have permission to use this command."
+    );
+  }
+
+  const userName = match[1]; // User name
+  const bookId = match[2]; // Book ID
+  const pickupTime = match[3] || "after isha salah"; // Optional pickup time
+
+  const user = await User.findOne({ userName });
+  const book = await Book.findOne({ id: bookId });
+
+  if (!user) {
+    return bot.sendMessage(chatId, "User not found.");
+  }
+
+  if (!book || !book.available) {
+    return bot.sendMessage(
+      chatId,
+      `Sorry, the book with ID ${bookId} is not available.`
+    );
+  }
+
+  const reservation = new Reservation({
+    userId: user._id,
+    bookId: book._id,
+    pickupTime,
+  });
+
+  await reservation.save();
+  book.available = false; // Mark the book as unavailable
+  await book.save();
+
+  await notifyLibrarian(
+    `New manual reservation for ${user.userName} for "${book.title}".`
+  );
+  bot.sendMessage(
+    chatId,
+    `Successfully added reservation for ${user.userName} for "${book.title}".`
+  );
+});
+bot.onText(/\/librarian_cancel_reservation (\d+)/, async (msg, match) => {
+  const chatId = msg.chat.id;
+  if (!isLibrarian(chatId)) {
+    return bot.sendMessage(
+      chatId,
+      "You do not have permission to use this command."
+    );
+  }
+
+  const reservationId = match[1];
+  const reservation = await Reservation.findById(reservationId);
+  if (!reservation) {
+    return bot.sendMessage(chatId, "Invalid reservation ID.");
+  }
+
+  const book = await Book.findById(reservation.bookId);
+  if (book) {
+    book.available = true; // Mark the book as available again
+    await book.save();
+  }
+
+  await Reservation.findByIdAndDelete(reservationId);
+  bot.sendMessage(
+    chatId,
+    `Reservation with ID ${reservationId} has been successfully canceled.`
+  );
+});
+bot.onText(/\/change_language/, (msg) => {
+  const chatId = msg.chat.id;
+  bot.sendMessage(chatId, "Please select a language:", {
+    reply_markup: {
+      keyboard: [["Arabic"], ["Amharic"], ["AfaanOromo"]],
+      one_time_keyboard: true,
+    },
+  });
+});
+
+// Handle language selection
+bot.on("message", async (msg) => {
+  const chatId = msg.chat.id;
+  if (["Arabic", "Amharic", "AfaanOromo"].includes(msg.text)) {
+    // Assuming you have a user object to save the language preference
+    const user = await User.findOne({ chatId });
+    if (user) {
+      user.language = msg.text; // Save the selected language
+      await user.save();
+      bot.sendMessage(chatId, `Language changed to ${msg.text}.`);
+    }
+  }
+});
+bot.onText(/\/cancel_own_reservation (\d+)/, async (msg, match) => {
+  const chatId = msg.chat.id;
+  const reservationId = match[1];
+
+  const user = await User.findOne({ chatId });
+  if (!user) {
+    return bot.sendMessage(
+      chatId,
+      "You need to register first using /register."
+    );
+  }
+
+  const reservation = await Reservation.findOne({
+    _id: reservationId,
+    userId: user._id,
+  });
+  if (!reservation) {
+    return bot.sendMessage(
+      chatId,
+      "You do not have a reservation with that ID."
+    );
+  }
+
+  const book = await Book.findById(reservation.bookId);
+  if (book) {
+    book.available = true; // Mark the book as available
+    await book.save();
+  }
+
+  await Reservation.findByIdAndDelete(reservationId);
+  bot.sendMessage(
+    chatId,
+    `You have successfully canceled your reservation for "${book.title}".`
+  );
+});
 // Remove book from the database
 bot.onText(/\/remove_book (\w+) (\w+) (\d+)/, async (msg, match) => {
   const chatId = msg.chat.id;
