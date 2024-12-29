@@ -53,6 +53,7 @@ async function notifyLibrarian(message) {
 
 const userStates = {};
 
+// Registration logic
 bot.onText(/\/register/, async (msg) => {
   const chatId = msg.chat.id;
   console.log(`User ${chatId} initiated registration.`); // Debug statement
@@ -73,6 +74,55 @@ bot.onText(/\/register/, async (msg) => {
   userStates[chatId] = { step: 1 };
   console.log(`User ${chatId} is at step 1: asking for full name.`); // Debug statement
   bot.sendMessage(chatId, "Please enter your full name:");
+});
+
+// Handle user messages during registration
+bot.on("message", async (msg) => {
+  const chatId = msg.chat.id;
+  console.log(`Received message from ${chatId}: ${msg.text}`); // Debug statement
+
+  // Ensure the message is not a command
+  if (msg.text.startsWith("/")) return;
+
+  if (userStates[chatId]) {
+    if (userStates[chatId].step === 1) {
+      userStates[chatId].userName = msg.text;
+      userStates[chatId].step = 2;
+      console.log(`User ${chatId} provided full name: ${msg.text}`); // Debug statement
+      bot.sendMessage(chatId, "Please enter your phone number:");
+    } else if (userStates[chatId].step === 2) {
+      const phoneNumber = msg.text;
+      console.log(`User ${chatId} provided phone number: ${phoneNumber}`); // Debug statement
+
+      const user = await addUser(
+        chatId,
+        userStates[chatId].userName,
+        phoneNumber
+      );
+      console.log(
+        `User ${chatId} registered with name: ${user.userName}, phone: ${phoneNumber}`
+      ); // Debug statement
+
+      await notifyLibrarian(
+        `New registration: ${user.userName}, Phone: ${phoneNumber}`
+      );
+      bot.sendMessage(
+        chatId,
+        `✓ Registration successful! Welcome, ${user.userName}.`
+      );
+      delete userStates[chatId]; // Clear the registration state
+      askLanguageSelection(chatId);
+    }
+  } else {
+    // Check for reservations after registration
+    const user = await User.findOne({ chatId });
+    if (user && msg.text.startsWith("/reserve")) {
+      console.log(
+        `User ${chatId} is registered and is trying to reserve a book.`
+      ); // Debug statement
+      // Existing reservation logic here...
+    }
+  }
 });
 
 // Handle user messages during registration
