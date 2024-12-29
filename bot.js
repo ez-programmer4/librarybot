@@ -51,54 +51,70 @@ async function notifyLibrarian(message) {
   await bot.sendMessage(librarianChatId, message);
 }
 
-// Registration logic
+const userStates = {};
+
 bot.onText(/\/register/, async (msg) => {
   const chatId = msg.chat.id;
-  const user = await User.findOne({ chatId });
+  console.log(`User ${chatId} initiated registration.`); // Debug statement
 
-  if (user) {
+  // Check if the user is already registered
+  const existingUser = await User.findOne({ chatId });
+  if (existingUser) {
+    console.log(
+      `User ${chatId} is already registered as ${existingUser.userName}.`
+    ); // Debug statement
     return bot.sendMessage(
       chatId,
-      `You are already registered as ${user.userName}.`
+      `You are already registered as ${existingUser.userName}.`
     );
   }
 
-  registrationState[chatId] = { step: 1 }; // Step 1: Getting full name
+  // Initialize registration state
+  userStates[chatId] = { step: 1 };
+  console.log(`User ${chatId} is at step 1: asking for full name.`); // Debug statement
   bot.sendMessage(chatId, "Please enter your full name:");
 });
 
-// When a user completes registration
+// Handle user messages during registration
 bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
+  console.log(`Received message from ${chatId}: ${msg.text}`); // Debug statement
 
-  if (registrationState[chatId]?.step === 1) {
-    const userName = msg.text; // User entered full name
+  if (userStates[chatId]) {
+    if (userStates[chatId].step === 1) {
+      userStates[chatId].userName = msg.text;
+      userStates[chatId].step = 2;
+      console.log(`User ${chatId} provided full name: ${msg.text}`); // Debug statement
+      bot.sendMessage(chatId, "Please enter your phone number:");
+    } else if (userStates[chatId].step === 2) {
+      const phoneNumber = msg.text;
+      console.log(`User ${chatId} provided phone number: ${phoneNumber}`); // Debug statement
 
-    // Move to the next step
-    registrationState[chatId].userName = userName; // Save the user's name
-    registrationState[chatId].step = 2; // Step 2: Getting phone number
-    bot.sendMessage(chatId, "Please enter your phone number:");
-  } else if (registrationState[chatId]?.step === 2) {
-    const phoneNumber = msg.text; // User entered phone number
-    const user = await addUser(
-      chatId,
-      registrationState[chatId].userName,
-      phoneNumber
-    );
+      const user = await addUser(
+        chatId,
+        userStates[chatId].userName,
+        phoneNumber
+      );
+      console.log(
+        `User ${chatId} registered with name: ${user.userName}, phone: ${phoneNumber}`
+      ); // Debug statement
 
-    // Notify librarian about the new registration
-    await notifyLibrarian(
-      `New registration: ${user.userName}, Phone: ${phoneNumber}`
-    );
-
-    bot.sendMessage(
-      chatId,
-      `✓ Registration successful! Welcome, ${user.userName}.`
-    );
-    askLanguageSelection(chatId);
-    delete registrationState[chatId]; // Clear the registration state
+      await notifyLibrarian(
+        `New registration: ${user.userName}, Phone: ${phoneNumber}`
+      );
+      bot.sendMessage(
+        chatId,
+        `✓ Registration successful! Welcome, ${user.userName}.`
+      );
+      delete userStates[chatId]; // Clear the registration state
+      askLanguageSelection(chatId);
+    }
   }
 });
+
+// Handle user messages during registration
+
+// When a user completes registration
 
 // Ask for language selection
 function askLanguageSelection(chatId) {
@@ -129,6 +145,11 @@ async function addUser(chatId, userName, phoneNumber) {
   if (!user) {
     user = new User({ userName, phoneNumber, chatId });
     await user.save();
+    console.log(`New user created: ${user.userName}, Phone: ${phoneNumber}`); // Debug statement
+  } else {
+    console.log(
+      `User with phone number ${phoneNumber} already exists. Returning existing user.`
+    ); // Debug statement
   }
   return user;
 }
@@ -190,9 +211,11 @@ async function isCategory(category) {
 bot.onText(/\/reserve (\d+)/, async (msg, match) => {
   const chatId = msg.chat.id;
   const bookId = match[1];
+  console.log(`User ${chatId} requested to reserve book ID: ${bookId}`); // Debug statement
 
   const user = await User.findOne({ chatId });
   if (!user) {
+    console.log(`User ${chatId} is not registered.`); // Debug statement
     return bot.sendMessage(
       chatId,
       "You need to register first using /register."
@@ -201,31 +224,39 @@ bot.onText(/\/reserve (\d+)/, async (msg, match) => {
 
   const book = await Book.findOne({ id: bookId });
   if (!book || !book.available) {
+    console.log(`Book ID ${bookId} is not available for user ${chatId}.`); // Debug statement
     return bot.sendMessage(
       chatId,
       `Sorry, the book with ID ${bookId} is not available.`
     );
   }
 
-  const reservation = new Reservation({
-    userId: user._id,
-    bookId: book._id,
-    pickupTime: "after isha salah", // Default pickup time
-  });
+  // Create a reservation
+  try {
+    const reservation = new Reservation({
+      userId: user._id,
+      bookId: book._id,
+      pickupTime: "after isha salah", // Default pickup time
+    });
 
-  await reservation.save();
-  book.available = false; // Mark the book as unavailable
-  await book.save();
+    await reservation.save();
+    book.available = false; // Mark the book as unavailable
+    await book.save();
 
-  // Notify librarian about the new reservation
-  await notifyLibrarian(
-    `New reservation by ${user.userName} for "${book.title}".`
-  );
-
-  return bot.sendMessage(
-    chatId,
-    `Successfully reserved: "${book.title}". Pickup time: after isha salah.`
-  );
+    await notifyLibrarian(
+      `New reservation by ${user.userName} for "${book.title}".`
+    );
+    bot.sendMessage(
+      chatId,
+      `Successfully reserved: "${book.title}". Pickup time: after isha salah.`
+    );
+  } catch (error) {
+    console.error("Error saving reservation:", error);
+    bot.sendMessage(
+      chatId,
+      "There was an error processing your reservation. Please try again."
+    );
+  }
 });
 
 // Adding books to the database
