@@ -1,8 +1,9 @@
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema({
-  userName: String,
-  phoneNumber: String,
+  userName: { type: String, required: true },
+  phoneNumber: { type: String, required: true, unique: true },
+  chatId: { type: Number, unique: true, required: true }, // Ensure chatId is included
 });
 
 const bookSchema = new mongoose.Schema({

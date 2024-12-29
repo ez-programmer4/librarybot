@@ -130,13 +130,14 @@ function askLanguageSelection(chatId) {
   });
 }
 
-// Add user function
 async function addUser(chatId, userName, phoneNumber) {
   let user = await User.findOne({ phoneNumber });
   if (!user) {
-    user = new User({ userName, phoneNumber, chatId });
+    user = new User({ userName, phoneNumber, chatId }); // Ensure chatId is included
     await user.save();
-    console.log(`New user created: ${user.userName}, Phone: ${phoneNumber}`);
+    console.log(
+      `New user created: ${user.userName}, Phone: ${phoneNumber}, Chat ID: ${chatId}`
+    );
   } else {
     console.log(
       `User with phone number ${phoneNumber} already exists. Returning existing user.`
@@ -206,7 +207,7 @@ bot.onText(/\/reserve (\d+)/, async (msg, match) => {
   console.log(`User ${chatId} requested to reserve book ID: ${bookId}`);
 
   const user = await User.findOne({ chatId });
-  if (!chatId) {
+  if (!user) {
     console.log(`User ${chatId} is not registered.`);
     return bot.sendMessage(
       chatId,
@@ -249,7 +250,6 @@ bot.onText(/\/reserve (\d+)/, async (msg, match) => {
     );
   }
 });
-
 // Adding books to the database
 bot.onText(/\/add_books (.+)/, async (msg, match) => {
   const chatId = msg.chat.id;
