@@ -27,7 +27,6 @@ async function connectToDatabase() {
   }
 }
 
-// Initialize database connection
 connectToDatabase();
 
 // Start command
@@ -40,46 +39,43 @@ bot.onText(/\/start/, (msg) => {
     
     For a list of all commands and guidance, type /help.
     ================---==============
-    `;
+  `;
   bot.sendMessage(chatId, welcomeMessage);
 });
 
-// Registration logic
-let registrationState = {};
+// Registration state management
+const userStates = {};
 
+// Notify librarian
 async function notifyLibrarian(message) {
   await bot.sendMessage(librarianChatId, message);
 }
 
-const userStates = {};
-
 // Registration logic
 bot.onText(/\/register/, async (msg) => {
   const chatId = msg.chat.id;
-  console.log(`User ${chatId} initiated registration.`); // Debug statement
+  console.log(`User ${chatId} initiated registration.`);
 
-  // Check if the user is already registered
   const existingUser = await User.findOne({ chatId });
   if (existingUser) {
     console.log(
       `User ${chatId} is already registered as ${existingUser.userName}.`
-    ); // Debug statement
+    );
     return bot.sendMessage(
       chatId,
       `You are already registered as ${existingUser.userName}.`
     );
   }
 
-  // Initialize registration state
   userStates[chatId] = { step: 1 };
-  console.log(`User ${chatId} is at step 1: asking for full name.`); // Debug statement
+  console.log(`User ${chatId} is at step 1: asking for full name.`);
   bot.sendMessage(chatId, "Please enter your full name:");
 });
 
-// Handle user messages during registration
+// Handle user messages
 bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
-  console.log(`Received message from ${chatId}: ${msg.text}`); // Debug statement
+  console.log(`Received message from ${chatId}: ${msg.text}`);
 
   // Ensure the message is not a command
   if (msg.text.startsWith("/")) return;
@@ -88,11 +84,11 @@ bot.on("message", async (msg) => {
     if (userStates[chatId].step === 1) {
       userStates[chatId].userName = msg.text;
       userStates[chatId].step = 2;
-      console.log(`User ${chatId} provided full name: ${msg.text}`); // Debug statement
+      console.log(`User ${chatId} provided full name: ${msg.text}`);
       bot.sendMessage(chatId, "Please enter your phone number:");
     } else if (userStates[chatId].step === 2) {
       const phoneNumber = msg.text;
-      console.log(`User ${chatId} provided phone number: ${phoneNumber}`); // Debug statement
+      console.log(`User ${chatId} provided phone number: ${phoneNumber}`);
 
       const user = await addUser(
         chatId,
@@ -101,7 +97,7 @@ bot.on("message", async (msg) => {
       );
       console.log(
         `User ${chatId} registered with name: ${user.userName}, phone: ${phoneNumber}`
-      ); // Debug statement
+      );
 
       await notifyLibrarian(
         `New registration: ${user.userName}, Phone: ${phoneNumber}`
@@ -119,52 +115,13 @@ bot.on("message", async (msg) => {
     if (user && msg.text.startsWith("/reserve")) {
       console.log(
         `User ${chatId} is registered and is trying to reserve a book.`
-      ); // Debug statement
-      // Existing reservation logic here...
+      );
+      // Reservation logic here...
+    } else {
+      // Handle other messages here if needed
     }
   }
 });
-
-// Handle user messages during registration
-bot.on("message", async (msg) => {
-  const chatId = msg.chat.id;
-  console.log(`Received message from ${chatId}: ${msg.text}`); // Debug statement
-
-  if (userStates[chatId]) {
-    if (userStates[chatId].step === 1) {
-      userStates[chatId].userName = msg.text;
-      userStates[chatId].step = 2;
-      console.log(`User ${chatId} provided full name: ${msg.text}`); // Debug statement
-      bot.sendMessage(chatId, "Please enter your phone number:");
-    } else if (userStates[chatId].step === 2) {
-      const phoneNumber = msg.text;
-      console.log(`User ${chatId} provided phone number: ${phoneNumber}`); // Debug statement
-
-      const user = await addUser(
-        chatId,
-        userStates[chatId].userName,
-        phoneNumber
-      );
-      console.log(
-        `User ${chatId} registered with name: ${user.userName}, phone: ${phoneNumber}`
-      ); // Debug statement
-
-      await notifyLibrarian(
-        `New registration: ${user.userName}, Phone: ${phoneNumber}`
-      );
-      bot.sendMessage(
-        chatId,
-        `✓ Registration successful! Welcome, ${user.userName}.`
-      );
-      delete userStates[chatId]; // Clear the registration state
-      askLanguageSelection(chatId);
-    }
-  }
-});
-
-// Handle user messages during registration
-
-// When a user completes registration
 
 // Ask for language selection
 function askLanguageSelection(chatId) {
@@ -180,9 +137,7 @@ function askLanguageSelection(chatId) {
 bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
 
-  if (registrationState[chatId]) {
-    // Handle registration process
-  } else if (["Arabic", "Amharic", "AfaanOromo"].includes(msg.text)) {
+  if (["Arabic", "Amharic", "AfaanOromo"].includes(msg.text)) {
     await handleLanguageSelection(chatId, msg.text);
   } else if (msg.text === "/change_language") {
     askLanguageSelection(chatId);
@@ -195,11 +150,11 @@ async function addUser(chatId, userName, phoneNumber) {
   if (!user) {
     user = new User({ userName, phoneNumber, chatId });
     await user.save();
-    console.log(`New user created: ${user.userName}, Phone: ${phoneNumber}`); // Debug statement
+    console.log(`New user created: ${user.userName}, Phone: ${phoneNumber}`);
   } else {
     console.log(
       `User with phone number ${phoneNumber} already exists. Returning existing user.`
-    ); // Debug statement
+    );
   }
   return user;
 }
@@ -224,48 +179,21 @@ async function handleLanguageSelection(chatId, language) {
   );
 }
 
-// Handle category selection and list books
-bot.on("message", async (msg) => {
-  const chatId = msg.chat.id;
-
-  if (await isCategory(msg.text)) {
-    const selectedCategory = msg.text;
-    const books = await Book.find({
-      category: selectedCategory,
-      available: true,
-    });
-
-    if (books.length === 0) {
-      return bot.sendMessage(
-        chatId,
-        `No available books in "${selectedCategory}".`
-      );
-    }
-
-    const bookList = books
-      .map((book) => `- "${book.title}" (ID: ${book.id})`)
-      .join("\n");
-    bot.sendMessage(
-      chatId,
-      `Available books in "${selectedCategory}":\n${bookList}\n\nTo reserve a book, type /reserve <ID>.`
-    );
-  }
-});
-
 // Function to check if the message is a valid category
 async function isCategory(category) {
   const categories = await Book.distinct("category");
   return categories.includes(category);
 }
 
+// Reservation logic
 bot.onText(/\/reserve (\d+)/, async (msg, match) => {
   const chatId = msg.chat.id;
   const bookId = match[1];
-  console.log(`User ${chatId} requested to reserve book ID: ${bookId}`); // Debug statement
+  console.log(`User ${chatId} requested to reserve book ID: ${bookId}`);
 
   const user = await User.findOne({ chatId });
   if (!user) {
-    console.log(`User ${chatId} is not registered.`); // Debug statement
+    console.log(`User ${chatId} is not registered.`);
     return bot.sendMessage(
       chatId,
       "You need to register first using /register."
@@ -274,7 +202,7 @@ bot.onText(/\/reserve (\d+)/, async (msg, match) => {
 
   const book = await Book.findOne({ id: bookId });
   if (!book || !book.available) {
-    console.log(`Book ID ${bookId} is not available for user ${chatId}.`); // Debug statement
+    console.log(`Book ID ${bookId} is not available for user ${chatId}.`);
     return bot.sendMessage(
       chatId,
       `Sorry, the book with ID ${bookId} is not available.`
@@ -286,7 +214,7 @@ bot.onText(/\/reserve (\d+)/, async (msg, match) => {
     const reservation = new Reservation({
       userId: user._id,
       bookId: book._id,
-      pickupTime: "after isha salah", // Default pickup time
+      pickupTime: "after isha salah",
     });
 
     await reservation.save();
