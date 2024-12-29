@@ -97,10 +97,31 @@ bot.on("message", async (msg) => {
       chatId,
       `✓ Registration successful! Welcome, ${user.userName}.`
     );
+    askLanguageSelection(chatId);
     delete registrationState[chatId]; // Clear the registration state
   }
 });
+// Ask for language selection
+function askLanguageSelection(chatId) {
+  bot.sendMessage(chatId, "Please select a language:", {
+    reply_markup: {
+      keyboard: [["Arabic"], ["Amharic"], ["AfaanOromo"]],
+      one_time_keyboard: true,
+    },
+  });
+}
+// Handle language selection
+bot.on("message", async (msg) => {
+  const chatId = msg.chat.id;
 
+  if (registrationState[chatId]) {
+    // Handle registration process
+  } else if (["Arabic", "Amharic", "AfaanOromo"].includes(msg.text)) {
+    await handleLanguageSelection(chatId, msg.text);
+  } else if (msg.text === "/change_language") {
+    askLanguageSelection(chatId);
+  }
+});
 // Add user function
 async function addUser(chatId, userName, phoneNumber) {
   let user = await User.findOne({ phoneNumber });
@@ -197,6 +218,46 @@ async function isCategory(category) {
   const categories = await Book.distinct("category");
   return categories.includes(category);
 }
+bot.onText(/\/reserve (\d+)/, async (msg, match) => {
+  const chatId = msg.chat.id;
+  const bookId = match[1];
+
+  const user = await User.findOne({ chatId });
+  if (!user) {
+    return bot.sendMessage(
+      chatId,
+      "You need to register first using /register."
+    );
+  }
+
+  const book = await Book.findOne({ id: bookId });
+  if (!book || !book.available) {
+    return bot.sendMessage(
+      chatId,
+      `Sorry, the book with ID ${bookId} is not available.`
+    );
+  }
+
+  const reservation = new Reservation({
+    userId: user._id,
+    bookId: book._id,
+    pickupTime: "after isha salah", // Default pickup time
+  });
+
+  await reservation.save();
+  book.available = false; // Mark the book as unavailable
+  await book.save();
+
+  // Notify librarian about the new reservation
+  await notifyLibrarian(
+    `New reservation by ${user.userName} for "${book.title}".`
+  );
+
+  return bot.sendMessage(
+    chatId,
+    `Successfully reserved: "${book.title}". Pickup time: after isha salah.`
+  );
+});
 
 bot.onText(/\/reserve (\d+) (in-person)?/, async (msg, match) => {
   const chatId = msg.chat.id;
