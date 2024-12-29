@@ -34,52 +34,49 @@ connectToDatabase();
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
   const welcomeMessage = `
-      ================---==============
+    ================---==============
     Welcome to the KJUMJ IRSHAD Library Booking Bot! 📚
     Please register to get started by typing /register.
     
     For a list of all commands and guidance, type /help.
     ================---==============
-    `;
+  `;
   bot.sendMessage(chatId, welcomeMessage);
 });
 
-// Registration logic
-let registrationState = {};
+// Registration state management
+const userStates = {};
 
+// Notify librarian
 async function notifyLibrarian(message) {
   await bot.sendMessage(librarianChatId, message);
 }
 
-const userStates = {};
-
 // Registration logic
 bot.onText(/\/register/, async (msg) => {
   const chatId = msg.chat.id;
-  console.log(`User ${chatId} initiated registration.`); // Debug statement
+  console.log(`User ${chatId} initiated registration.`);
 
-  // Check if the user is already registered
   const existingUser = await User.findOne({ chatId });
   if (existingUser) {
     console.log(
       `User ${chatId} is already registered as ${existingUser.userName}.`
-    ); // Debug statement
+    );
     return bot.sendMessage(
       chatId,
       `You are already registered as ${existingUser.userName}.`
     );
   }
 
-  // Initialize registration state
   userStates[chatId] = { step: 1 };
-  console.log(`User ${chatId} is at step 1: asking for full name.`); // Debug statement
+  console.log(`User ${chatId} is at step 1: asking for full name.`);
   bot.sendMessage(chatId, "Please enter your full name:");
 });
 
-// Handle user messages during registration
+// Handle user messages during registration and other commands
 bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
-  console.log(`Received message from ${chatId}: ${msg.text}`); // Debug statement
+  console.log(`Received message from ${chatId}: ${msg.text}`);
 
   // Ensure the message is not a command
   if (msg.text.startsWith("/")) return;
@@ -88,11 +85,11 @@ bot.on("message", async (msg) => {
     if (userStates[chatId].step === 1) {
       userStates[chatId].userName = msg.text;
       userStates[chatId].step = 2;
-      console.log(`User ${chatId} provided full name: ${msg.text}`); // Debug statement
-      bot.sendMessage(chatId, "Please enter your phone number:");
+      console.log(`User ${chatId} provided full name: ${msg.text}`);
+      return bot.sendMessage(chatId, "Please enter your phone number:");
     } else if (userStates[chatId].step === 2) {
       const phoneNumber = msg.text;
-      console.log(`User ${chatId} provided phone number: ${phoneNumber}`); // Debug statement
+      console.log(`User ${chatId} provided phone number: ${phoneNumber}`);
 
       const user = await addUser(
         chatId,
@@ -101,7 +98,7 @@ bot.on("message", async (msg) => {
       );
       console.log(
         `User ${chatId} registered with name: ${user.userName}, phone: ${phoneNumber}`
-      ); // Debug statement
+      );
 
       await notifyLibrarian(
         `New registration: ${user.userName}, Phone: ${phoneNumber}`
@@ -111,60 +108,17 @@ bot.on("message", async (msg) => {
         `✓ Registration successful! Welcome, ${user.userName}.`
       );
       delete userStates[chatId]; // Clear the registration state
-      askLanguageSelection(chatId);
-    }
-  } else {
-    // Check for reservations after registration
-    const user = await User.findOne({ chatId });
-    if (user && msg.text.startsWith("/reserve")) {
-      console.log(
-        `User ${chatId} is registered and is trying to reserve a book.`
-      ); // Debug statement
-      // Existing reservation logic here...
+      return askLanguageSelection(chatId);
     }
   }
-});
 
-// Handle user messages during registration
-bot.on("message", async (msg) => {
-  const chatId = msg.chat.id;
-  console.log(`Received message from ${chatId}: ${msg.text}`); // Debug statement
-
-  if (userStates[chatId]) {
-    if (userStates[chatId].step === 1) {
-      userStates[chatId].userName = msg.text;
-      userStates[chatId].step = 2;
-      console.log(`User ${chatId} provided full name: ${msg.text}`); // Debug statement
-      bot.sendMessage(chatId, "Please enter your phone number:");
-    } else if (userStates[chatId].step === 2) {
-      const phoneNumber = msg.text;
-      console.log(`User ${chatId} provided phone number: ${phoneNumber}`); // Debug statement
-
-      const user = await addUser(
-        chatId,
-        userStates[chatId].userName,
-        phoneNumber
-      );
-      console.log(
-        `User ${chatId} registered with name: ${user.userName}, phone: ${phoneNumber}`
-      ); // Debug statement
-
-      await notifyLibrarian(
-        `New registration: ${user.userName}, Phone: ${phoneNumber}`
-      );
-      bot.sendMessage(
-        chatId,
-        `✓ Registration successful! Welcome, ${user.userName}.`
-      );
-      delete userStates[chatId]; // Clear the registration state
-      askLanguageSelection(chatId);
-    }
+  // Handle language selection or other commands
+  if (["Arabic", "Amharic", "AfaanOromo"].includes(msg.text)) {
+    return handleLanguageSelection(chatId, msg.text);
+  } else if (msg.text === "/change_language") {
+    return askLanguageSelection(chatId);
   }
 });
-
-// Handle user messages during registration
-
-// When a user completes registration
 
 // Ask for language selection
 function askLanguageSelection(chatId) {
@@ -176,30 +130,17 @@ function askLanguageSelection(chatId) {
   });
 }
 
-// Handle language selection
-bot.on("message", async (msg) => {
-  const chatId = msg.chat.id;
-
-  if (registrationState[chatId]) {
-    // Handle registration process
-  } else if (["Arabic", "Amharic", "AfaanOromo"].includes(msg.text)) {
-    await handleLanguageSelection(chatId, msg.text);
-  } else if (msg.text === "/change_language") {
-    askLanguageSelection(chatId);
-  }
-});
-
 // Add user function
 async function addUser(chatId, userName, phoneNumber) {
   let user = await User.findOne({ phoneNumber });
   if (!user) {
     user = new User({ userName, phoneNumber, chatId });
     await user.save();
-    console.log(`New user created: ${user.userName}, Phone: ${phoneNumber}`); // Debug statement
+    console.log(`New user created: ${user.userName}, Phone: ${phoneNumber}`);
   } else {
     console.log(
       `User with phone number ${phoneNumber} already exists. Returning existing user.`
-    ); // Debug statement
+    );
   }
   return user;
 }
@@ -258,14 +199,15 @@ async function isCategory(category) {
   return categories.includes(category);
 }
 
+// Reservation logic
 bot.onText(/\/reserve (\d+)/, async (msg, match) => {
   const chatId = msg.chat.id;
   const bookId = match[1];
-  console.log(`User ${chatId} requested to reserve book ID: ${bookId}`); // Debug statement
+  console.log(`User ${chatId} requested to reserve book ID: ${bookId}`);
 
   const user = await User.findOne({ chatId });
   if (!user) {
-    console.log(`User ${chatId} is not registered.`); // Debug statement
+    console.log(`User ${chatId} is not registered.`);
     return bot.sendMessage(
       chatId,
       "You need to register first using /register."
@@ -274,19 +216,18 @@ bot.onText(/\/reserve (\d+)/, async (msg, match) => {
 
   const book = await Book.findOne({ id: bookId });
   if (!book || !book.available) {
-    console.log(`Book ID ${bookId} is not available for user ${chatId}.`); // Debug statement
+    console.log(`Book ID ${bookId} is not available for user ${chatId}.`);
     return bot.sendMessage(
       chatId,
       `Sorry, the book with ID ${bookId} is not available.`
     );
   }
 
-  // Create a reservation
   try {
     const reservation = new Reservation({
       userId: user._id,
       bookId: book._id,
-      pickupTime: "after isha salah", // Default pickup time
+      pickupTime: "after isha salah",
     });
 
     await reservation.save();
@@ -326,7 +267,6 @@ bot.onText(/\/add_books (.+)/, async (msg, match) => {
     const category = parts[3].trim();
     const title = parts[4].trim();
 
-    // Check if the language exists
     const existingBook = await Book.findOne({ id });
     if (existingBook) {
       await bot.sendMessage(chatId, `A book with ID ${id} already exists.`);
@@ -388,7 +328,6 @@ bot.onText(/\/my_reservations/, async (msg) => {
   const reservationList = userReservations
     .map((res) => `- "${res.bookId.title}" (Pickup: ${res.pickupTime})`)
     .join("\n");
-
   bot.sendMessage(chatId, `Your Reservations:\n${reservationList}`);
 });
 
@@ -472,6 +411,7 @@ app.post("/webhook", (req, res) => {
   res.sendStatus(200);
 });
 
+// Set webhook on startup
 setWebhook().catch(console.error);
 
 // Error handling
