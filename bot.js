@@ -73,56 +73,89 @@ bot.onText(/\/register/, async (msg) => {
 });
 
 // Handle user messages
+// Handle user messages during registration
+// Input validation for full name and phone number
+const isValidFullName = (name) =>
+  /^[a-zA-Z\s]+$/.test(name) && name.length <= 50;
+const isValidPhoneNumber = (number) => /^\d{10}$/.test(number);
+
+// Handle user messages during registration
 bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
   console.log(`Received message from ${chatId}: ${msg.text}`);
 
-  // Ensure the message is not a command
   if (msg.text.startsWith("/")) return;
 
   if (userStates[chatId]) {
     if (userStates[chatId].step === 1) {
+      if (!isValidFullName(msg.text)) {
+        return bot.sendMessage(
+          chatId,
+          "Please enter a valid full name (letters only, max 50 characters)."
+        );
+      }
       userStates[chatId].userName = msg.text;
       userStates[chatId].step = 2;
       console.log(`User ${chatId} provided full name: ${msg.text}`);
       bot.sendMessage(chatId, "Please enter your phone number:");
     } else if (userStates[chatId].step === 2) {
+      if (!isValidPhoneNumber(msg.text)) {
+        return bot.sendMessage(
+          chatId,
+          "Please enter a valid phone number (10 digits)."
+        );
+      }
       const phoneNumber = msg.text;
       console.log(`User ${chatId} provided phone number: ${phoneNumber}`);
 
-      const user = await addUser(
-        chatId,
-        userStates[chatId].userName,
-        phoneNumber
-      );
-      console.log(
-        `User ${chatId} registered with name: ${user.userName}, phone: ${phoneNumber}`
-      );
+      try {
+        const user = await addUser(
+          chatId,
+          userStates[chatId].userName,
+          phoneNumber
+        );
+        console.log(
+          `User ${chatId} registered with name: ${user.userName}, phone: ${phoneNumber}`
+        );
 
-      await notifyLibrarian(
-        `New registration: ${user.userName}, Phone: ${phoneNumber}`
-      );
-      bot.sendMessage(
-        chatId,
-        `✓ Registration successful! Welcome, ${user.userName}.`
-      );
+        await notifyLibrarian(
+          `New registration: ${user.userName}, Phone: ${phoneNumber}`
+        );
+        bot.sendMessage(
+          chatId,
+          `✓ Registration successful! Welcome, ${user.userName}. You can reserve books now.`
+        );
+      } catch (error) {
+        console.error("Error during user registration:", error);
+        bot.sendMessage(
+          chatId,
+          "There was an error during registration. Please try again."
+        );
+      }
       delete userStates[chatId]; // Clear the registration state
       askLanguageSelection(chatId);
-    }
-  } else {
-    // Check for reservations after registration
-    const user = await User.findOne({ chatId });
-    if (user && msg.text.startsWith("/reserve")) {
-      console.log(
-        `User ${chatId} is registered and is trying to reserve a book.`
-      );
-      // Reservation logic here...
-    } else {
-      // Handle other messages here if needed
     }
   }
 });
 
+// Consolidate language selection and command handling
+bot.on("message", async (msg) => {
+  const chatId = msg.chat.id;
+
+  if (msg.text.startsWith("/")) {
+    // Handle commands separately
+    if (msg.text === "/change_language") {
+      askLanguageSelection(chatId);
+    }
+    return;
+  }
+
+  if (userStates[chatId]) return; // Prevent further processing if in registration state
+
+  if (["Arabic", "Amharic", "AfaanOromo"].includes(msg.text)) {
+    await handleLanguageSelection(chatId, msg.text);
+  }
+});
 // Ask for language selection
 function askLanguageSelection(chatId) {
   bot.sendMessage(chatId, "Please select a language:", {
