@@ -198,21 +198,19 @@ async function isCategory(category) {
   return categories.includes(category);
 }
 
-bot.onText(/\/reserve (\d+)/, async (msg, match) => {
+bot.onText(/\/reserve (\d+) (in-person)?/, async (msg, match) => {
   const chatId = msg.chat.id;
   const bookId = match[1];
+  const isInPerson = match[2] === "in-person";
 
-  // Use chatId to find the user
-  // const user = await User.findOne({ chatId });
+  const user = await User.findOne({ chatId });
+  if (!user) {
+    return bot.sendMessage(
+      chatId,
+      "You need to register first using /register."
+    );
+  }
 
-  // if (!user) {
-  //   return bot.sendMessage(
-  //     chatId,
-  //     "You need to register first using /register."
-  //   );
-  // }
-
-  // Find the book by its ID
   const book = await Book.findOne({ id: bookId });
   if (!book || !book.available) {
     return bot.sendMessage(
@@ -221,11 +219,10 @@ bot.onText(/\/reserve (\d+)/, async (msg, match) => {
     );
   }
 
-  // Create a new reservation
   const reservation = new Reservation({
     userId: user._id,
     bookId: book._id,
-    pickupTime: "after isha salah",
+    pickupTime: isInPerson ? "In-Person Pickup" : "after isha salah",
   });
 
   await reservation.save();
@@ -234,12 +231,14 @@ bot.onText(/\/reserve (\d+)/, async (msg, match) => {
 
   // Notify librarian about the new reservation
   await notifyLibrarian(
-    `New reservation by ${user.userName} for "${book.title}".`
+    `New reservation by ${user.userName} for "${book.title}". Pickup type: ${
+      isInPerson ? "In-Person" : "after isha salah"
+    }.`
   );
 
   return bot.sendMessage(
     chatId,
-    `Successfully reserved: "${book.title}". Pickup time: after isha salah.`
+    `Successfully reserved: "${book.title}". Pickup time: ${reservation.pickupTime}.`
   );
 });
 
@@ -349,6 +348,43 @@ bot.onText(/\/cancel_reservation (\d+)/, async (msg, match) => {
   bot.sendMessage(
     chatId,
     `You have successfully canceled the reservation for "${reservation.bookId.title}".`
+  );
+});
+// Check if the user is a librarian
+const isLibrarian = (chatId) => {
+  return chatId === librarianChatId; // Compare with the librarian's chat ID
+};
+
+// Librarian can cancel a reservation
+bot.onText(/\/librarian_cancel_reservation (\d+)/, async (msg, match) => {
+  const chatId = msg.chat.id;
+  const reservationId = match[1];
+
+  if (!isLibrarian(chatId)) {
+    return bot.sendMessage(
+      chatId,
+      "You do not have permission to use this command."
+    );
+  }
+
+  const reservation = await Reservation.findById(reservationId);
+  if (!reservation) {
+    return bot.sendMessage(
+      chatId,
+      "Invalid reservation ID. Please check and try again."
+    );
+  }
+
+  const book = await Book.findById(reservation.bookId);
+  if (book) {
+    book.available = true; // Mark the book as available again
+    await book.save();
+  }
+
+  await Reservation.findByIdAndDelete(reservationId);
+  bot.sendMessage(
+    chatId,
+    `Reservation for "${reservation.bookId.title}" has been successfully canceled.`
   );
 });
 
