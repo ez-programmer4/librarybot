@@ -213,7 +213,6 @@ bot.onText(/\/reserve (\d+)/, async (msg, match) => {
   const bookId = match[1];
   console.log(`User ${chatId} requested to reserve book ID: ${bookId}`);
 
-  // Ensure chatId is correctly looked up
   const user = await User.findOne({ chatId: chatId });
   console.log("User object:", user);
 
@@ -271,6 +270,7 @@ bot.onText(/\/reserve (\d+)/, async (msg, match) => {
     );
   }
 });
+
 bot.onText(/\/backtomenu/, (msg) => {
   const chatId = msg.chat.id;
   askLanguageSelection(chatId); // Call the function to ask for language selection
