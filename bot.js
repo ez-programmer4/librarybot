@@ -554,7 +554,7 @@ bot.onText(/\/remove_book (\w+) (.+) (\d+)/, async (msg, match) => {
 
   // Debugging: Log the parameters
   console.log(
-    `Attempting to remove book - Language: ${language}, Category: ${category}, ID: ${id}`
+    `Attempting to remove book  Language: ${language}, Category: ${category}, ID: ${id}`
   );
 
   // Attempt to find and remove the book
@@ -599,27 +599,26 @@ bot.onText(/\/my_reservations/, async (msg) => {
 
   const reservationList = userReservations
     .map((res, index) => {
-      // Escape all Markdown special characters for Markdown V2
-      const title = res.bookId.title.replace(/([_*[]()~`>#+\-.!])/g, "\\$1");
-      const pickupTime = res.pickupTime.replace(/([_*[]()~`>#+\-.!])/g, "\\$1");
-      return `📝 *Reservation #${
+      // Escape all Markdown special characters
+      const title = res.bookId.title.replace(/([_*~`>#+\-.!])/g, "\\$1");
+      const pickupTime = res.pickupTime.replace(/([_*~`>#+\-.!])/g, "\\$1");
+      return `📝 Reservation #${
         index + 1
-      }*\\n*Title:* ${title}\\n*Pickup Time:* ${pickupTime}\\n`;
+      }:📙 ${title} ⌚ (Pickup: ${pickupTime})`;
     })
     .join("\n");
 
   // Log the final message for debugging
   console.log(
     "Final Message:",
-    `📖 *Your Reservations:*\n${reservationList}\nTo cancel a reservation, use /cancel_reservation <number>.`
+    `📖 *Your Reservations:*\n${reservationList}\n\nTo cancel a reservation, use /cancel_reservation <number>.`
   );
 
   try {
-    // Send message as formatted text using Markdown V2
+    // Send message as plain text for testing
     await bot.sendMessage(
       chatId,
-      `📖 *Your Reservations:*\n\n${reservationList}\nTo cancel a reservation, use /cancel_reservation <number>.`,
-      { parse_mode: "MarkdownV2" }
+      `📖 Your Reservations:\n${reservationList}\n\nTo cancel a reservation, use /cancel_reservation <number>.`
     );
   } catch (error) {
     console.error("Error sending message:", error);
@@ -629,6 +628,7 @@ bot.onText(/\/my_reservations/, async (msg) => {
     );
   }
 });
+
 // Cancel reservation by reservation number
 bot.onText(/\/cancel_reservation (\d+)/, async (msg, match) => {
   const chatId = msg.chat.id;
