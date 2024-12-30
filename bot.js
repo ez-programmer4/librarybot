@@ -289,6 +289,8 @@ bot.onText(/\/add_books (.+)/, async (msg, match) => {
 
 bot.onText(/\/view_reservations/, async (msg) => {
   const chatId = msg.chat.id;
+  console.log(chatId);
+  console.log(librarianChatId);
   if (!isLibrarian(chatId)) {
     return bot.sendMessage(
       chatId,
