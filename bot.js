@@ -34,12 +34,14 @@ connectToDatabase();
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
   const welcomeMessage = `
-    ================---==============
-    Welcome to the KJUMJ IRSHAD Library Booking Bot! 📚
-    Please register to get started by typing /register.
-    
-    For a list of all commands and guidance, type /help.
-    ================---==============
+  ====================---====================
+  🎉 *Welcome to the KJUMJ IRSHAD Library Booking Bot!* 📚
+  
+  Please register to get started by typing * /register *. ✍️
+  
+  For a list of all commands and guidance, type * /help *. ❓
+  
+  ====================---====================
   `;
   bot.sendMessage(chatId, welcomeMessage);
 });
@@ -53,6 +55,7 @@ async function notifyLibrarian(message) {
 }
 
 // Registration logic
+// Registration logic
 bot.onText(/\/register/, async (msg) => {
   const chatId = msg.chat.id;
   console.log(`User ${chatId} initiated registration.`);
@@ -64,13 +67,13 @@ bot.onText(/\/register/, async (msg) => {
     );
     return bot.sendMessage(
       chatId,
-      `You are already registered as ${existingUser.userName}.`
+      `🚫 You are already registered as *${existingUser.userName}*.`
     );
   }
 
   userStates[chatId] = { step: 1 };
   console.log(`User ${chatId} is at step 1: asking for full name.`);
-  bot.sendMessage(chatId, "Please enter your full name:");
+  bot.sendMessage(chatId, "📝 Please enter your full name:");
 });
 
 // Handle user messages during registration and other commands
@@ -86,7 +89,7 @@ bot.on("message", async (msg) => {
       userStates[chatId].userName = msg.text;
       userStates[chatId].step = 2;
       console.log(`User ${chatId} provided full name: ${msg.text}`);
-      return bot.sendMessage(chatId, "Please enter your phone number:");
+      return bot.sendMessage(chatId, "📞 Please enter your phone number:");
     } else if (userStates[chatId].step === 2) {
       const phoneNumber = msg.text;
       console.log(`User ${chatId} provided phone number: ${phoneNumber}`);
@@ -101,11 +104,11 @@ bot.on("message", async (msg) => {
       );
 
       await notifyLibrarian(
-        `New registration: ${user.userName}, Phone: ${phoneNumber}`
+        `🆕 New registration: *${user.userName}*, Phone: *${phoneNumber}*`
       );
       bot.sendMessage(
         chatId,
-        `✓ Registration successful! Welcome, ${user.userName}.`
+        `✓ Registration successful! Welcome, *${user.userName}*! 🎉`
       );
       delete userStates[chatId]; // Clear the registration state
       return askLanguageSelection(chatId);
@@ -122,7 +125,7 @@ bot.on("message", async (msg) => {
 
 // Ask for language selection
 function askLanguageSelection(chatId) {
-  bot.sendMessage(chatId, "Please select a language:", {
+  bot.sendMessage(chatId, "🌐 Please select a language:", {
     reply_markup: {
       keyboard: [["Arabic"], ["Amharic"], ["AfaanOromo"]],
       one_time_keyboard: true,
@@ -180,16 +183,18 @@ bot.on("message", async (msg) => {
     if (books.length === 0) {
       return bot.sendMessage(
         chatId,
-        `No available books in "${selectedCategory}".`
+        `📚 *No available books* in "${selectedCategory}".`
       );
     }
 
     const bookList = books
-      .map((book) => `- "${book.title}" (ID: ${book.id})`)
+      .map((book) => `🔖 *ID:* *${book.id}* - *"${book.title}"*`)
       .join("\n");
+
     bot.sendMessage(
       chatId,
-      `Available books in "${selectedCategory}":\n${bookList}\n\nTo reserve a book, type /reserve <ID>.`
+      `📖 *Available books in* *"${selectedCategory}"*:\n\n${bookList}\n\nTo reserve a book, type /reserve <ID>.`,
+      { parse_mode: "Markdown" }
     );
   }
 });
@@ -213,7 +218,7 @@ bot.onText(/\/reserve (\d+)/, async (msg, match) => {
     console.log(`User ${chatId} is not registered.`);
     return bot.sendMessage(
       chatId,
-      "You need to register first using /register."
+      "🚫 You need to register first using /register."
     );
   }
 
@@ -222,7 +227,7 @@ bot.onText(/\/reserve (\d+)/, async (msg, match) => {
     console.log(`Book ID ${bookId} is not available for user ${chatId}.`);
     return bot.sendMessage(
       chatId,
-      `Sorry, the book with ID ${bookId} is not available.`
+      `❌ Sorry, the book with ID *${bookId}* is not available.`
     );
   }
 
@@ -238,20 +243,21 @@ bot.onText(/\/reserve (\d+)/, async (msg, match) => {
     await book.save();
 
     await notifyLibrarian(
-      `New reservation by ${user.userName} for "${book.title}".`
+      `🆕 New reservation by *${user.userName}* for *"${book.title}"*.`
     );
     bot.sendMessage(
       chatId,
-      `Successfully reserved: "${book.title}". Pickup time: after isha salah.`
+      `✅ Successfully reserved: *"${book.title}"*. Pickup time: *after isha salah*.`
     );
   } catch (error) {
     console.error("Error saving reservation:", error);
     bot.sendMessage(
       chatId,
-      "There was an error processing your reservation. Please try again."
+      "⚠️ There was an error processing your reservation. Please try again."
     );
   }
 });
+
 // Adding books to the database
 bot.onText(/\/add_books (.+)/, async (msg, match) => {
   const chatId = msg.chat.id;
@@ -260,7 +266,10 @@ bot.onText(/\/add_books (.+)/, async (msg, match) => {
   for (const entry of entries) {
     const parts = entry.match(/^(\d+) (\w+) "(.+)" "(.+)"$/);
     if (!parts) {
-      await bot.sendMessage(chatId, `Invalid format for entry: "${entry}".`);
+      await bot.sendMessage(
+        chatId,
+        `❌ Invalid format for entry: *"${entry}".*`
+      );
       continue;
     }
 
@@ -271,7 +280,10 @@ bot.onText(/\/add_books (.+)/, async (msg, match) => {
 
     const existingBook = await Book.findOne({ id });
     if (existingBook) {
-      await bot.sendMessage(chatId, `A book with ID ${id} already exists.`);
+      await bot.sendMessage(
+        chatId,
+        `🚫 A book with ID *${id}* already exists.`
+      );
       continue;
     }
 
@@ -283,7 +295,7 @@ bot.onText(/\/add_books (.+)/, async (msg, match) => {
       category,
     });
     await newBook.save();
-    await bot.sendMessage(chatId, `Book "${title}" added successfully.`);
+    await bot.sendMessage(chatId, `✅ Book *"${title}"* added successfully.`);
   }
 });
 
@@ -299,17 +311,19 @@ bot.onText(/\/view_reservations/, async (msg) => {
 
   const reservations = await Reservation.find().populate("userId bookId");
   if (reservations.length === 0) {
-    return bot.sendMessage(chatId, "There are no reservations.");
+    return bot.sendMessage(chatId, "📅 There are no reservations.");
   }
 
   const reservationList = reservations
     .map(
       (res) =>
-        `User: ${res.userId.userName}, Book ID: ${res.bookId.id}, Book: "${res.bookId.title}", Pickup Time: ${res.pickupTime}`
+        `🔖 Book ID: *${res.bookId.id}* - User: *${res.userId.userName}* - Book: "${res.bookId.title}" - Pickup Time: *${res.pickupTime}*`
     )
     .join("\n");
 
-  bot.sendMessage(chatId, `Current Reservations:\n${reservationList}`);
+  bot.sendMessage(chatId, `📚 Current Reservations:\n\n${reservationList}`, {
+    parse_mode: "Markdown",
+  });
 });
 bot.onText(
   /\/librarian_add_reservation (\S+) (\d+) ?(.*)?/,
@@ -320,7 +334,7 @@ bot.onText(
     if (!isLibrarian(chatId)) {
       return bot.sendMessage(
         chatId,
-        "You do not have permission to use this command."
+        "🚫 You do not have permission to use this command."
       );
     }
 
@@ -333,7 +347,7 @@ bot.onText(
     if (!user) {
       return bot.sendMessage(
         chatId,
-        "User not found. Registration is required before reserving a book."
+        "👤 User not found. Registration is required before reserving a book."
       );
     }
 
@@ -342,7 +356,7 @@ bot.onText(
     if (!book || !book.available) {
       return bot.sendMessage(
         chatId,
-        `Sorry, the book with ID ${bookId} is not available.`
+        `❌ Sorry, the book with ID *${bookId}* is not available.`
       );
     }
 
@@ -358,14 +372,15 @@ bot.onText(
     await book.save();
 
     await notifyLibrarian(
-      `New manual reservation for ${user.userName} for "${book.title}".`
+      `🆕 New manual reservation for *${user.userName}* for *"${book.title}"*.`
     );
     bot.sendMessage(
       chatId,
-      `Successfully added reservation for ${user.userName} for "${book.title}".`
+      `✅ Successfully added reservation for *${user.userName}* for *"${book.title}"*.`
     );
   }
 );
+
 bot.onText(/\/librarian_cancel_reservation (\d+)/, async (msg, match) => {
   const chatId = msg.chat.id;
   const bookId = match[1]; // This is the numeric ID of the book provided by the user
@@ -373,7 +388,7 @@ bot.onText(/\/librarian_cancel_reservation (\d+)/, async (msg, match) => {
   if (!isLibrarian(chatId)) {
     return bot.sendMessage(
       chatId,
-      "You do not have permission to use this command."
+      "🚫 You do not have permission to use this command."
     );
   }
 
@@ -384,7 +399,7 @@ bot.onText(/\/librarian_cancel_reservation (\d+)/, async (msg, match) => {
   if (!book) {
     return bot.sendMessage(
       chatId,
-      "No book found with the given ID. Please check and try again."
+      "❌ No book found with the given ID. Please check and try again."
     );
   }
 
@@ -395,7 +410,7 @@ bot.onText(/\/librarian_cancel_reservation (\d+)/, async (msg, match) => {
   if (!reservation) {
     return bot.sendMessage(
       chatId,
-      "No reservation found for the given book ID. Please check and try again."
+      "❌ No reservation found for the given book ID. Please check and try again."
     );
   }
 
@@ -409,12 +424,13 @@ bot.onText(/\/librarian_cancel_reservation (\d+)/, async (msg, match) => {
   // Ensure to correctly access the title of the book
   bot.sendMessage(
     chatId,
-    `Reservation for "${book.title}" has been successfully canceled.`
+    `✅ Reservation for *"${book.title}"* has been successfully canceled.`
   );
 });
+
 bot.onText(/\/change_language/, (msg) => {
   const chatId = msg.chat.id;
-  bot.sendMessage(chatId, "Please select a language:", {
+  bot.sendMessage(chatId, "🌐 Please select a language:", {
     reply_markup: {
       keyboard: [["Arabic"], ["Amharic"], ["AfaanOromo"]],
       one_time_keyboard: true,
@@ -431,45 +447,45 @@ bot.on("message", async (msg) => {
     if (user) {
       user.language = msg.text; // Save the selected language
       await user.save();
-      bot.sendMessage(chatId, `Language changed to ${msg.text}.`);
+      bot.sendMessage(chatId, `✅ Language changed to *${msg.text}*.`);
     }
   }
 });
-bot.onText(/\/cancel_own_reservation (\d+)/, async (msg, match) => {
-  const chatId = msg.chat.id;
-  const reservationId = match[1];
+// bot.onText(/\/cancel_own_reservation (\d+)/, async (msg, match) => {
+//   const chatId = msg.chat.id;
+//   const reservationId = match[1];
 
-  const user = await User.findOne({ chatId });
-  if (!user) {
-    return bot.sendMessage(
-      chatId,
-      "You need to register first using /register."
-    );
-  }
+//   const user = await User.findOne({ chatId });
+//   if (!user) {
+//     return bot.sendMessage(
+//       chatId,
+//       "You need to register first using /register."
+//     );
+//   }
 
-  const reservation = await Reservation.findOne({
-    _id: reservationId,
-    userId: user._id,
-  });
-  if (!reservation) {
-    return bot.sendMessage(
-      chatId,
-      "You do not have a reservation with that ID."
-    );
-  }
+//   const reservation = await Reservation.findOne({
+//     _id: reservationId,
+//     userId: user._id,
+//   });
+//   if (!reservation) {
+//     return bot.sendMessage(
+//       chatId,
+//       "You do not have a reservation with that ID."
+//     );
+//   }
 
-  const book = await Book.findById(reservation.bookId);
-  if (book) {
-    book.available = true; // Mark the book as available
-    await book.save();
-  }
+//   const book = await Book.findById(reservation.bookId);
+//   if (book) {
+//     book.available = true; // Mark the book as available
+//     await book.save();
+//   }
 
-  await Reservation.findByIdAndDelete(reservationId);
-  bot.sendMessage(
-    chatId,
-    `You have successfully canceled your reservation for "${book.title}".`
-  );
-});
+//   await Reservation.findByIdAndDelete(reservationId);
+//   bot.sendMessage(
+//     chatId,
+//     `You have successfully canceled your reservation for "${book.title}".`
+//   );
+// });
 // Remove book from the database
 bot.onText(/\/remove_book (\w+) (\w+) (\d+)/, async (msg, match) => {
   const chatId = msg.chat.id;
@@ -481,13 +497,13 @@ bot.onText(/\/remove_book (\w+) (\w+) (\d+)/, async (msg, match) => {
   if (!book) {
     return bot.sendMessage(
       chatId,
-      `No book found with ID ${id} in category "${category}".`
+      `❌ No book found with ID *${id}* in category *"${category}".*`
     );
   }
 
   bot.sendMessage(
     chatId,
-    `Book with ID ${id} has been removed from category "${category}" in ${language}.`
+    `✅ Book with ID *${id}* has been removed from category *"${category}"* in *${language}*.`
   );
 });
 
@@ -499,7 +515,7 @@ bot.onText(/\/my_reservations/, async (msg) => {
   if (!user) {
     return bot.sendMessage(
       chatId,
-      "You need to register first using /register."
+      "🚫 You need to register first using /register."
     );
   }
 
@@ -508,21 +524,21 @@ bot.onText(/\/my_reservations/, async (msg) => {
   }).populate("bookId");
 
   if (userReservations.length === 0) {
-    return bot.sendMessage(chatId, "You currently have no reservations.");
+    return bot.sendMessage(chatId, "📭 You currently have no reservations.");
   }
 
   const reservationList = userReservations
     .map(
       (res, index) =>
-        `📝 Reservation #${index + 1}: "${res.bookId.title}" (Pickup: ${
+        `📝 Reservation #${index + 1}: *"${res.bookId.title}"* (Pickup: *${
           res.pickupTime
-        })`
+        }*)`
     )
     .join("\n");
 
   bot.sendMessage(
     chatId,
-    `Your Reservations:\n${reservationList}\n\nTo cancel a reservation, use /cancel_reservation <number>.`
+    `📖 *Your Reservations:*\n${reservationList}\n\nTo cancel a reservation, use /cancel_reservation <number>.`
   );
 });
 
@@ -535,7 +551,7 @@ bot.onText(/\/cancel_reservation (\d+)/, async (msg, match) => {
   if (!user) {
     return bot.sendMessage(
       chatId,
-      "You need to register first using /register."
+      "🚫 You need to register first using /register."
     );
   }
 
@@ -546,7 +562,7 @@ bot.onText(/\/cancel_reservation (\d+)/, async (msg, match) => {
   if (reservationIndex < 0 || reservationIndex >= userReservations.length) {
     return bot.sendMessage(
       chatId,
-      "Invalid reservation number. Please check your reservations and try again."
+      "❌ Invalid reservation number. Please check your reservations and try again."
     );
   }
 
@@ -561,7 +577,14 @@ bot.onText(/\/cancel_reservation (\d+)/, async (msg, match) => {
   await Reservation.findByIdAndDelete(reservation._id);
   bot.sendMessage(
     chatId,
-    `You have successfully canceled the reservation for "${reservation.bookId.title}".`
+    `✅ You have successfully canceled the reservation for *"${reservation.bookId.title}"*.`
+  );
+
+  // Notify the librarian about the cancellation
+  const librarianChatId = "YOUR_LIBRARIAN_CHAT_ID"; // Replace with the actual chat ID
+  bot.sendMessage(
+    librarianChatId,
+    `📩 User has canceled a reservation:\n- *"${reservation.bookId.title}"*\n- User ID: *${user._id}*`
   );
 });
 
@@ -578,7 +601,7 @@ bot.onText(/\/librarian_cancel_reservation (\d+)/, async (msg, match) => {
   if (!isLibrarian(chatId)) {
     return bot.sendMessage(
       chatId,
-      "You do not have permission to use this command."
+      "🚫 You do not have permission to use this command."
     );
   }
 
@@ -587,7 +610,7 @@ bot.onText(/\/librarian_cancel_reservation (\d+)/, async (msg, match) => {
   if (!book) {
     return bot.sendMessage(
       chatId,
-      "No book found with the given ID. Please check and try again."
+      "❌ No book found with the given ID. Please check and try again."
     );
   }
 
@@ -598,7 +621,7 @@ bot.onText(/\/librarian_cancel_reservation (\d+)/, async (msg, match) => {
   if (!reservation) {
     return bot.sendMessage(
       chatId,
-      "No reservation found for the given book ID. Please check and try again."
+      "❌ No reservation found for the given book ID. Please check and try again."
     );
   }
 
@@ -610,8 +633,29 @@ bot.onText(/\/librarian_cancel_reservation (\d+)/, async (msg, match) => {
   await Reservation.findByIdAndDelete(reservation._id);
   bot.sendMessage(
     chatId,
-    `Reservation for "${reservation.bookId.title}" has been successfully canceled.`
+    `✅ Reservation for *"${reservation.bookId.title}"* has been successfully canceled.`
   );
+});
+bot.onText(/\/help/, (msg) => {
+  const chatId = msg.chat.id;
+
+  const helpMessage = `
+  🤖 *Library Bot Help*
+
+  Here are the commands you can use:
+
+  - /register: Register yourself to start using the library services.
+  - /remove_book <language> <category> <id>: Remove a book from the library.
+  - /librarian_add_reservation <username> <book_id> [pickup_time]: Manually add a reservation for a user.
+  - /librarian_cancel_reservation <book_id>: Cancel a reservation for a book.
+  - /my_reservations: View your current reservations.
+  - /cancel_reservation <number>: Cancel a specific reservation by its number.
+  - /change_language: Change your preferred language.
+
+  For more assistance, feel free to ask questions! 📚
+  `;
+
+  bot.sendMessage(chatId, helpMessage, { parse_mode: "Markdown" });
 });
 
 // Start the Express server
