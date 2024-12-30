@@ -260,7 +260,7 @@ bot.onText(/\/reserve (\d+)/, async (msg, match) => {
     );
     await bot.sendMessage(
       chatId,
-      `✅ Successfully reserved: *"${book.title}"*. Pickup time: *after isha salah*.\n\nTo go back to the menu, type /menu.`,
+      `✅ Successfully reserved: *"${book.title}"*. Pickup time: *after isha salah*.\n\nTo go back to the menu, type /back_menu.`,
       { parse_mode: "Markdown" }
     );
   } catch (error) {
@@ -271,13 +271,9 @@ bot.onText(/\/reserve (\d+)/, async (msg, match) => {
     );
   }
 });
-bot.onText(/\/menu/, (msg) => {
+bot.onText(/\/back_menu/, (msg) => {
   const chatId = msg.chat.id;
-  // Send back the language selection menu or any relevant menu
-  bot.sendMessage(
-    chatId,
-    "🌐 Please choose your language:\n1. English\n2. Arabic\n..."
-  );
+  askLanguageSelection(chatId); // Call the function to ask for language selection
 });
 bot.onText(/\/add_books (.+)/, async (msg, match) => {
   const chatId = msg.chat.id;
