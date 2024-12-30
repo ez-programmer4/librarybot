@@ -599,12 +599,15 @@ bot.onText(/\/my_reservations/, async (msg) => {
 
   const reservationList = userReservations
     .map((res, index) => {
-      // Escape all Markdown special characters
-      const title = res.bookId.title.replace(/([_*~`>#+\-.!])/g, "\\$1");
-      const pickupTime = res.pickupTime.replace(/([_*~`>#+\-.!])/g, "\\$1");
+      // Escape all Markdown special characters for Markdown V2
+      const title = res.bookId.title.replace(/([_*[\]()~`>#+\-.!])/g, "\\$1");
+      const pickupTime = res.pickupTime.replace(
+        /([_*[\]()~`>#+\-.!])/g,
+        "\\$1"
+      );
       return `📝 *Reservation #${
         index + 1
-      }*\n*Title:* ${title}\n*Pickup Time:* ${pickupTime}\n`;
+      }*➡️*Title:* ${title}➡️*Pickup Time:* ${pickupTime}\n`;
     })
     .join("\n");
 
@@ -615,10 +618,11 @@ bot.onText(/\/my_reservations/, async (msg) => {
   );
 
   try {
-    // Send message as formatted text
+    // Send message as formatted text using Markdown V2
     await bot.sendMessage(
       chatId,
-      `📖 *Your Reservations:*\n\n${reservationList}\nTo cancel a reservation, use /cancel_reservation <number>.`
+      `📖 *Your Reservations:*\n\n${reservationList}\nTo cancel a reservation, use /cancel_reservation <number>.`,
+      { parse_mode: "MarkdownV2" }
     );
   } catch (error) {
     console.error("Error sending message:", error);
