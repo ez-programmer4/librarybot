@@ -542,18 +542,21 @@ bot.onText(/\/my_reservations/, async (msg) => {
 
   const reservationList = userReservations
     .map((res, index) => {
-      // Escape all Markdown special characters
-      const title = res.bookId.title.replace(/([_*[\]()~`>#+\-.!])/g, "\\$1");
-      const pickupTime = res.pickupTime.replace(
-        /([_*[\]()~`>#+\-.!])/g,
-        "\\$1"
-      );
+      // Escape Markdown special characters
+      const title = res.bookId.title.replace(/([_*[]()~`>#+\-.!])/g, "\\$1");
+      const pickupTime = res.pickupTime.replace(/([_*[]()~`>#+\-.!])/g, "\\$1");
+      // Remove quotes for better compatibility
       return `📝 Reservation #${
         index + 1
-      }: *"${title}"* (Pickup: *${pickupTime}*)`;
+      }: *${title}* (Pickup: *${pickupTime}*)`;
     })
     .join("\n");
-  console.log(reservationList);
+
+  // Log the final message for debugging
+  console.log(
+    "Final Message:",
+    `📖 *Your Reservations:*\n${reservationList}\n\nTo cancel a reservation, use /cancel_reservation <number>.`
+  );
 
   try {
     await bot.sendMessage(
