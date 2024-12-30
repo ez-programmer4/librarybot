@@ -513,12 +513,24 @@ bot.onText(/\/remove_book (\w+) (\w+) (\d+)/, async (msg, match) => {
   // Debugging: Log the incoming message
   console.log(`Received message from ${chatId}: ${msg.text}`);
 
+  // Log the match array
+  console.log(`Match array: ${JSON.stringify(match)}`);
+
   // Check if the user is a librarian
   if (!isLibrarian(chatId)) {
     console.log(`User ${chatId} is not a librarian.`);
     return bot.sendMessage(
       chatId,
       "🚫 You do not have permission to remove books."
+    );
+  }
+
+  // Check if match array is valid
+  if (!match || match.length < 4) {
+    console.log(`Invalid command syntax: ${msg.text}`);
+    return bot.sendMessage(
+      chatId,
+      "❌ Invalid command syntax. Please use: /remove_book <language> <category> <id>."
     );
   }
 
