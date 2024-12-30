@@ -368,7 +368,7 @@ bot.onText(
 );
 bot.onText(/\/librarian_cancel_reservation (\d+)/, async (msg, match) => {
   const chatId = msg.chat.id;
-  const bookId = match[1]; // This is the Book ID provided by the user
+  const bookId = match[1]; // This is the numeric ID of the book provided by the user
 
   if (!isLibrarian(chatId)) {
     return bot.sendMessage(
@@ -377,11 +377,19 @@ bot.onText(/\/librarian_cancel_reservation (\d+)/, async (msg, match) => {
     );
   }
 
-  // Convert bookId to ObjectId
-  console.log(bookId);
+  console.log(`Received book ID: ${bookId}`);
 
-  // Find the reservation by book ID
-  const reservation = await Reservation.findOne({ bookId: bookId }).populate(
+  // Find the book by its numeric ID
+  const book = await Book.findOne({ id: bookId });
+  if (!book) {
+    return bot.sendMessage(
+      chatId,
+      "No book found with the given ID. Please check and try again."
+    );
+  }
+
+  // Find the reservation using the book's ObjectId
+  const reservation = await Reservation.findOne({ bookId: book._id }).populate(
     "userId"
   );
   if (!reservation) {
@@ -391,13 +399,11 @@ bot.onText(/\/librarian_cancel_reservation (\d+)/, async (msg, match) => {
     );
   }
 
-  // Find the related book
-  const book = await Book.findById(reservation.bookId);
-  if (book) {
-    book.available = true; // Mark the book as available again
-    await book.save();
-  }
+  // Mark the book as available again
+  book.available = true; // Mark the book as available again
+  await book.save();
 
+  // Delete the reservation
   await Reservation.findByIdAndDelete(reservation._id);
   bot.sendMessage(
     chatId,
