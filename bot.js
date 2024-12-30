@@ -379,6 +379,7 @@ bot.onText(/\/librarian_cancel_reservation (\d+)/, async (msg, match) => {
 
   // Convert bookId to ObjectId
   const objectId = mongoose.Types.ObjectId(bookId);
+  console.log(objectId);
 
   // Find the reservation by book ID
   const reservation = await Reservation.findOne({ bookId: objectId }).populate(
@@ -542,7 +543,7 @@ const isLibrarian = (chatId) => {
 // Librarian can cancel a reservation
 bot.onText(/\/librarian_cancel_reservation (\d+)/, async (msg, match) => {
   const chatId = msg.chat.id;
-  const reservationId = match[1];
+  const bookId = match[1]; // This is the numeric ID of the book provided by the user
 
   if (!isLibrarian(chatId)) {
     return bot.sendMessage(
@@ -551,21 +552,32 @@ bot.onText(/\/librarian_cancel_reservation (\d+)/, async (msg, match) => {
     );
   }
 
-  const reservation = await Reservation.findById(reservationId);
-  if (!reservation) {
+  // Find the book by its numeric ID
+  const book = await Book.findOne({ id: bookId });
+  if (!book) {
     return bot.sendMessage(
       chatId,
-      "Invalid reservation ID. Please check and try again."
+      "No book found with the given ID. Please check and try again."
     );
   }
 
-  const book = await Book.findById(reservation.bookId);
-  if (book) {
-    book.available = true; // Mark the book as available again
-    await book.save();
+  // Find the reservation by book ID
+  const reservation = await Reservation.findOne({ bookId: book._id }).populate(
+    "userId"
+  );
+  if (!reservation) {
+    return bot.sendMessage(
+      chatId,
+      "No reservation found for the given book ID. Please check and try again."
+    );
   }
 
-  await Reservation.findByIdAndDelete(reservationId);
+  // Mark the book as available again
+  book.available = true;
+  await book.save();
+
+  // Delete the reservation
+  await Reservation.findByIdAndDelete(reservation._id);
   bot.sendMessage(
     chatId,
     `Reservation for "${reservation.bookId.title}" has been successfully canceled.`
