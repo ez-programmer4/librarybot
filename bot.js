@@ -542,16 +542,17 @@ bot.onText(/\/my_reservations/, async (msg) => {
 
   const reservationList = userReservations
     .map((res, index) => {
-      const title = res.bookId.title.replace(/[_*`]/g, "\\$&");
-      const pickupTime = res.pickupTime.replace(/[_*`]/g, "\\$&");
+      // Escape all Markdown special characters
+      const title = res.bookId.title.replace(/([_*[\]()~`>#+\-.!])/g, "\\$1");
+      const pickupTime = res.pickupTime.replace(
+        /([_*[\]()~`>#+\-.!])/g,
+        "\\$1"
+      );
       return `📝 Reservation #${
         index + 1
       }: *"${title}"* (Pickup: *${pickupTime}*)`;
     })
     .join("\n");
-
-  // Log the reservation list to inspect it
-  console.log("Reservation List:", reservationList);
 
   try {
     await bot.sendMessage(
