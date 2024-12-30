@@ -521,7 +521,6 @@ bot.onText(/\/remove_book (\w+) (\w+) (\d+)/, async (msg, match) => {
   );
 });
 
-// Display user reservations with icons and styling
 bot.onText(/\/my_reservations/, async (msg) => {
   const chatId = msg.chat.id;
   const user = await User.findOne({ chatId });
@@ -543,14 +542,16 @@ bot.onText(/\/my_reservations/, async (msg) => {
 
   const reservationList = userReservations
     .map((res, index) => {
-      // Ensure the title and pickupTime are safe for Markdown
-      const title = res.bookId.title.replace(/[_*`]/g, "\\$&"); // Escape Markdown special characters
-      const pickupTime = res.pickupTime.replace(/[_*`]/g, "\\$&"); // Escape Markdown special characters
+      const title = res.bookId.title.replace(/[_*`]/g, "\\$&");
+      const pickupTime = res.pickupTime.replace(/[_*`]/g, "\\$&");
       return `📝 Reservation #${
         index + 1
       }: *"${title}"* (Pickup: *${pickupTime}*)`;
     })
     .join("\n");
+
+  // Log the reservation list to inspect it
+  console.log("Reservation List:", reservationList);
 
   try {
     await bot.sendMessage(
