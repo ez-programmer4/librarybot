@@ -262,13 +262,21 @@ bot.onText(/\/reserve (\d+)/, async (msg, match) => {
   }
 });
 
-// Adding books to the database
 bot.onText(/\/add_books (.+)/, async (msg, match) => {
   const chatId = msg.chat.id;
+
+  // Check if the user is a librarian
+  if (!isLibrarian(chatId)) {
+    return bot.sendMessage(
+      chatId,
+      "🚫 You do not have permission to add books."
+    );
+  }
+
   const entries = match[1].split(";").map((entry) => entry.trim());
 
   for (const entry of entries) {
-    const parts = entry.match(/^(\d+) (\w+) "(.+)" "(.+)"$/);
+    const parts = entry.match(/^(\d+) (.+) "(.+)" "(.+)"$/); // Updated regex to allow any language
     if (!parts) {
       await bot.sendMessage(
         chatId,
