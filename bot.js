@@ -63,20 +63,24 @@ bot.onText(/\/register/, async (msg) => {
   console.log(`User ${chatId} initiated registration.`);
 
   const existingUser = await User.findOne({ chatId });
+
   if (existingUser) {
     console.log(
       `User ${chatId} is already registered as ${existingUser.userName}.`
     );
-    return bot.sendMessage(
+    await bot.sendMessage(
       chatId,
       `🚫 You are already registered as *${existingUser.userName}*.`,
       { parse_mode: "Markdown" }
     );
+
+    // Now ask for language selection
+    return askLanguageSelection(chatId);
   }
 
   userStates[chatId] = { step: 1 };
   console.log(`User ${chatId} is at step 1: asking for full name.`);
-  bot.sendMessage(chatId, "📝 Please enter your full name:");
+  await bot.sendMessage(chatId, "📝 Please enter your full name:");
 });
 
 // Handle user messages during registration and other commands
