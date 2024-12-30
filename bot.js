@@ -377,8 +377,13 @@ bot.onText(/\/librarian_cancel_reservation (\d+)/, async (msg, match) => {
     );
   }
 
+  // Convert bookId to ObjectId
+  const objectId = mongoose.Types.ObjectId(bookId);
+
   // Find the reservation by book ID
-  const reservation = await Reservation.findOne({ bookId }).populate("userId");
+  const reservation = await Reservation.findOne({ bookId: objectId }).populate(
+    "userId"
+  );
   if (!reservation) {
     return bot.sendMessage(
       chatId,
