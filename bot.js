@@ -312,51 +312,61 @@ bot.onText(/\/view_reservations/, async (msg) => {
 
   bot.sendMessage(chatId, `Current Reservations:\n${reservationList}`);
 });
-bot.onText(/\/librarian_add_reservation (.+) (.+) (.+)/, async (msg, match) => {
-  const chatId = msg.chat.id;
-  if (!isLibrarian(chatId)) {
-    return bot.sendMessage(
+bot.onText(
+  /\/librarian_add_reservation (\S+) (\d+) ?(.*)?/,
+  async (msg, match) => {
+    const chatId = msg.chat.id;
+
+    // Check if the user is a librarian
+    if (!isLibrarian(chatId)) {
+      return bot.sendMessage(
+        chatId,
+        "You do not have permission to use this command."
+      );
+    }
+
+    const userName = match[1]; // User name
+    const bookId = match[2]; // Book ID (make sure this is numeric)
+    const pickupTime = match[3] || "after isha salah"; // Optional pickup time
+
+    // Check if the user is registered
+    const user = await User.findOne({ userName });
+    if (!user) {
+      return bot.sendMessage(
+        chatId,
+        "User not found. Registration is required before reserving a book."
+      );
+    }
+
+    // Find the book by ID
+    const book = await Book.findOne({ id: bookId });
+    if (!book || !book.available) {
+      return bot.sendMessage(
+        chatId,
+        `Sorry, the book with ID ${bookId} is not available.`
+      );
+    }
+
+    // Create the reservation
+    const reservation = new Reservation({
+      userId: user._id,
+      bookId: book._id,
+      pickupTime,
+    });
+
+    await reservation.save();
+    book.available = false; // Mark the book as unavailable
+    await book.save();
+
+    await notifyLibrarian(
+      `New manual reservation for ${user.userName} for "${book.title}".`
+    );
+    bot.sendMessage(
       chatId,
-      "You do not have permission to use this command."
+      `Successfully added reservation for ${user.userName} for "${book.title}".`
     );
   }
-
-  const userName = match[1]; // User name
-  const bookId = match[2]; // Book ID
-  const pickupTime = match[3] || "after isha salah"; // Optional pickup time
-
-  const user = await User.findOne({ userName });
-  const book = await Book.findOne({ id: bookId });
-
-  if (!user) {
-    return bot.sendMessage(chatId, "User not found.");
-  }
-
-  if (!book || !book.available) {
-    return bot.sendMessage(
-      chatId,
-      `Sorry, the book with ID ${bookId} is not available.`
-    );
-  }
-
-  const reservation = new Reservation({
-    userId: user._id,
-    bookId: book._id,
-    pickupTime,
-  });
-
-  await reservation.save();
-  book.available = false; // Mark the book as unavailable
-  await book.save();
-
-  await notifyLibrarian(
-    `New manual reservation for ${user.userName} for "${book.title}".`
-  );
-  bot.sendMessage(
-    chatId,
-    `Successfully added reservation for ${user.userName} for "${book.title}".`
-  );
-});
+);
 bot.onText(/\/librarian_cancel_reservation (\d+)/, async (msg, match) => {
   const chatId = msg.chat.id;
   if (!isLibrarian(chatId)) {
