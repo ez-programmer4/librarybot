@@ -516,7 +516,7 @@ bot.onText(/\/cancel_reservation (\d+)/, async (msg, match) => {
 
 // Check if the user is a librarian
 const isLibrarian = (chatId) => {
-  return chatId === librarianChatId; // Compare with the librarian's chat ID
+  return chatId == librarianChatId; // Compare with the librarian's chat ID
 };
 
 // Librarian can cancel a reservation
