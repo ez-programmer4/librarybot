@@ -405,9 +405,11 @@ bot.onText(/\/librarian_cancel_reservation (\d+)/, async (msg, match) => {
 
   // Delete the reservation
   await Reservation.findByIdAndDelete(reservation._id);
+
+  // Ensure to correctly access the title of the book
   bot.sendMessage(
     chatId,
-    `Reservation for "${reservation.bookId.title}" has been successfully canceled.`
+    `Reservation for "${book.title}" has been successfully canceled.`
   );
 });
 bot.onText(/\/change_language/, (msg) => {
