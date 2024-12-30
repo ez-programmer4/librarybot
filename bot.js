@@ -216,6 +216,7 @@ bot.onText(/\/reserve (\d+)/, async (msg, match) => {
   // Ensure chatId is correctly looked up
   const user = await User.findOne({ chatId: chatId });
   console.log("User object:", user);
+
   if (!user) {
     console.log(`User ${chatId} is not registered.`);
     return bot.sendMessage(
@@ -225,7 +226,16 @@ bot.onText(/\/reserve (\d+)/, async (msg, match) => {
   }
 
   const book = await Book.findOne({ id: bookId });
-  if (!book || !book.available) {
+  if (!book) {
+    console.log(`Book ID ${bookId} does not exist.`);
+    return bot.sendMessage(
+      chatId,
+      `❌ Sorry, the book with ID *${bookId}* does not exist.`,
+      { parse_mode: "Markdown" }
+    );
+  }
+
+  if (!book.available) {
     console.log(`Book ID ${bookId} is not available for user ${chatId}.`);
     return bot.sendMessage(
       chatId,
@@ -248,9 +258,9 @@ bot.onText(/\/reserve (\d+)/, async (msg, match) => {
     await notifyLibrarian(
       `🆕 New reservation by *${user.userName}* for *"${book.title}"*.`
     );
-    bot.sendMessage(
+    await bot.sendMessage(
       chatId,
-      `✅ Successfully reserved: *"${book.title}"*. Pickup time: *after isha salah*.`,
+      `✅ Successfully reserved: *"${book.title}"*. Pickup time: *after isha salah*.\n\nTo go back to the menu, type /menu.`,
       { parse_mode: "Markdown" }
     );
   } catch (error) {
@@ -261,7 +271,14 @@ bot.onText(/\/reserve (\d+)/, async (msg, match) => {
     );
   }
 });
-
+bot.onText(/\/menu/, (msg) => {
+  const chatId = msg.chat.id;
+  // Send back the language selection menu or any relevant menu
+  bot.sendMessage(
+    chatId,
+    "🌐 Please choose your language:\n1. English\n2. Arabic\n..."
+  );
+});
 bot.onText(/\/add_books (.+)/, async (msg, match) => {
   const chatId = msg.chat.id;
 
