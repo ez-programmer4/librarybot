@@ -561,7 +561,7 @@ bot.onText(/\/librarian_cancel_reservation (\d+)/, async (msg, match) => {
     );
   }
 
-  // Find the reservation by book ID
+  // Find the reservation by book ID using the book's ObjectId
   const reservation = await Reservation.findOne({ bookId: book._id }).populate(
     "userId"
   );
