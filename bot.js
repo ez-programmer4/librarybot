@@ -600,14 +600,11 @@ bot.onText(/\/my_reservations/, async (msg) => {
   const reservationList = userReservations
     .map((res, index) => {
       // Escape all Markdown special characters for Markdown V2
-      const title = res.bookId.title.replace(/([_*[\]()~`>#+\-.!])/g, "\\$1");
-      const pickupTime = res.pickupTime.replace(
-        /([_*[\]()~`>#+\-.!])/g,
-        "\\$1"
-      );
+      const title = res.bookId.title.replace(/([_*[]()~`>#+\-.!])/g, "\\$1");
+      const pickupTime = res.pickupTime.replace(/([_*[]()~`>#+\-.!])/g, "\\$1");
       return `📝 *Reservation #${
         index + 1
-      }*➡️*Title:* ${title}➡️*Pickup Time:* ${pickupTime}\n`;
+      }*\\n*Title:* ${title}\\n*Pickup Time:* ${pickupTime}\\n`;
     })
     .join("\n");
 
@@ -632,7 +629,6 @@ bot.onText(/\/my_reservations/, async (msg) => {
     );
   }
 });
-
 // Cancel reservation by reservation number
 bot.onText(/\/cancel_reservation (\d+)/, async (msg, match) => {
   const chatId = msg.chat.id;
