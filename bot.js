@@ -244,22 +244,6 @@ bot.onText(/\/reserve (\d+)/, async (msg, match) => {
     );
   }
 
-  // Function to escape Markdown characters
-  function escapeMarkdown(text) {
-    return text
-      .replace(/_/g, "\\_") // Escape underscores
-      .replace(/\*/g, "\\*") // Escape asterisks
-      .replace(/~/g, "\\~") // Escape tildes
-      .replace(/`/g, "\\`") // Escape backticks
-      .replace(/\[/g, "\\[") // Escape square brackets
-      .replace(/\]/g, "\\]") // Escape square brackets
-      .replace(/\(/g, "\\(") // Escape parentheses
-      .replace(/\)/g, "\\)") // Escape parentheses
-      .replace(/>/g, "\\>") // Escape greater than
-      .replace(/</g, "\\<"); // Escape less than
-  }
-
-  // Reservation code
   try {
     const reservation = new Reservation({
       userId: user._id,
@@ -271,15 +255,12 @@ bot.onText(/\/reserve (\d+)/, async (msg, match) => {
     book.available = false; // Mark the book as unavailable
     await book.save();
 
-    const escapedUserName = escapeMarkdown(user.userName);
-    const escapedBookTitle = escapeMarkdown(book.title);
-
     await notifyLibrarian(
-      `🆕 New reservation by *${escapedUserName}* for *"${escapedBookTitle}"*.`
+      `🆕 New reservation by *${user.userName}* for *"${book.title}"*.`
     );
     await bot.sendMessage(
       chatId,
-      `✅ Successfully reserved: *"${escapedBookTitle}"*. Pickup time: *after isha salah*.\n\nTo go back to the menu, type /back_menu.`,
+      `✅ Successfully reserved: *"${book.title}"*. Pickup time: *after isha salah*.\n\nTo go back to the menu, type /backtomenu.`,
       { parse_mode: "Markdown" }
     );
   } catch (error) {
@@ -290,7 +271,7 @@ bot.onText(/\/reserve (\d+)/, async (msg, match) => {
     );
   }
 });
-bot.onText(/\/back_menu/, (msg) => {
+bot.onText(/\/backtomenu/, (msg) => {
   const chatId = msg.chat.id;
   askLanguageSelection(chatId); // Call the function to ask for language selection
 });
