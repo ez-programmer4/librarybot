@@ -542,10 +542,9 @@ bot.onText(/\/my_reservations/, async (msg) => {
 
   const reservationList = userReservations
     .map((res, index) => {
-      // Escape Markdown special characters
-      const title = res.bookId.title.replace(/([_*[]()~`>#+\-.!])/g, "\\$1");
-      const pickupTime = res.pickupTime.replace(/([_*[]()~`>#+\-.!])/g, "\\$1");
-      // Remove quotes for better compatibility
+      // Escape all Markdown special characters
+      const title = res.bookId.title.replace(/([_*~`>#+\-.!])/g, "\\$1");
+      const pickupTime = res.pickupTime.replace(/([_*~`>#+\-.!])/g, "\\$1");
       return `📝 Reservation #${
         index + 1
       }: *${title}* (Pickup: *${pickupTime}*)`;
@@ -559,10 +558,10 @@ bot.onText(/\/my_reservations/, async (msg) => {
   );
 
   try {
+    // Send message as plain text for testing
     await bot.sendMessage(
       chatId,
-      `📖 *Your Reservations:*\n${reservationList}\n\nTo cancel a reservation, use /cancel_reservation <number>.`,
-      { parse_mode: "Markdown" }
+      `📖 Your Reservations:\n${reservationList}\n\nTo cancel a reservation, use /cancel_reservation <number>.`
     );
   } catch (error) {
     console.error("Error sending message:", error);
