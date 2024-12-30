@@ -553,6 +553,7 @@ bot.onText(/\/my_reservations/, async (msg) => {
       }: *"${title}"* (Pickup: *${pickupTime}*)`;
     })
     .join("\n");
+  console.log(reservationList);
 
   try {
     await bot.sendMessage(
