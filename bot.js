@@ -366,43 +366,39 @@ bot.onText(
     );
   }
 );
-bot.onText(
-  /\/librarian_cancel_reservation_by_book_id (\d+)/,
-  async (msg, match) => {
-    const chatId = msg.chat.id;
-    const bookId = match[1];
+bot.onText(/\/librarian_cancel_reservation (\d+)/, async (msg, match) => {
+  const chatId = msg.chat.id;
+  const bookId = match[1]; // This is the Book ID provided by the user
 
-    if (!isLibrarian(chatId)) {
-      return bot.sendMessage(
-        chatId,
-        "You do not have permission to use this command."
-      );
-    }
-
-    // Find the reservation by book ID
-    const reservation = await Reservation.findOne({ bookId }).populate(
-      "userId"
-    );
-    if (!reservation) {
-      return bot.sendMessage(
-        chatId,
-        "No reservation found for the given book ID. Please check and try again."
-      );
-    }
-
-    const book = await Book.findById(bookId);
-    if (book) {
-      book.available = true; // Mark the book as available again
-      await book.save();
-    }
-
-    await Reservation.findByIdAndDelete(reservation._id);
-    bot.sendMessage(
+  if (!isLibrarian(chatId)) {
+    return bot.sendMessage(
       chatId,
-      `Reservation for "${reservation.bookId.title}" has been successfully canceled.`
+      "You do not have permission to use this command."
     );
   }
-);
+
+  // Find the reservation by book ID
+  const reservation = await Reservation.findOne({ bookId }).populate("userId");
+  if (!reservation) {
+    return bot.sendMessage(
+      chatId,
+      "No reservation found for the given book ID. Please check and try again."
+    );
+  }
+
+  // Find the related book
+  const book = await Book.findById(reservation.bookId);
+  if (book) {
+    book.available = true; // Mark the book as available again
+    await book.save();
+  }
+
+  await Reservation.findByIdAndDelete(reservation._id);
+  bot.sendMessage(
+    chatId,
+    `Reservation for "${reservation.bookId.title}" has been successfully canceled.`
+  );
+});
 bot.onText(/\/change_language/, (msg) => {
   const chatId = msg.chat.id;
   bot.sendMessage(chatId, "Please select a language:", {
