@@ -289,8 +289,7 @@ bot.onText(/\/add_books (.+)/, async (msg, match) => {
 
 bot.onText(/\/view_reservations/, async (msg) => {
   const chatId = msg.chat.id;
-  console.log(chatId);
-  console.log(librarianChatId);
+
   if (!isLibrarian(chatId)) {
     return bot.sendMessage(
       chatId,
@@ -306,7 +305,7 @@ bot.onText(/\/view_reservations/, async (msg) => {
   const reservationList = reservations
     .map(
       (res) =>
-        `User: ${res.userId.userName}, Book: "${res.bookId.title}", Pickup Time: ${res.pickupTime}`
+        `User: ${res.userId.userName}, Book ID: ${res.bookId.id}, Book: "${res.bookId.title}", Pickup Time: ${res.pickupTime}`
     )
     .join("\n");
 
@@ -367,33 +366,43 @@ bot.onText(
     );
   }
 );
-bot.onText(/\/librarian_cancel_reservation (\d+)/, async (msg, match) => {
-  const chatId = msg.chat.id;
-  if (!isLibrarian(chatId)) {
-    return bot.sendMessage(
+bot.onText(
+  /\/librarian_cancel_reservation_by_book_id (\d+)/,
+  async (msg, match) => {
+    const chatId = msg.chat.id;
+    const bookId = match[1];
+
+    if (!isLibrarian(chatId)) {
+      return bot.sendMessage(
+        chatId,
+        "You do not have permission to use this command."
+      );
+    }
+
+    // Find the reservation by book ID
+    const reservation = await Reservation.findOne({ bookId }).populate(
+      "userId"
+    );
+    if (!reservation) {
+      return bot.sendMessage(
+        chatId,
+        "No reservation found for the given book ID. Please check and try again."
+      );
+    }
+
+    const book = await Book.findById(bookId);
+    if (book) {
+      book.available = true; // Mark the book as available again
+      await book.save();
+    }
+
+    await Reservation.findByIdAndDelete(reservation._id);
+    bot.sendMessage(
       chatId,
-      "You do not have permission to use this command."
+      `Reservation for "${reservation.bookId.title}" has been successfully canceled.`
     );
   }
-
-  const reservationId = match[1];
-  const reservation = await Reservation.findById(reservationId);
-  if (!reservation) {
-    return bot.sendMessage(chatId, "Invalid reservation ID.");
-  }
-
-  const book = await Book.findById(reservation.bookId);
-  if (book) {
-    book.available = true; // Mark the book as available again
-    await book.save();
-  }
-
-  await Reservation.findByIdAndDelete(reservationId);
-  bot.sendMessage(
-    chatId,
-    `Reservation with ID ${reservationId} has been successfully canceled.`
-  );
-});
+);
 bot.onText(/\/change_language/, (msg) => {
   const chatId = msg.chat.id;
   bot.sendMessage(chatId, "Please select a language:", {
