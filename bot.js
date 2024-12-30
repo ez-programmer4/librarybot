@@ -542,19 +542,29 @@ bot.onText(/\/my_reservations/, async (msg) => {
   }
 
   const reservationList = userReservations
-    .map(
-      (res, index) =>
-        `📝 Reservation #${index + 1}: *"${res.bookId.title}"* (Pickup: *${
-          res.pickupTime
-        }*)`
-    )
+    .map((res, index) => {
+      // Ensure the title and pickupTime are safe for Markdown
+      const title = res.bookId.title.replace(/[_*`]/g, "\\$&"); // Escape Markdown special characters
+      const pickupTime = res.pickupTime.replace(/[_*`]/g, "\\$&"); // Escape Markdown special characters
+      return `📝 Reservation #${
+        index + 1
+      }: *"${title}"* (Pickup: *${pickupTime}*)`;
+    })
     .join("\n");
 
-  bot.sendMessage(
-    chatId,
-    `📖 *Your Reservations:*\n${reservationList}\n\nTo cancel a reservation, use /cancel_reservation <number>.`,
-    { parse_mode: "Markdown" }
-  );
+  try {
+    await bot.sendMessage(
+      chatId,
+      `📖 *Your Reservations:*\n${reservationList}\n\nTo cancel a reservation, use /cancel_reservation <number>.`,
+      { parse_mode: "Markdown" }
+    );
+  } catch (error) {
+    console.error("Error sending message:", error);
+    await bot.sendMessage(
+      chatId,
+      "❌ An error occurred while retrieving your reservations. Please try again."
+    );
+  }
 });
 
 // Cancel reservation by reservation number
