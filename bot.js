@@ -510,8 +510,12 @@ bot.on("message", async (msg) => {
 bot.onText(/\/remove_book (\w+) (\w+) (\d+)/, async (msg, match) => {
   const chatId = msg.chat.id;
 
+  // Debugging: Log the incoming message
+  console.log(`Received message from ${chatId}: ${msg.text}`);
+
   // Check if the user is a librarian
   if (!isLibrarian(chatId)) {
+    console.log(`User ${chatId} is not a librarian.`);
     return bot.sendMessage(
       chatId,
       "🚫 You do not have permission to remove books."
@@ -522,9 +526,15 @@ bot.onText(/\/remove_book (\w+) (\w+) (\d+)/, async (msg, match) => {
   const category = match[2].trim();
   const id = parseInt(match[3], 10);
 
+  // Debugging: Log the parameters
+  console.log(
+    `Attempting to remove book - Language: ${language}, Category: ${category}, ID: ${id}`
+  );
+
   // Attempt to find and remove the book
   const book = await Book.findOneAndDelete({ id, language, category });
   if (!book) {
+    console.log(`No book found with ID ${id} in category "${category}".`);
     return bot.sendMessage(
       chatId,
       `❌ No book found with ID *${id}* in category *"${category}".*`,
@@ -532,6 +542,9 @@ bot.onText(/\/remove_book (\w+) (\w+) (\d+)/, async (msg, match) => {
     );
   }
 
+  console.log(
+    `Book with ID ${id} has been removed from category "${category}".`
+  );
   bot.sendMessage(
     chatId,
     `✅ Book with ID *${id}* has been removed from category *"${category}"* in *${language}*.`,
