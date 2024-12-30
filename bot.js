@@ -34,6 +34,7 @@ connectToDatabase();
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
   const welcomeMessage = `
+
   ====================---====================
   🎉 *Welcome to the KJUMJ IRSHAD Library Booking Bot!* 📚
   
@@ -43,7 +44,7 @@ bot.onText(/\/start/, (msg) => {
   
   ====================---====================
   `;
-  bot.sendMessage(chatId, welcomeMessage);
+  bot.sendMessage(chatId, welcomeMessage, { parse_mode: "Markdown" });
 });
 
 // Registration state management
@@ -67,7 +68,8 @@ bot.onText(/\/register/, async (msg) => {
     );
     return bot.sendMessage(
       chatId,
-      `🚫 You are already registered as *${existingUser.userName}*.`
+      `🚫 You are already registered as *${existingUser.userName}*.`,
+      { parse_mode: "Markdown" }
     );
   }
 
@@ -227,7 +229,8 @@ bot.onText(/\/reserve (\d+)/, async (msg, match) => {
     console.log(`Book ID ${bookId} is not available for user ${chatId}.`);
     return bot.sendMessage(
       chatId,
-      `❌ Sorry, the book with ID *${bookId}* is not available.`
+      `❌ Sorry, the book with ID *${bookId}* is not available.`,
+      { parse_mode: "Markdown" }
     );
   }
 
@@ -247,7 +250,8 @@ bot.onText(/\/reserve (\d+)/, async (msg, match) => {
     );
     bot.sendMessage(
       chatId,
-      `✅ Successfully reserved: *"${book.title}"*. Pickup time: *after isha salah*.`
+      `✅ Successfully reserved: *"${book.title}"*. Pickup time: *after isha salah*.`,
+      { parse_mode: "Markdown" }
     );
   } catch (error) {
     console.error("Error saving reservation:", error);
@@ -268,7 +272,8 @@ bot.onText(/\/add_books (.+)/, async (msg, match) => {
     if (!parts) {
       await bot.sendMessage(
         chatId,
-        `❌ Invalid format for entry: *"${entry}".*`
+        `❌ Invalid format for entry: *"${entry}".*`,
+        { parse_mode: "Markdown" }
       );
       continue;
     }
@@ -295,7 +300,9 @@ bot.onText(/\/add_books (.+)/, async (msg, match) => {
       category,
     });
     await newBook.save();
-    await bot.sendMessage(chatId, `✅ Book *"${title}"* added successfully.`);
+    await bot.sendMessage(chatId, `✅ Book *"${title}"* added successfully.`, {
+      parse_mode: "Markdown",
+    });
   }
 });
 
@@ -317,7 +324,7 @@ bot.onText(/\/view_reservations/, async (msg) => {
   const reservationList = reservations
     .map(
       (res) =>
-        `🔖 Book ID: *${res.bookId.id}* - User: *${res.userId.userName}* - Book: "${res.bookId.title}" - Pickup Time: *${res.pickupTime}*`
+        `🔖 Book ID: *${res.bookId.id}* - User: *${res.userId.userName}* - Book: "${res.bookId.title}" - Pickup Time: *${res.pickupTime}*,`
     )
     .join("\n");
 
@@ -356,7 +363,8 @@ bot.onText(
     if (!book || !book.available) {
       return bot.sendMessage(
         chatId,
-        `❌ Sorry, the book with ID *${bookId}* is not available.`
+        `❌ Sorry, the book with ID *${bookId}* is not available.`,
+        { parse_mode: "Markdown" }
       );
     }
 
@@ -376,7 +384,8 @@ bot.onText(
     );
     bot.sendMessage(
       chatId,
-      `✅ Successfully added reservation for *${user.userName}* for *"${book.title}"*.`
+      `✅ Successfully added reservation for *${user.userName}* for *"${book.title}"*.`,
+      { parse_mode: "Markdown" }
     );
   }
 );
@@ -424,7 +433,8 @@ bot.onText(/\/librarian_cancel_reservation (\d+)/, async (msg, match) => {
   // Ensure to correctly access the title of the book
   bot.sendMessage(
     chatId,
-    `✅ Reservation for *"${book.title}"* has been successfully canceled.`
+    `✅ Reservation for *"${book.title}"* has been successfully canceled.`,
+    { parse_mode: "Markdown" }
   );
 });
 
@@ -447,7 +457,9 @@ bot.on("message", async (msg) => {
     if (user) {
       user.language = msg.text; // Save the selected language
       await user.save();
-      bot.sendMessage(chatId, `✅ Language changed to *${msg.text}*.`);
+      bot.sendMessage(chatId, `✅ Language changed to *${msg.text}*.`, {
+        parse_mode: "Markdown",
+      });
     }
   }
 });
@@ -497,13 +509,15 @@ bot.onText(/\/remove_book (\w+) (\w+) (\d+)/, async (msg, match) => {
   if (!book) {
     return bot.sendMessage(
       chatId,
-      `❌ No book found with ID *${id}* in category *"${category}".*`
+      `❌ No book found with ID *${id}* in category *"${category}".*`,
+      { parse_mode: "Markdown" }
     );
   }
 
   bot.sendMessage(
     chatId,
-    `✅ Book with ID *${id}* has been removed from category *"${category}"* in *${language}*.`
+    `✅ Book with ID *${id}* has been removed from category *"${category}"* in *${language}*.`,
+    { parse_mode: "Markdown" }
   );
 });
 
@@ -538,7 +552,8 @@ bot.onText(/\/my_reservations/, async (msg) => {
 
   bot.sendMessage(
     chatId,
-    `📖 *Your Reservations:*\n${reservationList}\n\nTo cancel a reservation, use /cancel_reservation <number>.`
+    `📖 *Your Reservations:*\n${reservationList}\n\nTo cancel a reservation, use /cancel_reservation <number>.`,
+    { parse_mode: "Markdown" }
   );
 });
 
@@ -577,14 +592,20 @@ bot.onText(/\/cancel_reservation (\d+)/, async (msg, match) => {
   await Reservation.findByIdAndDelete(reservation._id);
   bot.sendMessage(
     chatId,
-    `✅ You have successfully canceled the reservation for *"${reservation.bookId.title}"*.`
+    `✅ You have successfully canceled the reservation for *"${reservation.bookId.title}"*.`,
+    { parse_mode: "Markdown" }
   );
 
   // Notify the librarian about the cancellation
   const librarianChatId = "YOUR_LIBRARIAN_CHAT_ID"; // Replace with the actual chat ID
   bot.sendMessage(
     librarianChatId,
-    `📩 User has canceled a reservation:\n- *"${reservation.bookId.title}"*\n- User ID: *${user._id}*`
+    `📩 User has canceled a reservation:\n- *Title:* *"${
+      reservation.bookId.title
+    }"*\n- *User ID:* *${user._id}*\n- *Reservation Number:* *${
+      reservationIndex + 1
+    }*`,
+    { parse_mode: "Markdown" }
   );
 });
 
@@ -633,7 +654,8 @@ bot.onText(/\/librarian_cancel_reservation (\d+)/, async (msg, match) => {
   await Reservation.findByIdAndDelete(reservation._id);
   bot.sendMessage(
     chatId,
-    `✅ Reservation for *"${reservation.bookId.title}"* has been successfully canceled.`
+    `✅ Reservation for *"${reservation.bookId.title}"* has been successfully canceled.`,
+    { parse_mode: "Markdown" }
   );
 });
 bot.onText(/\/help/, (msg) => {
