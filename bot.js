@@ -509,10 +509,20 @@ bot.on("message", async (msg) => {
 // Remove book from the database
 bot.onText(/\/remove_book (\w+) (\w+) (\d+)/, async (msg, match) => {
   const chatId = msg.chat.id;
+
+  // Check if the user is a librarian
+  if (!isLibrarian(chatId)) {
+    return bot.sendMessage(
+      chatId,
+      "🚫 You do not have permission to remove books."
+    );
+  }
+
   const language = match[1].trim();
   const category = match[2].trim();
   const id = parseInt(match[3], 10);
 
+  // Attempt to find and remove the book
   const book = await Book.findOneAndDelete({ id, language, category });
   if (!book) {
     return bot.sendMessage(
