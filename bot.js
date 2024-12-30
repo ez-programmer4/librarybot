@@ -507,7 +507,7 @@ bot.on("message", async (msg) => {
 //   );
 // });
 // Remove book from the database
-bot.onText(/\/remove_book (\w+) (\w+) (\d+)/, async (msg, match) => {
+bot.onText(/\/remove_book (\w+) (.+) (\d+)/, async (msg, match) => {
   const chatId = msg.chat.id;
 
   // Debugging: Log the incoming message
