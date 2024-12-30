@@ -35,14 +35,15 @@ bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
   const welcomeMessage = `
 
-  ====================---====================
+        ❖◉◉◉◉◉❖◉◉◉◉◉◉❖◉◉◉◉◉◉❖
+        اَلسَّلاَ مُ عَلَيْكُمْ وَرَحْمَةُ اللهِ وَبَرَكَاتُهُ
   🎉 *Welcome to the KJUMJ IRSHAD Library Booking Bot!* 📚
   
   Please register to get started by typing * /register *. ✍️
   
   For a list of all commands and guidance, type * /help *. ❓
   
-  ====================---====================
+        ❖◉◉◉◉◉❖◉◉◉◉◉◉❖◉◉◉◉◉◉❖
   `;
   bot.sendMessage(chatId, welcomeMessage, { parse_mode: "Markdown" });
 });
@@ -106,7 +107,7 @@ bot.on("message", async (msg) => {
       );
 
       await notifyLibrarian(
-        `🆕 New registration: *${user.userName}*, Phone: *${phoneNumber}*`
+        `🆕 New registration: *${user.userName}*,\n Phone: *${phoneNumber}*`
       );
       bot.sendMessage(
         chatId,
@@ -259,7 +260,7 @@ bot.onText(/\/reserve (\d+)/, async (msg, match) => {
     );
     await bot.sendMessage(
       chatId,
-      `✅ Successfully reserved: *"${book.title}"*. Pickup time: *after isha salah*.\n\nTo go back to the menu, type /backtomenu.`,
+      `✅ Successfully reserved: *"${book.title}"*.\n Pickup time: *after isha salah*.\n\nTo go back to the menu, type /back.`,
       { parse_mode: "Markdown" }
     );
   } catch (error) {
@@ -271,7 +272,7 @@ bot.onText(/\/reserve (\d+)/, async (msg, match) => {
   }
 });
 
-bot.onText(/\/backtomenu/, (msg) => {
+bot.onText(/\/back/, (msg) => {
   const chatId = msg.chat.id;
   askLanguageSelection(chatId); // Call the function to ask for language selection
 });
@@ -345,7 +346,7 @@ bot.onText(/\/view_reservations/, async (msg) => {
   const reservationList = reservations
     .map(
       (res) =>
-        `🔖 Book ID: *${res.bookId.id}* - User: *${res.userId.userName}* - Book: "${res.bookId.title}" - Pickup Time: *${res.pickupTime}*,`
+        `🔖 Book ID: *${res.bookId.id}* → User: *${res.userId.userName}* → Book: "${res.bookId.title}" → Pickup Time: *${res.pickupTime}*,`
     )
     .join("\n");
 
@@ -601,23 +602,23 @@ bot.onText(/\/my_reservations/, async (msg) => {
       // Escape all Markdown special characters
       const title = res.bookId.title.replace(/([_*~`>#+\-.!])/g, "\\$1");
       const pickupTime = res.pickupTime.replace(/([_*~`>#+\-.!])/g, "\\$1");
-      return `📝 Reservation #${
+      return `📝 *Reservation #${
         index + 1
-      }: *${title}* (Pickup: *${pickupTime}*)`;
+      }*\n*Title:* ${title}\n*Pickup Time:* ${pickupTime}\n`;
     })
     .join("\n");
 
   // Log the final message for debugging
   console.log(
     "Final Message:",
-    `📖 *Your Reservations:*\n${reservationList}\n\nTo cancel a reservation, use /cancel_reservation <number>.`
+    `📖 *Your Reservations:*\n${reservationList}\nTo cancel a reservation, use /cancel_reservation <number>.`
   );
 
   try {
-    // Send message as plain text for testing
+    // Send message as formatted text
     await bot.sendMessage(
       chatId,
-      `📖 Your Reservations:\n${reservationList}\n\nTo cancel a reservation, use /cancel_reservation <number>.`
+      `📖 *Your Reservations:*\n\n${reservationList}\nTo cancel a reservation, use /cancel_reservation <number>.`
     );
   } catch (error) {
     console.error("Error sending message:", error);
