@@ -652,7 +652,8 @@ bot.onText(/\/my_reservations/, async (msg) => {
 
 bot.onText(/\/cancel_reservation (\d+)/, async (msg, match) => {
   const chatId = msg.chat.id;
-  const reservationIndex = parseInt(match[1]) - 1; // Convert to zero-based index
+  console.log("Chat ID:", chatId); // Log the chat ID for debugging
+  const reservationIndex = parseInt(match[1]) - 1;
 
   const user = await User.findOne({ chatId });
   if (!user) {
@@ -674,15 +675,12 @@ bot.onText(/\/cancel_reservation (\d+)/, async (msg, match) => {
   }
 
   const reservation = userReservations[reservationIndex];
-
-  // Mark the book as available again
   const book = await Book.findById(reservation.bookId);
   if (book) {
-    book.available = true; // Update availability
+    book.available = true;
     await book.save();
   }
 
-  // Delete the reservation
   await Reservation.findByIdAndDelete(reservation._id);
   await bot.sendMessage(
     chatId,
@@ -690,17 +688,17 @@ bot.onText(/\/cancel_reservation (\d+)/, async (msg, match) => {
     { parse_mode: "Markdown" }
   );
 
-  // Notify the librarian about the cancellation
-  const librarianChatId = "YOUR_LIBRARIAN_CHAT_ID"; // Replace with the actual chat ID
-  await bot.sendMessage(
-    librarianChatId,
-    `📩 User has canceled a reservation:\n- *Title:* *"${
-      reservation.bookId.title
-    }"*\n- *User ID:* *${user._id}*\n- *Reservation Number:* *${
-      reservationIndex + 1
-    }*`,
-    { parse_mode: "Markdown" }
-  );
+  const notificationMessage = `📩 User has canceled a reservation:\n- *Title:* *"${
+    reservation.bookId.title
+  }"*\n- *User ID:* *${user._id}*\n- *Reservation Number:* *${
+    reservationIndex + 1
+  }*`;
+
+  try {
+    await notifyLibrarian(notificationMessage);
+  } catch (error) {
+    console.error("Failed to notify librarian:", error);
+  }
 });
 
 // Check if the user is a librarian
