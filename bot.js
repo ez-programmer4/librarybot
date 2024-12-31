@@ -61,14 +61,10 @@ async function notifyLibrarian(message) {
 // Registration logic
 bot.onText(/\/register/, async (msg) => {
   const chatId = msg.chat.id;
-  console.log(`User ${chatId} initiated registration.`);
 
   const existingUser = await User.findOne({ chatId });
 
   if (existingUser) {
-    console.log(
-      `User ${chatId} is already registered as ${existingUser.userName}.`
-    );
     await bot.sendMessage(
       chatId,
       `🚫 You are already registered as *${existingUser.userName}*.`,
