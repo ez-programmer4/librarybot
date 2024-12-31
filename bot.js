@@ -754,31 +754,31 @@ bot.onText(/\/help/, (msg) => {
   const chatId = msg.chat.id;
 
   const helpMessage = `
-  🤖 *Library Bot Help*
+🤖 Library Bot Help
 
-  Here are the commands you can use:
+Here are the commands you can use:
 
-  ➡️ 📋 /register: Register yourself to start using the library services.
-     *Example:* /register
+➡️ 📋 /register: Register yourself to start using the library services.
+   Example: /register
 
-  ➡️ 🌐 /change_language: Change your preferred language.
-     *Example:* /change_language
+➡️ 🌐 /change_language: Change your preferred language.
+   Example: /change_language
 
-  ➡️ 📚 /select_category: Choose a category for books.
-    
-  ➡️ 📖 /reserve_book <book_id>: Reserve a specific book.
-     *Example:* /reserve_book 112
+➡️ 📚 /select_category: Choose a category for books.
 
-  ➡️ 📝 /my_reservations: View your current reservations.
-     *Example:* /my_reservations
+➡️ 📖 /reserve_book <book_id>: Reserve a specific book.
+   Example: /reserve_book 112
 
-  ➡️ ❌ /cancel_reservation <number>: Cancel a specific reservation by its number.
-     *Example:* /cancel_reservation 1
+➡️ 📝 /my_reservations: View your current reservations.
+   Example: /my_reservations
 
-  For more questions, feel free to reach out to us via @IrshadComments_bot! 📩
-  `;
+➡️ ❌ /cancel_reservation <number>: Cancel a specific reservation by its number.
+   Example: /cancel_reservation 1
 
-  bot.sendMessage(chatId, helpMessage, { parse_mode: "Markdown" });
+For more questions, feel free to reach out to us via @IrshadComments_bot! 📩
+`;
+
+  bot.sendMessage(chatId, helpMessage);
 });
 // Start the Express server
 app.listen(port, () => {
