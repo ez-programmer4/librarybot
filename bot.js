@@ -276,9 +276,9 @@ bot.onText(/\/reserve (\d+)/, async (msg, match) => {
     book.available = false; // Mark the book as unavailable
     await book.save();
 
-    await notifyLibrarian(
-      `🆕 New reservation by *${user.userName}* for *"${book.title}"*.`
-    );
+    const notificationMessage = `🆕 New reservation by *${user.userName}* (Phone: *${user.phoneNumber}*) for *"${book.title}"*.`;
+    await notifyLibrarian(notificationMessage);
+
     await bot.sendMessage(
       chatId,
       `✅ Successfully reserved: *"${book.title}"*.\n Pickup time: *after isha salah*.\n\nTo go back to the menu, type /back.`,
@@ -690,9 +690,9 @@ bot.onText(/\/cancel_reservation (\d+)/, async (msg, match) => {
 
   const notificationMessage = `📩 User has canceled a reservation:\n- *Title:* *"${
     reservation.bookId.title
-  }"*\n- *User ID:* *${user._id}*\n- *Reservation Number:* *${
-    reservationIndex + 1
-  }*`;
+  }"*\n- *User ID:* *${user._id}*\n- *Name:* *${user.userName}*\n- *Phone:* *${
+    user.phoneNumber
+  }*\n- *Reservation Number:* *${reservationIndex + 1}*`;
 
   try {
     await notifyLibrarian(notificationMessage);
@@ -766,7 +766,6 @@ bot.onText(/\/help/, (msg) => {
 
   ➡️ 📚 /select_category: Choose a category for books.
     
-
   ➡️ 📖 /reserve_book <book_id>: Reserve a specific book.
     *Example:* /reserve_book 112
 
