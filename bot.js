@@ -35,13 +35,14 @@ bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
   const welcomeMessage = `
 
-        ❖◉◉◉◉◉❖◉◉◉◉◉◉❖◉◉◉◉◉◉❖
+          ❖◉◉◉◉◉❖◉◉◉◉◉◉❖◉◉◉◉◉◉❖
         اَلسَّلاَ مُ عَلَيْكُمْ وَرَحْمَةُ اللهِ وَبَرَكَاتُهُ
+        
   🎉 *Welcome to the KJUMJ IRSHAD Library Booking Bot!* 📚
   
   Please register to get started by typing * /register *. ✍️
   
-  For a list of all commands and guidance, type * /help *. ❓
+  For a list of all commands and guidance, type * /help *.❓
   
         ❖◉◉◉◉◉❖◉◉◉◉◉◉❖◉◉◉◉◉◉❖
   `;
@@ -96,10 +97,22 @@ bot.on("message", async (msg) => {
       userStates[chatId].userName = msg.text;
       userStates[chatId].step = 2;
       console.log(`User ${chatId} provided full name: ${msg.text}`);
-      return bot.sendMessage(chatId, "📞 Please enter your phone number:");
+      return bot.sendMessage(
+        chatId,
+        "📞 Please enter your phone number (must start with 09 and be 10 digits long):"
+      );
     } else if (userStates[chatId].step === 2) {
       const phoneNumber = msg.text;
       console.log(`User ${chatId} provided phone number: ${phoneNumber}`);
+
+      // Validate phone number
+      const phoneRegex = /^09\d{8}$/; // Matches numbers starting with 09 and exactly 10 digits
+      if (!phoneRegex.test(phoneNumber)) {
+        return bot.sendMessage(
+          chatId,
+          "❌ Invalid phone number. Please enter a valid phone number starting with 09 and consisting of 10 digits."
+        );
+      }
 
       const user = await addUser(
         chatId,
@@ -211,6 +224,10 @@ async function isCategory(category) {
   const categories = await Book.distinct("category");
   return categories.includes(category);
 }
+bot.onText(/\/select_language/, (msg) => {
+  const chatId = msg.chat.id;
+  askLanguageSelection(chatId);
+});
 
 // Reservation logic
 bot.onText(/\/reserve (\d+)/, async (msg, match) => {
@@ -633,7 +650,6 @@ bot.onText(/\/my_reservations/, async (msg) => {
   }
 });
 
-// Cancel reservation by reservation number
 bot.onText(/\/cancel_reservation (\d+)/, async (msg, match) => {
   const chatId = msg.chat.id;
   const reservationIndex = parseInt(match[1]) - 1; // Convert to zero-based index
@@ -659,14 +675,16 @@ bot.onText(/\/cancel_reservation (\d+)/, async (msg, match) => {
 
   const reservation = userReservations[reservationIndex];
 
+  // Mark the book as available again
   const book = await Book.findById(reservation.bookId);
   if (book) {
-    book.available = true; // Mark the book as available again
+    book.available = true; // Update availability
     await book.save();
   }
 
+  // Delete the reservation
   await Reservation.findByIdAndDelete(reservation._id);
-  bot.sendMessage(
+  await bot.sendMessage(
     chatId,
     `✅ You have successfully canceled the reservation for *"${reservation.bookId.title}"*.`,
     { parse_mode: "Markdown" }
@@ -674,7 +692,7 @@ bot.onText(/\/cancel_reservation (\d+)/, async (msg, match) => {
 
   // Notify the librarian about the cancellation
   const librarianChatId = "YOUR_LIBRARIAN_CHAT_ID"; // Replace with the actual chat ID
-  bot.sendMessage(
+  await bot.sendMessage(
     librarianChatId,
     `📩 User has canceled a reservation:\n- *Title:* *"${
       reservation.bookId.title
@@ -742,15 +760,25 @@ bot.onText(/\/help/, (msg) => {
 
   Here are the commands you can use:
 
-  - /register: Register yourself to start using the library services.
-  - /remove_book <language> <category> <id>: Remove a book from the library.
-  - /librarian_add_reservation <username> <book_id> [pickup_time]: Manually add a reservation for a user.
-  - /librarian_cancel_reservation <book_id>: Cancel a reservation for a book.
-  - /my_reservations: View your current reservations.
-  - /cancel_reservation <number>: Cancel a specific reservation by its number.
-  - /change_language: Change your preferred language.
+  ➡️ 📋 /register: Register yourself to start using the library services.
+    *Example:* /register
 
-  For more assistance, feel free to ask questions! 📚
+  ➡️ 🌐 /change_language: Change your preferred language.
+    *Example:* /change_language
+
+  ➡️ 📚 /select_category: Choose a category for books.
+    
+
+  ➡️ 📖 /reserve_book <book_id>: Reserve a specific book.
+    *Example:* /reserve_book 112
+
+  ➡️ 📝 /my_reservations: View your current reservations.
+    *Example:* /my_reservations
+
+  ➡️ ❌ /cancel_reservation <number>: Cancel a specific reservation by its number.
+    *Example:* /cancel_reservation 1
+
+  For more questions, feel free to reach out to us via @IrshadComments_bot! 📩
   `;
 
   bot.sendMessage(chatId, helpMessage, { parse_mode: "Markdown" });
