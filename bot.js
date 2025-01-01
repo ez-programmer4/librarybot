@@ -147,11 +147,21 @@ bot.on("message", async (msg) => {
 function askLanguageSelection(chatId) {
   bot.sendMessage(chatId, "🌐 Please select a language:", {
     reply_markup: {
-      keyboard: [["Arabic"], ["Amharic"], ["AfaanOromo"]],
-      one_time_keyboard: true,
+      inline_keyboard: [
+        [{ text: "Arabic", callback_data: "Arabic" }],
+        [{ text: "Amharic", callback_data: "Amharic" }],
+        [{ text: "AfaanOromo", callback_data: "AfaanOromo" }],
+      ],
     },
   });
 }
+bot.on("callback_query", async (query) => {
+  const chatId = query.message.chat.id;
+  const language = query.data;
+
+  await handleLanguageSelection(chatId, language);
+  bot.answerCallbackQuery(query.id); // Acknowledge the callback
+});
 
 async function addUser(chatId, userName, phoneNumber) {
   let user = await User.findOne({ phoneNumber });
@@ -170,6 +180,7 @@ async function addUser(chatId, userName, phoneNumber) {
 }
 
 // Handle language selection
+
 async function handleLanguageSelection(chatId, language) {
   const categories = await Book.distinct("category", { language });
 
@@ -177,46 +188,49 @@ async function handleLanguageSelection(chatId, language) {
     return bot.sendMessage(chatId, `No categories available for ${language}.`);
   }
 
+  const inlineButtons = categories.map((cat) => [
+    { text: cat, callback_data: cat },
+  ]);
+
   bot.sendMessage(
     chatId,
     `You selected ${language}. Please choose a category:`,
     {
       reply_markup: {
-        keyboard: categories.map((cat) => [cat]),
-        one_time_keyboard: true,
+        inline_keyboard: inlineButtons,
       },
     }
   );
 }
 
 // Handle category selection and list books
-bot.on("message", async (msg) => {
-  const chatId = msg.chat.id;
+bot.on("callback_query", async (query) => {
+  const chatId = query.message.chat.id;
+  const selectedCategory = query.data;
 
-  if (await isCategory(msg.text)) {
-    const selectedCategory = msg.text;
-    const books = await Book.find({
-      category: selectedCategory,
-      available: true,
-    });
+  const books = await Book.find({
+    category: selectedCategory,
+    available: true,
+  });
 
-    if (books.length === 0) {
-      return bot.sendMessage(
-        chatId,
-        `📚 *No available books* in "${selectedCategory}".`
-      );
-    }
-
-    const bookList = books
-      .map((book) => `🔖 *ID:* *${book.id}* - *"${book.title}"*`)
-      .join("\n");
-
-    bot.sendMessage(
+  if (books.length === 0) {
+    return bot.sendMessage(
       chatId,
-      `📖 *Available books in* *"${selectedCategory}"*:\n\n${bookList}\n\nTo reserve a book, type /reserve <ID>.`,
-      { parse_mode: "Markdown" }
+      `📚 *No available books* in "${selectedCategory}".`
     );
   }
+
+  const bookList = books
+    .map((book) => `🔖 *ID:* *${book.id}* - *"${book.title}"*`)
+    .join("\n");
+
+  bot.sendMessage(
+    chatId,
+    `📖 *Available books in* *"${selectedCategory}"*:\n\n${bookList}\n\nTo reserve a book, type /reserve <ID>.`,
+    { parse_mode: "Markdown" }
+  );
+
+  bot.answerCallbackQuery(query.id); // Acknowledge the callback
 });
 
 // Function to check if the message is a valid category
@@ -485,8 +499,11 @@ bot.onText(/\/change_language/, (msg) => {
   const chatId = msg.chat.id;
   bot.sendMessage(chatId, "🌐 Please select a language:", {
     reply_markup: {
-      keyboard: [["Arabic"], ["Amharic"], ["AfaanOromo"]],
-      one_time_keyboard: true,
+      inline_keyboard: [
+        [{ text: "Arabic", callback_data: "Arabic" }],
+        [{ text: "Amharic", callback_data: "Amharic" }],
+        [{ text: "AfaanOromo", callback_data: "AfaanOromo" }],
+      ],
     },
   });
 });
