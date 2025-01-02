@@ -118,6 +118,15 @@ bot.on("message", async (msg) => {
       );
     }
   }
+  if (userStates[chatId]) {
+    if (userStates[chatId].step === 2) {
+      return bot.sendMessage(
+        chatId,
+        "⚠️ Please use the inline keyboard to select your language."
+      );
+    }
+    // Add other states as necessary
+  }
 
   if (userStates[chatId]) {
     if (userStates[chatId].step === 1) {
@@ -261,6 +270,13 @@ bot.on("callback_query", async (query) => {
   // If no available books, simply do nothing (no message sent)
 });
 
+// Example for category selection
+if (userStates[chatId] && userStates[chatId].awaitingCategory) {
+  return bot.sendMessage(
+    chatId,
+    "⚠️ Please select a category using the inline keyboard."
+  );
+}
 // Function to check if the message is a valid category
 async function isCategory(category) {
   const categories = await Book.distinct("category");
