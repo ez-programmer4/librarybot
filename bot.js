@@ -159,7 +159,15 @@ bot.on("callback_query", async (query) => {
   const chatId = query.message.chat.id;
   const language = query.data;
 
+  // Handle language selection
   await handleLanguageSelection(chatId, language);
+
+  // Remove the inline keyboard by editing the message
+  await bot.editMessageReplyMarkup(
+    { inline_keyboard: [] },
+    { chat_id: chatId, message_id: query.message.message_id }
+  );
+
   bot.answerCallbackQuery(query.id); // Acknowledge the callback
 });
 
