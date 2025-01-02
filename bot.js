@@ -139,7 +139,18 @@ bot.on("message", async (msg) => {
     );
   }
 });
+async function handleUnexpectedMessage(chatId, message) {
+  const isCommand = message.startsWith("/") && validCommands.includes(message);
+  const isLanguage = ["Arabic", "Amharic", "AfaanOromo"].includes(message);
 
+  // If it's not a command or a recognized language, provide feedback
+  if (!isCommand && !isLanguage) {
+    await bot.sendMessage(
+      chatId,
+      "❓ I didn't understand that. Please type /help to see available commands."
+    );
+  }
+}
 async function handleRegistrationSteps(chatId, msg) {
   if (userStates[chatId].step === 1) {
     userStates[chatId].userName = msg.text;
