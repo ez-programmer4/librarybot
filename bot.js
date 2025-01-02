@@ -61,51 +61,35 @@ async function notifyLibrarian(message) {
 // Registration logic
 bot.onText(/\/register/, async (msg) => {
   const chatId = msg.chat.id;
-  console.log(`User ${chatId} initiated registration.`);
-
   const existingUser = await User.findOne({ chatId });
 
   if (existingUser) {
-    console.log(
-      `User ${chatId} is already registered as ${existingUser.userName}.`
-    );
     await bot.sendMessage(
       chatId,
       `🚫 You are already registered as *${existingUser.userName}*.`,
       { parse_mode: "Markdown" }
     );
-
-    // Now ask for language selection
     return askLanguageSelection(chatId);
   }
 
   userStates[chatId] = { step: 1 };
-  console.log(`User ${chatId} is at step 1: asking for full name.`);
   await bot.sendMessage(chatId, "📝 Please enter your full name:");
 });
 
 // Handle user messages during registration and other commands
 bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
-  console.log(`Received message from ${chatId}: ${msg.text}`);
-
-  // Ensure the message is not a command
-  if (msg.text.startsWith("/")) return;
 
   if (userStates[chatId]) {
     if (userStates[chatId].step === 1) {
       userStates[chatId].userName = msg.text;
       userStates[chatId].step = 2;
-      console.log(`User ${chatId} provided full name: ${msg.text}`);
       return bot.sendMessage(
         chatId,
         "📞 Please enter your phone number (must start with 09 and be 10 digits long):"
       );
     } else if (userStates[chatId].step === 2) {
       const phoneNumber = msg.text;
-      console.log(`User ${chatId} provided phone number: ${phoneNumber}`);
-
-      // Validate phone number
       const phoneRegex = /^09\d{8}$/; // Matches numbers starting with 09 and exactly 10 digits
       if (!phoneRegex.test(phoneNumber)) {
         return bot.sendMessage(
@@ -119,12 +103,8 @@ bot.on("message", async (msg) => {
         userStates[chatId].userName,
         phoneNumber
       );
-      console.log(
-        `User ${chatId} registered with name: ${user.userName}, phone: ${phoneNumber}`
-      );
-
       await notifyLibrarian(
-        `🆕 New registration: *${user.userName}*,\n Phone: *${phoneNumber}*`
+        `🆕 New registration: *${user.userName}*, Phone: *${phoneNumber}*`
       );
       bot.sendMessage(
         chatId,
@@ -135,11 +115,33 @@ bot.on("message", async (msg) => {
     }
   }
 
-  // Handle language selection or other commands
-  if (["Arabic", "Amharic", "AfaanOromo"].includes(msg.text)) {
-    return handleLanguageSelection(chatId, msg.text);
-  } else if (msg.text === "/change_language") {
-    return askLanguageSelection(chatId);
+  // Handle reservations and cancellations
+  if (msg.text.startsWith("/reserve")) {
+    const match = msg.text.match(/\/reserve (\d+)/);
+    if (!match) {
+      return bot.sendMessage(
+        chatId,
+        "🚫 Please provide a book ID to reserve. Usage: /reserve <ID>."
+      );
+    }
+    return handleReservation(chatId, match[1]);
+  } else if (msg.text.startsWith("/cancel_reservation")) {
+    const match = msg.text.match(/\/cancel_reservation (\d+)/);
+    if (!match) {
+      return bot.sendMessage(
+        chatId,
+        "🚫 Please provide a reservation number to cancel. Usage: /cancel_reservation <number>."
+      );
+    }
+    return handleCancellation(chatId, match[1]);
+  }
+
+  // Handle invalid command
+  if (msg.text.startsWith("/")) {
+    await bot.sendMessage(
+      chatId,
+      `❌ Invalid command. Please use /help to see the available commands.`
+    );
   }
 });
 
