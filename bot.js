@@ -30,6 +30,25 @@ async function connectToDatabase() {
 // Initialize database connection
 connectToDatabase();
 
+const validCommands = [
+  "/start",
+  "/register",
+  "/help",
+  "/change_language",
+  "/select_language",
+  "/reserve",
+  "/back",
+  "/my_reservations",
+  "/cancel_reservation",
+  "/add_books",
+  "/view_reservations",
+  "/librarian_add_reservation",
+  "/librarian_cancel_reservation",
+  "/remove_book",
+  "/my_reservations",
+  // Add other commands as needed
+];
+
 // Start command
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
@@ -90,7 +109,15 @@ bot.on("message", async (msg) => {
   console.log(`Received message from ${chatId}: ${msg.text}`);
 
   // Ensure the message is not a command
-  if (msg.text.startsWith("/")) return;
+  if (msg.text.startsWith("/")) {
+    // Check if the command is valid
+    if (!validCommands.includes(msg.text)) {
+      return bot.sendMessage(
+        chatId,
+        "❌ Invalid command. Please type /help to see the list of available commands."
+      );
+    }
+  }
 
   if (userStates[chatId]) {
     if (userStates[chatId].step === 1) {
