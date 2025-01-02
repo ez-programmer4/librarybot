@@ -184,23 +184,22 @@ async function addUser(chatId, userName, phoneNumber) {
 async function handleLanguageSelection(chatId, language) {
   const categories = await Book.distinct("category", { language });
 
-  if (categories.length === 0) {
-    return bot.sendMessage(chatId, `No categories available for ${language}.`);
+  if (categories.length > 0) {
+    const inlineButtons = categories.map((cat) => [
+      { text: cat, callback_data: cat },
+    ]);
+
+    await bot.sendMessage(
+      chatId,
+      `You selected ${language}. Please choose a category:`,
+      {
+        reply_markup: {
+          inline_keyboard: inlineButtons,
+        },
+      }
+    );
   }
-
-  const inlineButtons = categories.map((cat) => [
-    { text: cat, callback_data: cat },
-  ]);
-
-  bot.sendMessage(
-    chatId,
-    `You selected ${language}. Please choose a category:`,
-    {
-      reply_markup: {
-        inline_keyboard: inlineButtons,
-      },
-    }
-  );
+  // If no categories found, simply do nothing (no message sent)
 }
 
 // Handle category selection and list books
@@ -213,24 +212,18 @@ bot.on("callback_query", async (query) => {
     available: true,
   });
 
-  if (books.length === 0) {
-    return bot.sendMessage(
+  if (books.length > 0) {
+    const bookList = books
+      .map((book) => `🔖 *ID:* *${book.id}* - *"${book.title}"*`)
+      .join("\n");
+
+    await bot.sendMessage(
       chatId,
-      `📚 *No available books* in "${selectedCategory}".`
+      `📖 *Available books in* *"${selectedCategory}"*:\n\n${bookList}\n\nTo reserve a book, type /reserve <ID>.`,
+      { parse_mode: "Markdown" }
     );
   }
-
-  const bookList = books
-    .map((book) => `🔖 *ID:* *${book.id}* - *"${book.title}"*`)
-    .join("\n");
-
-  bot.sendMessage(
-    chatId,
-    `📖 *Available books in* *"${selectedCategory}"*:\n\n${bookList}\n\nTo reserve a book, type /reserve <ID>.`,
-    { parse_mode: "Markdown" }
-  );
-
-  bot.answerCallbackQuery(query.id); // Acknowledge the callback
+  // If no available books, simply do nothing (no message sent)
 });
 
 // Function to check if the message is a valid category
