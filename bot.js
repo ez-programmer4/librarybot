@@ -273,12 +273,12 @@ bot.on("callback_query", async (query) => {
 });
 
 // Example for category selection
-if (userStates[chatId] && userStates[chatId].awaitingCategory) {
-  return bot.sendMessage(
-    chatId,
-    "⚠️ Please select a category using the inline keyboard."
-  );
-}
+// if (userStates[chatId] && userStates[chatId].awaitingCategory) {
+//   return bot.sendMessage(
+//     chatId,
+//     "⚠️ Please select a category using the inline keyboard."
+//   );
+// }
 // Function to check if the message is a valid category
 async function isCategory(category) {
   const categories = await Book.distinct("category");
