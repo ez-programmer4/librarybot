@@ -75,6 +75,10 @@ const userStates = {};
 async function notifyLibrarian(message) {
   await bot.sendMessage(librarianChatId, message);
 }
+async function handleError(chatId, errorMessage, logMessage) {
+  console.error(logMessage); // Log the error detail
+  await bot.sendMessage(chatId, errorMessage); // Notify the user
+}
 
 // Registration logic
 // Registration logic
@@ -82,102 +86,100 @@ bot.onText(/\/register/, async (msg) => {
   const chatId = msg.chat.id;
   console.log(`User ${chatId} initiated registration.`);
 
-  const existingUser = await User.findOne({ chatId });
+  try {
+    const existingUser = await User.findOne({ chatId });
+    if (existingUser) {
+      console.log(
+        `User ${chatId} is already registered as ${existingUser.userName}.`
+      );
+      await bot.sendMessage(
+        chatId,
+        `🚫 You are already registered as *${existingUser.userName}*.`
+      );
+      return askLanguageSelection(chatId);
+    }
 
-  if (existingUser) {
-    console.log(
-      `User ${chatId} is already registered as ${existingUser.userName}.`
-    );
-    await bot.sendMessage(
+    userStates[chatId] = { step: 1 };
+    console.log(`User ${chatId} is at step 1: asking for full name.`);
+    await bot.sendMessage(chatId, "📝 Please enter your full name:");
+  } catch (error) {
+    await handleError(
       chatId,
-      `🚫 You are already registered as *${existingUser.userName}*.`,
-      { parse_mode: "Markdown" }
+      "⚠️ An error occurred during registration. Please try again.",
+      `Error during registration initiation: ${error.message}`
     );
-
-    // Now ask for language selection
-    return askLanguageSelection(chatId);
   }
-
-  userStates[chatId] = { step: 1 };
-  console.log(`User ${chatId} is at step 1: asking for full name.`);
-  await bot.sendMessage(chatId, "📝 Please enter your full name:");
 });
 
-// Handle user messages during registration and other commands
 bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
   console.log(`Received message from ${chatId}: ${msg.text}`);
 
-  // Ensure the message is not a command
-  if (msg.text.startsWith("/")) {
-    // Check if the command is valid
-    if (!validCommands.includes(msg.text)) {
+  try {
+    // Handle commands
+    if (msg.text.startsWith("/") && !validCommands.includes(msg.text)) {
       return bot.sendMessage(
         chatId,
-        "❌ Invalid command. Please type /help to see the list of available commands."
+        "❌ Invalid command. Please type /help for the list of available commands."
       );
     }
-  }
-  if (userStates[chatId]) {
-    if (userStates[chatId].step === 2) {
-      return bot.sendMessage(
-        chatId,
-        "⚠️ Please use the inline keyboard to select your language."
-      );
-    }
-    // Add other states as necessary
-  }
 
-  if (userStates[chatId]) {
-    if (userStates[chatId].step === 1) {
-      userStates[chatId].userName = msg.text;
-      userStates[chatId].step = 2;
-      console.log(`User ${chatId} provided full name: ${msg.text}`);
-      return bot.sendMessage(
-        chatId,
-        "📞 Please enter your phone number (must start with 09 and be 10 digits long):"
-      );
-    } else if (userStates[chatId].step === 2) {
-      const phoneNumber = msg.text;
-      console.log(`User ${chatId} provided phone number: ${phoneNumber}`);
-
-      // Validate phone number
-      const phoneRegex = /^09\d{8}$/; // Matches numbers starting with 09 and exactly 10 digits
-      if (!phoneRegex.test(phoneNumber)) {
-        return bot.sendMessage(
-          chatId,
-          "❌ Invalid phone number. Please enter a valid phone number starting with 09 and consisting of 10 digits."
-        );
-      }
-
-      const user = await addUser(
-        chatId,
-        userStates[chatId].userName,
-        phoneNumber
-      );
-      console.log(
-        `User ${chatId} registered with name: ${user.userName}, phone: ${phoneNumber}`
-      );
-
-      await notifyLibrarian(
-        `🆕 New registration: *${user.userName}*,\n Phone: *${phoneNumber}*`
-      );
-      bot.sendMessage(
-        chatId,
-        `✓ Registration successful! Welcome, *${user.userName}*! 🎉`
-      );
-      delete userStates[chatId]; // Clear the registration state
+    if (userStates[chatId]) {
+      await handleRegistrationSteps(chatId, msg);
+    } else if (["Arabic", "Amharic", "AfaanOromo"].includes(msg.text)) {
+      return handleLanguageSelection(chatId, msg.text);
+    } else if (msg.text === "/change_language") {
       return askLanguageSelection(chatId);
     }
-  }
-
-  // Handle language selection or other commands
-  if (["Arabic", "Amharic", "AfaanOromo"].includes(msg.text)) {
-    return handleLanguageSelection(chatId, msg.text);
-  } else if (msg.text === "/change_language") {
-    return askLanguageSelection(chatId);
+  } catch (error) {
+    await handleError(
+      chatId,
+      "⚠️ An unexpected error occurred. Please try again.",
+      `Error handling message from ${chatId}: ${error.message}`
+    );
   }
 });
+
+async function handleRegistrationSteps(chatId, msg) {
+  if (userStates[chatId].step === 1) {
+    userStates[chatId].userName = msg.text;
+    userStates[chatId].step = 2;
+    console.log(`User ${chatId} provided full name: ${msg.text}`);
+    return bot.sendMessage(
+      chatId,
+      "📞 Please enter your phone number (must start with 09 and be 10 digits long):"
+    );
+  } else if (userStates[chatId].step === 2) {
+    return await processPhoneNumber(chatId, msg.text);
+  }
+}
+
+async function processPhoneNumber(chatId, phoneNumber) {
+  console.log(`User ${chatId} provided phone number: ${phoneNumber}`);
+  const phoneRegex = /^09\d{8}$/;
+
+  if (!phoneRegex.test(phoneNumber)) {
+    return bot.sendMessage(
+      chatId,
+      "❌ Invalid phone number. Please enter a valid phone number starting with 09 and consisting of 10 digits."
+    );
+  }
+
+  const user = await addUser(chatId, userStates[chatId].userName, phoneNumber);
+  console.log(
+    `User ${chatId} registered with name: ${user.userName}, phone: ${phoneNumber}`
+  );
+
+  await notifyLibrarian(
+    `🆕 New registration: *${user.userName}*,\n Phone: *${phoneNumber}*`
+  );
+  await bot.sendMessage(
+    chatId,
+    `✓ Registration successful! Welcome, *${user.userName}*! 🎉`
+  );
+  delete userStates[chatId]; // Clear the registration state
+  return askLanguageSelection(chatId);
+}
 
 // Ask for language selection
 function askLanguageSelection(chatId) {
@@ -293,43 +295,40 @@ bot.onText(/\/reserve (\d+)/, async (msg, match) => {
   const bookId = match[1];
   console.log(`User ${chatId} requested to reserve book ID: ${bookId}`);
 
-  const user = await User.findOne({ chatId: chatId });
-  console.log("User object:", user);
-
-  if (!user) {
-    console.log(`User ${chatId} is not registered.`);
-    return bot.sendMessage(
-      chatId,
-      "🚫 You need to register first using /register."
-    );
-  }
-
-  const book = await Book.findOne({ id: bookId });
-  if (!book) {
-    console.log(`Book ID ${bookId} does not exist.`);
-    return bot.sendMessage(
-      chatId,
-      `❌ Sorry, the book with ID *${bookId}* does not exist.`,
-      { parse_mode: "Markdown" }
-    );
-  }
-
-  if (!book.available) {
-    console.log(`Book ID ${bookId} is not available for user ${chatId}.`);
-    return bot.sendMessage(
-      chatId,
-      `❌ Sorry, the book with ID *${bookId}* is not available.`,
-      { parse_mode: "Markdown" }
-    );
-  }
-
   try {
+    const user = await User.findOne({ chatId });
+    if (!user) {
+      console.log(`User ${chatId} is not registered.`);
+      return bot.sendMessage(
+        chatId,
+        "🚫 You need to register first using /register."
+      );
+    }
+
+    const book = await Book.findOne({ id: bookId });
+    if (!book) {
+      console.log(`Book ID ${bookId} does not exist.`);
+      return bot.sendMessage(
+        chatId,
+        `❌ Sorry, the book with ID *${bookId}* does not exist.`,
+        { parse_mode: "Markdown" }
+      );
+    }
+
+    if (!book.available) {
+      console.log(`Book ID ${bookId} is not available for user ${chatId}.`);
+      return bot.sendMessage(
+        chatId,
+        `❌ Sorry, the book with ID *${bookId}* is not available.`,
+        { parse_mode: "Markdown" }
+      );
+    }
+
     const reservation = new Reservation({
       userId: user._id,
       bookId: book._id,
       pickupTime: "after isha salah",
     });
-
     await reservation.save();
     book.available = false; // Mark the book as unavailable
     await book.save();
@@ -343,10 +342,10 @@ bot.onText(/\/reserve (\d+)/, async (msg, match) => {
       { parse_mode: "Markdown" }
     );
   } catch (error) {
-    console.error("Error saving reservation:", error);
-    bot.sendMessage(
+    await handleError(
       chatId,
-      "⚠️ There was an error processing your reservation. Please try again."
+      "⚠️ There was an error processing your reservation. Please try again.",
+      `Error saving reservation: ${error.message}`
     );
   }
 });
