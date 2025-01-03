@@ -102,11 +102,10 @@ bot.on("message", async (msg) => {
   }
 });
 
-// Handle the reservation command
-// Handle the reservation command
+// Centralized reservation handling
 async function handleReserveCommand(chatId, bookId) {
   try {
-    const book = await Book.findOne({ id: bookId, available: true }); // Ensure the book is available
+    const book = await Book.findOne({ id: bookId, available: true });
     if (!book) {
       return bot.sendMessage(
         chatId,
@@ -128,6 +127,7 @@ async function handleReserveCommand(chatId, bookId) {
       pickupTime: "after isha salah",
     });
     await reservation.save();
+
     book.available = false; // Mark the book as unavailable
     await book.save();
 
@@ -140,7 +140,7 @@ async function handleReserveCommand(chatId, bookId) {
       { parse_mode: "Markdown" }
     );
   } catch (error) {
-    console.error("Error reserving book:", error); // Log the error
+    console.error("Error reserving book:", error);
     await handleError(
       chatId,
       "⚠️ There was an error processing your reservation. Please try again.",
@@ -148,6 +148,16 @@ async function handleReserveCommand(chatId, bookId) {
     );
   }
 }
+
+// Command handler for reserving a book
+bot.onText(/\/reserve (\d+)/, async (msg, match) => {
+  const chatId = msg.chat.id;
+  const bookId = match[1];
+  console.log(`User ${chatId} requested to reserve book ID: ${bookId}`);
+
+  // Call the centralized reservation handler
+  await handleReserveCommand(chatId, bookId);
+});
 
 // Handle the cancel reservation command
 async function handleCancelReservation(chatId, reservationId) {
@@ -488,65 +498,6 @@ bot.onText(/\/select_language/, (msg) => {
 });
 
 // Reservation logic
-bot.onText(/\/reserve (\d+)/, async (msg, match) => {
-  const chatId = msg.chat.id;
-  const bookId = match[1];
-  console.log(`User ${chatId} requested to reserve book ID: ${bookId}`);
-
-  try {
-    const user = await User.findOne({ chatId });
-    if (!user) {
-      console.log(`User ${chatId} is not registered.`);
-      return bot.sendMessage(
-        chatId,
-        "🚫 You need to register first using /register."
-      );
-    }
-
-    const book = await Book.findOne({ id: bookId });
-    if (!book) {
-      console.log(`Book ID ${bookId} does not exist.`);
-      return bot.sendMessage(
-        chatId,
-        `❌ Sorry, the book with ID *${bookId}* does not exist.`,
-        { parse_mode: "Markdown" }
-      );
-    }
-
-    if (!book.available) {
-      console.log(`Book ID ${bookId} is not available for user ${chatId}.`);
-      return bot.sendMessage(
-        chatId,
-        `❌ Sorry, the book with ID *${bookId}* is not available.`,
-        { parse_mode: "Markdown" }
-      );
-    }
-
-    const reservation = new Reservation({
-      userId: user._id,
-      bookId: book._id,
-      pickupTime: "after isha salah",
-    });
-    await reservation.save();
-    book.available = false; // Mark the book as unavailable
-    await book.save();
-
-    const notificationMessage = `🆕 New reservation by *${user.userName}* (Phone: *${user.phoneNumber}*) for *"${book.title}"*.`;
-    await notifyLibrarian(notificationMessage);
-
-    await bot.sendMessage(
-      chatId,
-      `✅ Successfully reserved: *"${book.title}"*.\n Pickup time: *after isha salah*.\n\nTo go back to the menu, type /back.`,
-      { parse_mode: "Markdown" }
-    );
-  } catch (error) {
-    await handleError(
-      chatId,
-      "⚠️ There was an error processing your reservation. Please try again.",
-      `Error saving reservation: ${error.message}`
-    );
-  }
-});
 
 bot.onText(/\/back/, (msg) => {
   const chatId = msg.chat.id;
