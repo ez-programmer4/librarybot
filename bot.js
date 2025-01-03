@@ -50,22 +50,75 @@ const validCommands = [
 ];
 
 // Start command
+// Start command
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
   const welcomeMessage = `
-
           ❖◉◉◉◉◉❖◉◉◉◉◉◉❖◉◉◉◉◉◉❖
         اَلسَّلاَ مُ عَلَيْكُمْ وَرَحْمَةُ اللهِ وَبَرَكَاتُهُ
         
   🎉 *Welcome to the KJUMJ IRSHAD Library Booking Bot!* 📚
-  
-  Please register to get started by typing * /register *. ✍️
-  
-  For a list of all commands and guidance, type * /help *.❓
-  
+
+  Please choose an option below:
+        
         ❖◉◉◉◉◉❖◉◉◉◉◉◉❖◉◉◉◉◉◉❖
   `;
-  bot.sendMessage(chatId, welcomeMessage, { parse_mode: "Markdown" });
+
+  const options = {
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: "Register", callback_data: "register" }],
+        [{ text: "Help", callback_data: "help" }],
+      ],
+    },
+  };
+
+  bot.sendMessage(chatId, welcomeMessage, {
+    parse_mode: "Markdown",
+    ...options,
+  });
+});
+
+// Handle button callbacks for Register and Help
+bot.on("callback_query", async (query) => {
+  const chatId = query.message.chat.id;
+
+  if (query.data === "register") {
+    await bot.sendMessage(
+      chatId,
+      "📝 Please enter your full name to register:"
+    );
+    userStates[chatId] = { step: 1 }; // Set the user state to registration step
+  } else if (query.data === "help") {
+    const helpMessage = `
+🤖 Library Bot Help
+
+Here are the commands you can use:
+
+➡️ 📋 /register: Register yourself to start using the library services.
+   Example: /register
+
+➡️ 🌐 /change_language: Change your preferred language.
+   Example: /change_language
+
+➡️ 📚 /select_category: Choose a category for books.
+
+➡️ 📖 /reserve_book <book_id>: Reserve a specific book.
+   Example: /reserve_book 112
+
+➡️ 📝 /my_reservations: View your current reservations.
+   Example: /my_reservations
+
+➡️ ❌ /cancel_reservation <number>: Cancel a specific reservation by its number.
+   Example: /cancel_reservation 1
+
+For more questions, feel free to reach out to us via @IrshadComments_bot! 📩
+`;
+    await bot.sendMessage(chatId, helpMessage);
+  }
+
+  // Acknowledge the callback
+  bot.answerCallbackQuery(query.id);
 });
 
 // Registration state management
