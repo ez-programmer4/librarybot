@@ -54,21 +54,24 @@ const validCommands = [
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
   const welcomeMessage = `
+
           ❖◉◉◉◉◉❖◉◉◉◉◉◉❖◉◉◉◉◉◉❖
         اَلسَّلاَ مُ عَلَيْكُمْ وَرَحْمَةُ اللهِ وَبَرَكَاتُهُ
         
   🎉 *Welcome to the KJUMJ IRSHAD Library Booking Bot!* 📚
-
+  
   Please choose an option below:
-        
+
         ❖◉◉◉◉◉❖◉◉◉◉◉◉❖◉◉◉◉◉◉❖
   `;
 
   const options = {
     reply_markup: {
       inline_keyboard: [
-        [{ text: "Register", callback_data: "register" }],
-        [{ text: "Help", callback_data: "help" }],
+        [
+          { text: "📝 Register", callback_data: "register" },
+          { text: "❓ Help", callback_data: "help" },
+        ],
       ],
     },
   };
@@ -79,16 +82,39 @@ bot.onText(/\/start/, (msg) => {
   });
 });
 
+// Registration state management
+const userStates = {};
+
 // Handle button callbacks for Register and Help
 bot.on("callback_query", async (query) => {
   const chatId = query.message.chat.id;
 
   if (query.data === "register") {
-    await bot.sendMessage(
-      chatId,
-      "📝 Please enter your full name to register:"
-    );
-    userStates[chatId] = { step: 1 }; // Set the user state to registration step
+    console.log(`User ${chatId} initiated registration.`);
+
+    try {
+      const existingUser = await User.findOne({ chatId });
+      if (existingUser) {
+        console.log(
+          `User ${chatId} is already registered as ${existingUser.userName}.`
+        );
+        await bot.sendMessage(
+          chatId,
+          `🚫 You are already registered as *${existingUser.userName}*.`
+        );
+        return askLanguageSelection(chatId);
+      }
+
+      userStates[chatId] = { step: 1 };
+      console.log(`User ${chatId} is at step 1: asking for full name.`);
+      await bot.sendMessage(chatId, "📝 Please enter your full name:");
+    } catch (error) {
+      await handleError(
+        chatId,
+        "⚠️ An error occurred during registration. Please try again.",
+        `Error during registration initiation: ${error.message}`
+      );
+    }
   } else if (query.data === "help") {
     const helpMessage = `
 🤖 Library Bot Help
@@ -121,9 +147,30 @@ For more questions, feel free to reach out to us via @IrshadComments_bot! 📩
   bot.answerCallbackQuery(query.id);
 });
 
-// Registration state management
-const userStates = {};
+// Handle user input for registration
+bot.on("message", async (msg) => {
+  const chatId = msg.chat.id;
 
+  if (userStates[chatId] && userStates[chatId].step === 1) {
+    console.log(`User ${chatId} provided full name: ${msg.text}`);
+    try {
+      const userName = msg.text; // Save the user's full name
+      const newUser = new User({ chatId, userName }); // Create a new user in the database
+      await newUser.save(); // Save the user to the database
+      await bot.sendMessage(
+        chatId,
+        `✅ Registration successful! Welcome, *${userName}*!`
+      );
+      delete userStates[chatId]; // Clear the user state
+    } catch (error) {
+      await handleError(
+        chatId,
+        "⚠️ An error occurred while saving your registration. Please try again.",
+        `Error during registration saving: ${error.message}`
+      );
+    }
+  }
+});
 // Notify librarian
 async function notifyLibrarian(message) {
   await bot.sendMessage(librarianChatId, message);
@@ -135,34 +182,6 @@ async function handleError(chatId, errorMessage, logMessage) {
 
 // Registration logic
 // Registration logic
-bot.onText(/\/register/, async (msg) => {
-  const chatId = msg.chat.id;
-  console.log(`User ${chatId} initiated registration.`);
-
-  try {
-    const existingUser = await User.findOne({ chatId });
-    if (existingUser) {
-      console.log(
-        `User ${chatId} is already registered as ${existingUser.userName}.`
-      );
-      await bot.sendMessage(
-        chatId,
-        `🚫 You are already registered as *${existingUser.userName}*.`
-      );
-      return askLanguageSelection(chatId);
-    }
-
-    userStates[chatId] = { step: 1 };
-    console.log(`User ${chatId} is at step 1: asking for full name.`);
-    await bot.sendMessage(chatId, "📝 Please enter your full name:");
-  } catch (error) {
-    await handleError(
-      chatId,
-      "⚠️ An error occurred during registration. Please try again.",
-      `Error during registration initiation: ${error.message}`
-    );
-  }
-});
 
 bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
