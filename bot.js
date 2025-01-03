@@ -150,33 +150,53 @@ async function handleReserveCommand(chatId, bookId) {
   }
 }
 
-// Handle the cancel reservation command
-async function handleCancelReservation(chatId, reservationId) {
+// Centralized cancellation handling
+async function handleCancelReservation(chatId, reservationIndex) {
   try {
-    const reservation = await Reservation.findById(reservationId).populate(
-      "bookId"
-    );
-    if (!reservation) {
+    const user = await User.findOne({ chatId });
+    if (!user) {
       return bot.sendMessage(
         chatId,
-        "❌ Invalid reservation ID. Please check and try again."
+        "🚫 You need to register first using /register."
       );
     }
 
-    const book = await Book.findById(reservation.bookId._id);
+    const userReservations = await Reservation.find({
+      userId: user._id,
+    }).populate("bookId");
+
+    if (reservationIndex < 0 || reservationIndex >= userReservations.length) {
+      return bot.sendMessage(
+        chatId,
+        "❌ Invalid reservation number. Please check your reservations and try again."
+      );
+    }
+
+    const reservation = userReservations[reservationIndex];
+    const book = await Book.findById(reservation.bookId);
     if (book) {
       book.available = true; // Mark the book as available again
       await book.save();
     }
 
-    await Reservation.findByIdAndDelete(reservationId);
+    await Reservation.findByIdAndDelete(reservation._id);
     await bot.sendMessage(
       chatId,
       `✅ You have successfully canceled the reservation for *"${reservation.bookId.title}"*.`,
       { parse_mode: "Markdown" }
     );
+
+    // Notify librarian
+    const notificationMessage = `📩 User has canceled a reservation:\n- *Title:* *"${
+      reservation.bookId.title
+    }"*\n- *User ID:* *${user._id}*\n- *Name:* *${
+      user.userName
+    }*\n- *Phone:* *${user.phoneNumber}*\n- *Reservation Number:* *${
+      reservationIndex + 1
+    }*`;
+    await notifyLibrarian(notificationMessage);
   } catch (error) {
-    console.error("Error canceling reservation:", error); // Log the error
+    console.error("Error canceling reservation:", error);
     await handleError(
       chatId,
       "⚠️ An error occurred while canceling your reservation. Please try again.",
@@ -184,7 +204,16 @@ async function handleCancelReservation(chatId, reservationId) {
     );
   }
 }
-// Start command
+
+// Command handler for canceling a reservation
+bot.onText(/\/cancel_reservation (\d+)/, async (msg, match) => {
+  const chatId = msg.chat.id;
+  const reservationIndex = parseInt(match[1]) - 1; // Convert to zero-based index
+  console.log("Chat ID:", chatId); // Log the chat ID for debugging
+
+  // Call the centralized cancellation handling function
+  await handleCancelReservation(chatId, reservationIndex);
+});
 // Start command
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
