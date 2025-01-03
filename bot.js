@@ -36,18 +36,115 @@ const validCommands = [
   "/help",
   "/change_language",
   "/select_language",
-  "/reserve",
+  "/reserve", // This command requires an ID
   "/back",
   "/my_reservations",
-  "/cancel_reservation",
+  "/cancel_reservation", // This command requires a reservation number
   "/add_books",
   "/view_reservations",
   "/librarian_add_reservation",
   "/librarian_cancel_reservation",
   "/remove_book",
-  "/my_reservations",
   // Add other commands as needed
 ];
+
+bot.on("message", async (msg) => {
+  const chatId = msg.chat.id;
+  console.log(`Received message from ${chatId}: ${msg.text}`);
+
+  try {
+    // Handle commands
+    if (msg.text.startsWith("/")) {
+      // Check if it's a valid command
+      if (!validCommands.includes(msg.text.split(" ")[0])) {
+        return bot.sendMessage(
+          chatId,
+          "❌ Invalid command. Please type /help for the list of available commands."
+        );
+      }
+
+      // Special handling for commands that require parameters
+      if (msg.text.startsWith("/reserve")) {
+        const bookId = msg.text.split(" ")[1];
+        if (!bookId) {
+          return bot.sendMessage(
+            chatId,
+            "❌ Please provide a book ID to reserve."
+          );
+        }
+        await handleReserveCommand(chatId, bookId);
+      } else if (msg.text.startsWith("/cancel_reservation")) {
+        const reservationId = msg.text.split(" ")[1];
+        if (!reservationId) {
+          return bot.sendMessage(
+            chatId,
+            "❌ Please provide a reservation ID to cancel."
+          );
+        }
+        await handleCancelReservation(chatId, reservationId);
+      }
+    }
+
+    // Continue checking for other commands or user states
+    if (userStates[chatId]) {
+      await handleRegistrationSteps(chatId, msg);
+    } else if (["Arabic", "Amharic", "AfaanOromo"].includes(msg.text)) {
+      return handleLanguageSelection(chatId, msg.text);
+    } else if (msg.text === "/change_language") {
+      return askLanguageSelection(chatId);
+    }
+  } catch (error) {
+    await handleError(
+      chatId,
+      "⚠️ An unexpected error occurred. Please try again.",
+      `Error handling message from ${chatId}: ${error.message}`
+    );
+  }
+});
+
+// Handle the reservation command
+async function handleReserveCommand(chatId, bookId) {
+  try {
+    const book = await Book.findById(bookId);
+    if (!book || !book.available) {
+      return bot.sendMessage(
+        chatId,
+        "❌ Invalid book ID or the book is not available."
+      );
+    }
+
+    // Proceed with the reservation
+    await reserveBook(chatId, book);
+  } catch (error) {
+    await handleError(
+      chatId,
+      "⚠️ An error occurred while reserving the book. Please try again.",
+      `Error reserving book with ID ${bookId}: ${error.message}`
+    );
+  }
+}
+
+// Handle the cancel reservation command
+async function handleCancelReservation(chatId, reservationId) {
+  try {
+    const reservation = await Reservation.findById(reservationId);
+    if (!reservation) {
+      return bot.sendMessage(
+        chatId,
+        "❌ Invalid reservation ID. Please check and try again."
+      );
+    }
+
+    // Proceed to cancel the reservation
+    await cancelReservation(chatId, reservation);
+  } catch (error) {
+    await handleError(
+      chatId,
+      "⚠️ An error occurred while canceling the reservation. Please try again.",
+      `Error canceling reservation with ID ${reservationId}: ${error.message}`
+    );
+  }
+}
 
 // Start command
 // Start command
@@ -175,42 +272,7 @@ bot.on("message", async (msg) => {
 async function notifyLibrarian(message) {
   await bot.sendMessage(librarianChatId, message);
 }
-async function handleError(chatId, errorMessage, logMessage) {
-  console.error(logMessage); // Log the error detail
-  await bot.sendMessage(chatId, errorMessage); // Notify the user
-}
 
-// Registration logic
-// Registration logic
-
-bot.on("message", async (msg) => {
-  const chatId = msg.chat.id;
-  console.log(`Received message from ${chatId}: ${msg.text}`);
-
-  try {
-    // Handle commands
-    if (msg.text.startsWith("/") && !validCommands.includes(msg.text)) {
-      return bot.sendMessage(
-        chatId,
-        "❌ Invalid command. Please type /help for the list of available commands."
-      );
-    }
-
-    if (userStates[chatId]) {
-      await handleRegistrationSteps(chatId, msg);
-    } else if (["Arabic", "Amharic", "AfaanOromo"].includes(msg.text)) {
-      return handleLanguageSelection(chatId, msg.text);
-    } else if (msg.text === "/change_language") {
-      return askLanguageSelection(chatId);
-    }
-  } catch (error) {
-    await handleError(
-      chatId,
-      "⚠️ An unexpected error occurred. Please try again.",
-      `Error handling message from ${chatId}: ${error.message}`
-    );
-  }
-});
 async function handleUnexpectedMessage(chatId, message) {
   const isCommand = message.startsWith("/") && validCommands.includes(message);
   const isLanguage = ["Arabic", "Amharic", "AfaanOromo"].includes(message);
