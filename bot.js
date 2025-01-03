@@ -149,8 +149,31 @@ async function handleReserveCommand(chatId, bookId) {
     );
   }
 }
+// Function to get user reservations
+async function getUserReservations(userId) {
+  return await Reservation.find({ userId }).populate("bookId");
+}
 
-async function handleCancelReservation(chatId, reservationIndex) {
+// Function to handle cancellation of a specific reservation by book ID
+async function cancelReservationByBookId(userId, bookId) {
+  const reservation = await Reservation.findOne({ userId, bookId });
+
+  if (!reservation) {
+    throw new Error("Reservation not found for this book.");
+  }
+
+  const book = await Book.findById(bookId);
+  if (book) {
+    book.available = true; // Mark the book as available again
+    await book.save();
+  }
+
+  await Reservation.findByIdAndDelete(reservation._id);
+  return book.title; // Return the book title for confirmation
+}
+
+// Main function to handle canceling a reservation by book ID
+async function handleCancelReservation(chatId, bookId) {
   try {
     const user = await User.findOne({ chatId });
     if (!user) {
@@ -160,42 +183,18 @@ async function handleCancelReservation(chatId, reservationIndex) {
       );
     }
 
-    // Fetch the current reservations each time
-    const userReservations = await Reservation.find({
-      userId: user._id,
-    }).populate("bookId");
+    // Cancel the reservation for the specified book ID
+    const bookTitle = await cancelReservationByBookId(user._id, bookId);
 
-    // Check if the provided index is valid
-    if (reservationIndex < 0 || reservationIndex >= userReservations.length) {
-      return bot.sendMessage(
-        chatId,
-        "❌ Invalid reservation number. Please check your reservations and try again."
-      );
-    }
-
-    // Proceed with canceling the specific reservation
-    const reservation = userReservations[reservationIndex];
-    const book = await Book.findById(reservation.bookId);
-    if (book) {
-      book.available = true; // Mark the book as available again
-      await book.save();
-    }
-
-    await Reservation.findByIdAndDelete(reservation._id);
     await bot.sendMessage(
       chatId,
-      `✅ You have successfully canceled the reservation for *"${reservation.bookId.title}"*.`,
+      `✅ You have successfully canceled the reservation for *"${bookTitle}"*.`,
       { parse_mode: "Markdown" }
     );
 
     // Notify librarian
-    const notificationMessage = `📩 User has canceled a reservation:\n- *Title:* *"${
-      reservation.bookId.title
-    }"*\n- *User ID:* *${user._id}*\n- *Name:* *${
-      user.userName
-    }*\n- *Phone:* *${user.phoneNumber}*\n- *Reservation Number:* *${
-      reservationIndex + 1
-    }*`;
+    const notificationMessage = `📩 User has canceled a reservation:\n- *Title:* *"${bookTitle}"*\n- *User ID:* *${user._id}*\n- *Name:* *${user.userName}*\n- *Phone:* *${user.phoneNumber}*`;
+
     await notifyLibrarian(notificationMessage);
   } catch (error) {
     console.error("Error canceling reservation:", error);
@@ -207,15 +206,16 @@ async function handleCancelReservation(chatId, reservationIndex) {
   }
 }
 
-// Command handler for canceling a reservation
-bot.onText(/\/cancel_reservation (\d+)/, async (msg, match) => {
+// Command handler for canceling a reservation by book ID
+bot.onText(/\/cancel_reservation (\w+)/, async (msg, match) => {
   const chatId = msg.chat.id;
-  const reservationIndex = parseInt(match[1]) - 1; // Convert to zero-based index
+  const bookId = match[1]; // Get the book ID from the command
   console.log("Chat ID:", chatId); // Log the chat ID for debugging
 
   // Call the centralized cancellation handling function
-  await handleCancelReservation(chatId, reservationIndex);
+  await handleCancelReservation(chatId, bookId);
 });
+
 // Start command
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
