@@ -72,6 +72,7 @@ bot.on("message", async (msg) => {
             "❌ Please provide a book ID to reserve."
           );
         }
+        // Call the centralized reservation handling function
         await handleReserveCommand(chatId, bookId);
       } else if (msg.text.startsWith("/cancel_reservation")) {
         const reservationId = msg.text.split(" ")[1];
@@ -148,16 +149,6 @@ async function handleReserveCommand(chatId, bookId) {
     );
   }
 }
-
-// Command handler for reserving a book
-bot.onText(/\/reserve (\d+)/, async (msg, match) => {
-  const chatId = msg.chat.id;
-  const bookId = match[1];
-  console.log(`User ${chatId} requested to reserve book ID: ${bookId}`);
-
-  // Call the centralized reservation handler
-  await handleReserveCommand(chatId, bookId);
-});
 
 // Handle the cancel reservation command
 async function handleCancelReservation(chatId, reservationId) {
