@@ -214,6 +214,7 @@ bot.onText(/\/cancel_reservation (\d+)/, async (msg, match) => {
   // Call the centralized cancellation handling function
   await handleCancelReservation(chatId, reservationIndex);
 });
+
 // Start command
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
@@ -876,57 +877,6 @@ bot.onText(/\/my_reservations/, async (msg) => {
       chatId,
       "❌ An error occurred while retrieving your reservations. Please try again."
     );
-  }
-});
-
-bot.onText(/\/cancel_reservation (\d+)/, async (msg, match) => {
-  const chatId = msg.chat.id;
-  console.log("Chat ID:", chatId); // Log the chat ID for debugging
-  const reservationIndex = parseInt(match[1]) - 1;
-
-  const user = await User.findOne({ chatId });
-  if (!user) {
-    return bot.sendMessage(
-      chatId,
-      "🚫 You need to register first using /register."
-    );
-  }
-
-  const userReservations = await Reservation.find({
-    userId: user._id,
-  }).populate("bookId");
-
-  if (reservationIndex < 0 || reservationIndex >= userReservations.length) {
-    return bot.sendMessage(
-      chatId,
-      "❌ Invalid reservation number. Please check your reservations and try again."
-    );
-  }
-
-  const reservation = userReservations[reservationIndex];
-  const book = await Book.findById(reservation.bookId);
-  if (book) {
-    book.available = true;
-    await book.save();
-  }
-
-  await Reservation.findByIdAndDelete(reservation._id);
-  await bot.sendMessage(
-    chatId,
-    `✅ You have successfully canceled the reservation for *"${reservation.bookId.title}"*.`,
-    { parse_mode: "Markdown" }
-  );
-
-  const notificationMessage = `📩 User has canceled a reservation:\n- *Title:* *"${
-    reservation.bookId.title
-  }"*\n- *User ID:* *${user._id}*\n- *Name:* *${user.userName}*\n- *Phone:* *${
-    user.phoneNumber
-  }*\n- *Reservation Number:* *${reservationIndex + 1}*`;
-
-  try {
-    await notifyLibrarian(notificationMessage);
-  } catch (error) {
-    console.error("Failed to notify librarian:", error);
   }
 });
 
