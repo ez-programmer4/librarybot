@@ -269,13 +269,16 @@ function askLanguageSelection(chatId) {
   bot.sendMessage(chatId, "🌐 Please select a language:", {
     reply_markup: {
       inline_keyboard: [
-        [{ text: "Arabic", callback_data: "Arabic" }],
-        [{ text: "Amharic", callback_data: "Amharic" }],
-        [{ text: "AfaanOromo", callback_data: "AfaanOromo" }],
+        [
+          { text: "🇸🇩 Arabic", callback_data: "Arabic" },
+          { text: "🇪🇹 Amharic", callback_data: "Amharic" },
+        ],
+        [{ text: "🇪🇹 Afaan Oromoo", callback_data: "AfaanOromo" }],
       ],
     },
   });
 }
+
 bot.on("callback_query", async (query) => {
   const chatId = query.message.chat.id;
   const language = query.data;
@@ -283,11 +286,12 @@ bot.on("callback_query", async (query) => {
   // Handle language selection
   await handleLanguageSelection(chatId, language);
 
-  // Remove the inline keyboard by editing the message
-  await bot.editMessageReplyMarkup(
-    { inline_keyboard: [] },
-    { chat_id: chatId, message_id: query.message.message_id }
-  );
+  // Remove the inline keyboard and update the message
+  await bot.editMessageText(`🌐 You have selected *${language}*. Thank you!`, {
+    chat_id: chatId,
+    message_id: query.message.message_id,
+    parse_mode: "Markdown",
+  });
 
   bot.answerCallbackQuery(query.id); // Acknowledge the callback
 });
@@ -315,18 +319,20 @@ async function handleLanguageSelection(chatId, language) {
 
   if (categories.length > 0) {
     const inlineButtons = categories.map((cat) => [
-      { text: cat, callback_data: cat },
+      { text: `📚 ${cat}`, callback_data: cat }, // Add a book icon to each category
     ]);
 
-    await bot.sendMessage(
+    const message = await bot.sendMessage(
       chatId,
-      `You selected ${language}. Please choose a category:`,
+      `🌐 You selected *${language}*. Please choose a category:`,
       {
         reply_markup: {
           inline_keyboard: inlineButtons,
         },
       }
     );
+
+    return message; // Return the message object for later use
   }
   // If no categories found, simply do nothing (no message sent)
 }
@@ -335,6 +341,16 @@ async function handleLanguageSelection(chatId, language) {
 bot.on("callback_query", async (query) => {
   const chatId = query.message.chat.id;
   const selectedCategory = query.data;
+
+  // Remove the inline keyboard and update the previous message
+  await bot.editMessageText(
+    `📚 You selected the category: *${selectedCategory}*. Loading available books...`,
+    {
+      chat_id: chatId,
+      message_id: query.message.message_id,
+      parse_mode: "Markdown",
+    }
+  );
 
   const books = await Book.find({
     category: selectedCategory,
