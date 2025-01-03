@@ -154,25 +154,43 @@ async function getUserReservations(userId) {
   return await Reservation.find({ userId }).populate("bookId");
 }
 
-// Function to handle cancellation of a specific reservation by book ID
-async function cancelReservationByBookId(userId, bookId) {
-  const reservation = await Reservation.findOne({ userId, bookId });
+// Inline back button functionality
+const backButton = {
+  reply_markup: {
+    inline_keyboard: [[{ text: "⬅️ Back", callback_data: "back" }]],
+  },
+};
 
-  if (!reservation) {
-    throw new Error("Reservation not found for this book.");
+// Handle inline button callback for back action
+bot.on("callback_query", async (query) => {
+  const chatId = query.message.chat.id;
+
+  if (query.data === "back") {
+    await bot.sendMessage(
+      chatId,
+      "🔙 Returning to the main menu...",
+      backButton
+    );
+    return askLanguageSelection(chatId); // Adjust this to return to your desired menu
   }
 
-  const book = await Book.findById(bookId);
-  if (book) {
-    book.available = true; // Mark the book as available again
-    await book.save();
-  }
+  // Handle language selection
+  await handleLanguageSelection(chatId, query.data);
 
-  await Reservation.findByIdAndDelete(reservation._id);
-  return book.title; // Return the book title for confirmation
-}
+  // Remove the inline keyboard and update the message
+  await bot.editMessageText(
+    `🌐 You have selected *${query.data}*. Thank you!`,
+    {
+      chat_id: chatId,
+      message_id: query.message.message_id,
+      parse_mode: "Markdown",
+    }
+  );
 
-// Main function to handle canceling a reservation by book ID
+  bot.answerCallbackQuery(query.id); // Acknowledge the callback
+});
+
+// Adjusted cancellation of reservation
 async function handleCancelReservation(chatId, bookId) {
   try {
     const user = await User.findOne({ chatId });
@@ -206,7 +224,7 @@ async function handleCancelReservation(chatId, bookId) {
   }
 }
 
-// Command handler for canceling a reservation by book ID
+// Update the command to cancel reservation
 bot.onText(/\/cancel_reservation (\w+)/, async (msg, match) => {
   const chatId = msg.chat.id;
   const bookId = match[1]; // Get the book ID from the command
@@ -215,6 +233,20 @@ bot.onText(/\/cancel_reservation (\w+)/, async (msg, match) => {
   // Call the centralized cancellation handling function
   await handleCancelReservation(chatId, bookId);
 });
+
+// Example of handling unexpected messages
+async function handleUnexpectedMessage(chatId, message) {
+  const isCommand = message.startsWith("/") && validCommands.includes(message);
+  const isLanguage = ["Arabic", "Amharic", "AfaanOromo"].includes(message);
+
+  // If it's not a command or a recognized language, provide feedback
+  if (!isCommand && !isLanguage) {
+    await bot.sendMessage(
+      chatId,
+      "❓ I didn't understand that. Please type /help to see available commands."
+    );
+  }
+}
 
 // Start command
 bot.onText(/\/start/, (msg) => {
@@ -342,18 +374,6 @@ async function notifyLibrarian(message) {
   await bot.sendMessage(librarianChatId, message);
 }
 
-async function handleUnexpectedMessage(chatId, message) {
-  const isCommand = message.startsWith("/") && validCommands.includes(message);
-  const isLanguage = ["Arabic", "Amharic", "AfaanOromo"].includes(message);
-
-  // If it's not a command or a recognized language, provide feedback
-  if (!isCommand && !isLanguage) {
-    await bot.sendMessage(
-      chatId,
-      "❓ I didn't understand that. Please type /help to see available commands."
-    );
-  }
-}
 async function handleRegistrationSteps(chatId, msg) {
   if (userStates[chatId].step === 1) {
     userStates[chatId].userName = msg.text;
