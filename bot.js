@@ -103,23 +103,48 @@ bot.on("message", async (msg) => {
 });
 
 // Handle the reservation command
+// Handle the reservation command
 async function handleReserveCommand(chatId, bookId) {
   try {
-    const book = await Book.findById(bookId);
-    if (!book || !book.available) {
+    const book = await Book.findOne({ id: bookId, available: true }); // Ensure the book is available
+    if (!book) {
       return bot.sendMessage(
         chatId,
         "❌ Invalid book ID or the book is not available."
       );
     }
 
-    // Proceed with the reservation
-    await reserveBook(chatId, book);
+    const user = await User.findOne({ chatId });
+    if (!user) {
+      return bot.sendMessage(
+        chatId,
+        "🚫 You need to register first using /register."
+      );
+    }
+
+    const reservation = new Reservation({
+      userId: user._id,
+      bookId: book._id,
+      pickupTime: "after isha salah",
+    });
+    await reservation.save();
+    book.available = false; // Mark the book as unavailable
+    await book.save();
+
+    const notificationMessage = `🆕 New reservation by *${user.userName}* (Phone: *${user.phoneNumber}*) for *"${book.title}"*.`;
+    await notifyLibrarian(notificationMessage);
+
+    await bot.sendMessage(
+      chatId,
+      `✅ Successfully reserved: *"${book.title}"*.\nPickup time: *after isha salah*.\n\nTo go back to the menu, type /back.`,
+      { parse_mode: "Markdown" }
+    );
   } catch (error) {
+    console.error("Error reserving book:", error); // Log the error
     await handleError(
       chatId,
-      "⚠️ An error occurred while reserving the book. Please try again.",
-      `Error reserving book with ID ${bookId}: ${error.message}`
+      "⚠️ There was an error processing your reservation. Please try again.",
+      `Error saving reservation: ${error.message}`
     );
   }
 }
@@ -127,7 +152,9 @@ async function handleReserveCommand(chatId, bookId) {
 // Handle the cancel reservation command
 async function handleCancelReservation(chatId, reservationId) {
   try {
-    const reservation = await Reservation.findById(reservationId);
+    const reservation = await Reservation.findById(reservationId).populate(
+      "bookId"
+    );
     if (!reservation) {
       return bot.sendMessage(
         chatId,
@@ -135,17 +162,27 @@ async function handleCancelReservation(chatId, reservationId) {
       );
     }
 
-    // Proceed to cancel the reservation
-    await cancelReservation(chatId, reservation);
+    const book = await Book.findById(reservation.bookId._id);
+    if (book) {
+      book.available = true; // Mark the book as available again
+      await book.save();
+    }
+
+    await Reservation.findByIdAndDelete(reservationId);
+    await bot.sendMessage(
+      chatId,
+      `✅ You have successfully canceled the reservation for *"${reservation.bookId.title}"*.`,
+      { parse_mode: "Markdown" }
+    );
   } catch (error) {
+    console.error("Error canceling reservation:", error); // Log the error
     await handleError(
       chatId,
-      "⚠️ An error occurred while canceling the reservation. Please try again.",
-      `Error canceling reservation with ID ${reservationId}: ${error.message}`
+      "⚠️ An error occurred while canceling your reservation. Please try again.",
+      `Error canceling reservation: ${error.message}`
     );
   }
 }
-
 // Start command
 // Start command
 bot.onText(/\/start/, (msg) => {
