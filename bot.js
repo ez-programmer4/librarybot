@@ -150,7 +150,6 @@ async function handleReserveCommand(chatId, bookId) {
   }
 }
 
-// Centralized cancellation handling
 async function handleCancelReservation(chatId, reservationIndex) {
   try {
     const user = await User.findOne({ chatId });
