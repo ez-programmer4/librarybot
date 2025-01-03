@@ -160,10 +160,12 @@ async function handleCancelReservation(chatId, reservationIndex) {
       );
     }
 
+    // Fetch the current reservations each time
     const userReservations = await Reservation.find({
       userId: user._id,
     }).populate("bookId");
 
+    // Check if the provided index is valid
     if (reservationIndex < 0 || reservationIndex >= userReservations.length) {
       return bot.sendMessage(
         chatId,
@@ -171,6 +173,7 @@ async function handleCancelReservation(chatId, reservationIndex) {
       );
     }
 
+    // Proceed with canceling the specific reservation
     const reservation = userReservations[reservationIndex];
     const book = await Book.findById(reservation.bookId);
     if (book) {
@@ -213,7 +216,6 @@ bot.onText(/\/cancel_reservation (\d+)/, async (msg, match) => {
   // Call the centralized cancellation handling function
   await handleCancelReservation(chatId, reservationIndex);
 });
-
 // Start command
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
