@@ -871,14 +871,12 @@ bot.onText(/\/my_reservations/, async (msg) => {
 
   const reservationList = userReservations
     .map((res, index) => {
-      const title = res.bookId.title.replace(/[_*]/g, "\\$&"); // Escape Markdown special characters
-      return `📝 Reservation #${index + 1}: 📙 *${title}* (Pickup: ${
-        res.pickupTime
-      })`;
+      const title = res.bookId.title; // No escaping or formatting
+      return `Reservation #${index + 1}: ${title} (Pickup: ${res.pickupTime})`;
     })
     .join("\n");
 
-  const message = `📖 Your Reservations:\n${reservationList}\n\nTo cancel a reservation, use /cancel_reservation <number>.`;
+  const message = `Your Reservations:\n${reservationList}\n\nTo cancel a reservation, use /cancel_reservation <number>.`;
 
   // Check message length and split if necessary
   const MAX_MESSAGE_LENGTH = 4096; // Telegram message character limit
@@ -889,16 +887,10 @@ bot.onText(/\/my_reservations/, async (msg) => {
     }
 
     for (const msgPart of splitMessages) {
-      await bot.sendMessage(chatId, msgPart, {
-        parse_mode: "Markdown",
-        reply_markup: backButton,
-      });
+      await bot.sendMessage(chatId, msgPart, { reply_markup: backButton });
     }
   } else {
-    await bot.sendMessage(chatId, message, {
-      parse_mode: "Markdown",
-      reply_markup: backButton,
-    });
+    await bot.sendMessage(chatId, message, { reply_markup: backButton });
   }
 });
 // Check if the user is a librarian
