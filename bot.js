@@ -878,11 +878,28 @@ bot.onText(/\/my_reservations/, async (msg) => {
     })
     .join("\n");
 
-  await bot.sendMessage(
-    chatId,
-    `📖 Your Reservations:\n${reservationList}\n\nTo cancel a reservation, use /cancel_reservation <number>.`,
-    { parse_mode: "Markdown", reply_markup: backButton }
-  );
+  const message = `📖 Your Reservations:\n${reservationList}\n\nTo cancel a reservation, use /cancel_reservation <number>.`;
+
+  // Check message length and split if necessary
+  const MAX_MESSAGE_LENGTH = 4096; // Telegram message character limit
+  if (message.length > MAX_MESSAGE_LENGTH) {
+    const splitMessages = [];
+    for (let i = 0; i < message.length; i += MAX_MESSAGE_LENGTH) {
+      splitMessages.push(message.slice(i, i + MAX_MESSAGE_LENGTH));
+    }
+
+    for (const msgPart of splitMessages) {
+      await bot.sendMessage(chatId, msgPart, {
+        parse_mode: "Markdown",
+        reply_markup: backButton,
+      });
+    }
+  } else {
+    await bot.sendMessage(chatId, message, {
+      parse_mode: "Markdown",
+      reply_markup: backButton,
+    });
+  }
 });
 // Check if the user is a librarian
 const isLibrarian = (chatId) => {
