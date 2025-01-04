@@ -153,8 +153,7 @@ async function handleReserveCommand(chatId, bookId) {
 async function getUserReservations(userId) {
   return await Reservation.find({ userId }).populate("bookId");
 }
-
-// Inline back button functionality
+// Centralized function to create back button
 const backButton = {
   reply_markup: {
     inline_keyboard: [[{ text: "⬅️ Back", callback_data: "back" }]],
@@ -166,16 +165,14 @@ bot.on("callback_query", async (query) => {
   const chatId = query.message.chat.id;
 
   if (query.data === "back") {
-    await bot.sendMessage(
-      chatId,
-      "🔙 Returning to the main menu...",
-      backButton
-    );
+    await bot.editMessageText("🔙 Returning to the main menu...", {
+      chat_id: chatId,
+      message_id: query.message.message_id,
+    });
     return askLanguageSelection(chatId); // Adjust this to return to your desired menu
   }
 });
 
-// Updated /my_reservations command
 bot.onText(/\/my_reservations/, async (msg) => {
   const chatId = msg.chat.id;
   const user = await User.findOne({ chatId });
@@ -199,11 +196,11 @@ bot.onText(/\/my_reservations/, async (msg) => {
     .map((res) => {
       const title = res.bookId.title; // No escaping or formatting
       const bookId = res.bookId.id; // Get the book ID
-      return `Book ID: *${bookId}* - Title: *"${title}"* (Pickup: ${res.pickupTime})`;
+      return `📚 *Book ID:* *${bookId}* \n *Title:* *"${title}"* \n *Pickup:* ${res.pickupTime}\n`;
     })
-    .join("\n");
+    .join("🟢\n");
 
-  const message = `Your Reservations:\n${reservationList}\n\nTo cancel a reservation, use /cancel_reservation <book_id>.`;
+  const message = `✨ *Your Reservations:* ✨\n\n${reservationList}To cancel a reservation, use /cancel_reservation <book_id>.`;
 
   // Check message length and split if necessary
   const MAX_MESSAGE_LENGTH = 4096; // Telegram message character limit
