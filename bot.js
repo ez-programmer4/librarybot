@@ -173,21 +173,6 @@ bot.on("callback_query", async (query) => {
     );
     return askLanguageSelection(chatId); // Adjust this to return to your desired menu
   }
-
-  // Handle language selection
-  await handleLanguageSelection(chatId, query.data);
-
-  // Remove the inline keyboard and update the message
-  await bot.editMessageText(
-    `🌐 You have selected *${query.data}*. Thank you!`,
-    {
-      chat_id: chatId,
-      message_id: query.message.message_id,
-      parse_mode: "Markdown",
-    }
-  );
-
-  bot.answerCallbackQuery(query.id); // Acknowledge the callback
 });
 
 // Adjusted cancellation of reservation
@@ -865,7 +850,6 @@ bot.onText(/\/remove_book (\w+) (.+) (\d+)/, async (msg, match) => {
     { parse_mode: "Markdown" }
   );
 });
-
 bot.onText(/\/my_reservations/, async (msg) => {
   const chatId = msg.chat.id;
   const user = await User.findOne({ chatId });
@@ -886,37 +870,20 @@ bot.onText(/\/my_reservations/, async (msg) => {
   }
 
   const reservationList = userReservations
-    .map((res, index) => {
-      // Escape all Markdown special characters
-      const title = res.bookId.title.replace(/([_*~`>#+\-.!])/g, "\\$1");
-      const pickupTime = res.pickupTime.replace(/([_*~`>#+\-.!])/g, "\\$1");
-      return `📝 Reservation #${
-        index + 1
-      }:📙 ${title} ⌚ (Pickup: ${pickupTime})`;
-    })
+    .map(
+      (res, index) =>
+        `📝 Reservation #${index + 1}: 📙 *${res.bookId.title}* (Pickup: ${
+          res.pickupTime
+        })`
+    )
     .join("\n");
 
-  // Log the final message for debugging
-  console.log(
-    "Final Message:",
-    `📖 *Your Reservations:*\n${reservationList}\n\nTo cancel a reservation, use /cancel_reservation <number>.`
+  await bot.sendMessage(
+    chatId,
+    `📖 Your Reservations:\n${reservationList}\n\nTo cancel a reservation, use /cancel_reservation <number>.`,
+    { parse_mode: "Markdown", reply_markup: backButton }
   );
-
-  try {
-    // Send message as plain text for testing
-    await bot.sendMessage(
-      chatId,
-      `📖 Your Reservations:\n${reservationList}\n\nTo cancel a reservation, use /cancel_reservation <number>.`
-    );
-  } catch (error) {
-    console.error("Error sending message:", error);
-    await bot.sendMessage(
-      chatId,
-      "❌ An error occurred while retrieving your reservations. Please try again."
-    );
-  }
 });
-
 // Check if the user is a librarian
 const isLibrarian = (chatId) => {
   return chatId == librarianChatId; // Compare with the librarian's chat ID
