@@ -870,12 +870,12 @@ bot.onText(/\/my_reservations/, async (msg) => {
   }
 
   const reservationList = userReservations
-    .map(
-      (res, index) =>
-        `📝 Reservation #${index + 1}: 📙 *${res.bookId.title}* (Pickup: ${
-          res.pickupTime
-        })`
-    )
+    .map((res, index) => {
+      const title = res.bookId.title.replace(/[_*]/g, "\\$&"); // Escape Markdown special characters
+      return `📝 Reservation #${index + 1}: 📙 *${title}* (Pickup: ${
+        res.pickupTime
+      })`;
+    })
     .join("\n");
 
   await bot.sendMessage(
