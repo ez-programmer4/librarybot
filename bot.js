@@ -191,7 +191,7 @@ bot.on("callback_query", async (query) => {
 });
 
 // Adjusted cancellation of reservation
-async function handleCancelReservation(chatId, bookId) {
+async function handleCancelReservation(chatId, reservationId) {
   try {
     const user = await User.findOne({ chatId });
     if (!user) {
@@ -201,18 +201,35 @@ async function handleCancelReservation(chatId, bookId) {
       );
     }
 
-    // Cancel the reservation for the specified book ID
-    const bookTitle = await cancelReservationByBookId(user._id, bookId);
+    // Find the reservation by ID and ensure it belongs to the user
+    const reservation = await Reservation.findOne({
+      _id: reservationId,
+      userId: user._id,
+    }).populate("bookId");
+
+    if (!reservation) {
+      return bot.sendMessage(
+        chatId,
+        "❌ No reservation found with that ID or it does not belong to you."
+      );
+    }
+
+    // Mark the book as available again
+    const book = reservation.bookId;
+    book.available = true;
+    await book.save();
+
+    // Delete the reservation
+    await Reservation.findByIdAndDelete(reservationId);
 
     await bot.sendMessage(
       chatId,
-      `✅ You have successfully canceled the reservation for *"${bookTitle}"*.`,
+      `✅ You have successfully canceled the reservation for *"${book.title}"*.`,
       { parse_mode: "Markdown" }
     );
 
     // Notify librarian
-    const notificationMessage = `📩 User has canceled a reservation:\n- *Title:* *"${bookTitle}"*\n- *User ID:* *${user._id}*\n- *Name:* *${user.userName}*\n- *Phone:* *${user.phoneNumber}*`;
-
+    const notificationMessage = `📩 User has canceled a reservation:\n- *Title:* *"${book.title}"*\n- *User ID:* *${user._id}*\n- *Name:* *${user.userName}*\n- *Phone:* *${user.phoneNumber}*`;
     await notifyLibrarian(notificationMessage);
   } catch (error) {
     console.error("Error canceling reservation:", error);
@@ -227,11 +244,10 @@ async function handleCancelReservation(chatId, bookId) {
 // Update the command to cancel reservation
 bot.onText(/\/cancel_reservation (\w+)/, async (msg, match) => {
   const chatId = msg.chat.id;
-  const bookId = match[1]; // Get the book ID from the command
-  console.log("Chat ID:", chatId); // Log the chat ID for debugging
+  const reservationId = match[1]; // Get the reservation ID from the command
 
   // Call the centralized cancellation handling function
-  await handleCancelReservation(chatId, bookId);
+  await handleCancelReservation(chatId, reservationId);
 });
 
 // Example of handling unexpected messages
