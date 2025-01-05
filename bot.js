@@ -326,12 +326,33 @@ bot.on("message", async (msg) => {
   }
 });
 
-// Function to handle unexpected messages
 async function handleUnexpectedMessage(chatId, message) {
   const isCommand = message.startsWith("/") && validCommands.includes(message);
+  const isReserveCommand = message.startsWith("/reserve");
+  const isCancelReservationCommand = message.startsWith("/cancel_reservation");
   const isLanguage = ["Arabic", "Amharic", "AfaanOromo"].includes(message);
 
-  // If it's not a command or a recognized language, provide feedback
+  // Check if the command is /reserve or /cancel_reservation without an ID
+  const hasValidID = message.split(" ").length === 2;
+
+  // If the command is valid but missing an ID, inform the user
+  if (isReserveCommand && !hasValidID) {
+    await bot.sendMessage(
+      chatId,
+      "❗ Please specify an ID to reserve a book. Example: /reserve <ID>"
+    );
+    return;
+  }
+
+  if (isCancelReservationCommand && !hasValidID) {
+    await bot.sendMessage(
+      chatId,
+      "❗ Please specify an ID to cancel a reservation. Example: /cancel_reservation <ID>"
+    );
+    return;
+  }
+
+  // If it's not a recognized command or input, provide feedback
   if (!isCommand && !isLanguage) {
     await bot.sendMessage(
       chatId,
