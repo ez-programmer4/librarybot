@@ -327,7 +327,9 @@ bot.on("message", async (msg) => {
 });
 
 async function handleUnexpectedMessage(chatId, message) {
-  const isCommand = message.startsWith("/") && validCommands.includes(message);
+  const isCommand =
+    message.startsWith("/") &&
+    validCommands.some((cmd) => message.startsWith(cmd));
   const isReserveCommand = message.startsWith("/reserve");
   const isCancelReservationCommand = message.startsWith("/cancel_reservation");
   const isLanguage = ["Arabic", "Amharic", "AfaanOromo"].includes(message);
@@ -335,7 +337,7 @@ async function handleUnexpectedMessage(chatId, message) {
   // Check if the command is /reserve or /cancel_reservation without an ID
   const hasValidID = message.split(" ").length === 2;
 
-  // Inform the user if they are missing an ID for valid commands
+  // If the command is valid but missing an ID, inform the user
   if (isReserveCommand && !hasValidID) {
     await bot.sendMessage(
       chatId,
@@ -360,6 +362,14 @@ async function handleUnexpectedMessage(chatId, message) {
     );
   }
 }
+
+// Add this function to handle text messages
+bot.on("message", (msg) => {
+  const chatId = msg.chat.id;
+  const messageText = msg.text;
+
+  handleUnexpectedMessage(chatId, messageText);
+});
 
 // Start command
 bot.onText(/\/start/, (msg) => {
