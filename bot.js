@@ -584,6 +584,40 @@ async function handleLanguageSelection(chatId, language) {
   // If no categories found, simply do nothing (no message sent)
 }
 
+// Handle category selection and list books
+bot.on("callback_query", async (query) => {
+  const chatId = query.message.chat.id;
+  const selectedCategory = query.data;
+
+  // Remove the inline keyboard and update the previous message
+  await bot.editMessageText(
+    `📚 You selected the category: *${selectedCategory}*. Loading available books...`,
+    {
+      chat_id: chatId,
+      message_id: query.message.message_id,
+      parse_mode: "Markdown",
+    }
+  );
+
+  const books = await Book.find({
+    category: selectedCategory,
+    available: true,
+  });
+
+  if (books.length > 0) {
+    const bookList = books
+      .map((book) => `🔖 *ID:* *${book.id}* - *"${book.title}"*`)
+      .join("\n");
+
+    await bot.sendMessage(
+      chatId,
+      `📖 *Available books in* *"${selectedCategory}"*:\n\n${bookList}\n\nTo reserve a book, type /reserve <ID>.`,
+      { parse_mode: "Markdown" }
+    );
+  }
+  // If no available books, simply do nothing (no message sent)
+});
+
 // Example for category selection
 // if (userStates[chatId] && userStates[chatId].awaitingCategory) {
 //   return bot.sendMessage(
@@ -716,47 +750,6 @@ bot.onText(
     );
   }
 );
-bot.on("callback_query", async (query) => {
-  const chatId = query.message.chat.id;
-  const selectedCategory = query.data;
-
-  // Check if the selectedCategory is valid for loading books
-  if (isValidCategory(selectedCategory)) {
-    // Remove the inline keyboard and update the previous message
-    await bot.editMessageText(
-      `📚 You selected the category: *${selectedCategory}*. Loading available books...`,
-      {
-        chat_id: chatId,
-        message_id: query.message.message_id,
-        parse_mode: "Markdown",
-      }
-    );
-
-    // Fetch available books in the selected category
-    const books = await Book.find({
-      category: selectedCategory,
-      available: true,
-    });
-
-    if (books.length > 0) {
-      const bookList = books
-        .map((book) => `🔖 *ID:* *${book.id}* - *"${book.title}"*`)
-        .join("\n");
-
-      await bot.sendMessage(
-        chatId,
-        `📖 *Available books in* *"${selectedCategory}"*:\n\n${bookList}\n\nTo reserve a book, type /reserve <ID>.`,
-        { parse_mode: "Markdown" }
-      );
-    }
-  }
-});
-
-// Function to validate categories (you need to implement this based on your categories)
-function isValidCategory(category) {
-  const validCategories = ["register", "category1", "category2"]; // Add your actual categories here
-  return validCategories.includes(category);
-}
 
 bot.onText(/\/librarian_cancel_reservation (\d+)/, async (msg, match) => {
   const chatId = msg.chat.id;
