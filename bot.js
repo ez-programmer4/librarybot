@@ -512,10 +512,10 @@ function askLanguageSelection(chatId) {
     reply_markup: {
       inline_keyboard: [
         [
-          { text: "🇸🇩 Arabic", callback_data: "Arabic" },
-          { text: "🇪🇹 Amharic", callback_data: "Amharic" },
+          { text: "Arabic", callback_data: "Arabic" },
+          { text: "Amharic", callback_data: "Amharic" },
         ],
-        [{ text: "🇪🇹 Afaan Oromoo", callback_data: "AfaanOromo" }],
+        [{ text: "Afaan Oromoo", callback_data: "AfaanOromo" }],
       ],
     },
   });
@@ -528,16 +528,21 @@ bot.on("callback_query", async (query) => {
   // Handle language selection
   await handleLanguageSelection(chatId, language);
 
-  // Remove the inline keyboard and update the message
-  await bot.editMessageText(`🌐 You have selected *${language}*. Thank you!`, {
-    chat_id: chatId,
-    message_id: query.message.message_id,
-    parse_mode: "Markdown",
-  });
+  // Only send the confirmation message for language selection
+  if (["Arabic", "Amharic", "AfaanOromo"].includes(language)) {
+    await bot.editMessageText(
+      `🌐 You have selected *${language}*. Thank you!`,
+      {
+        chat_id: chatId,
+        message_id: query.message.message_id,
+        parse_mode: "Markdown",
+      }
+    );
+  }
 
-  bot.answerCallbackQuery(query.id); // Acknowledge the callback
+  // Acknowledge the callback
+  bot.answerCallbackQuery(query.id);
 });
-
 async function addUser(chatId, userName, phoneNumber) {
   let user = await User.findOne({ phoneNumber });
   if (!user) {
