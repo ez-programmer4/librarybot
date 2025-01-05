@@ -274,7 +274,7 @@ bot.onText(/\/view_reservations/, async (msg) => {
   if (!isLibrarian(chatId)) {
     return bot.sendMessage(
       chatId,
-      "You do not have permission to use this command."
+      "🚫 You do not have permission to use this command."
     );
   }
 
@@ -287,16 +287,13 @@ bot.onText(/\/view_reservations/, async (msg) => {
   const reservationList = reservations
     .map(
       (res) =>
-        `🔖 Book ID: *${res.bookId.id}* → User: *${res.userId.userName}* → Book: *"${res.bookId.title}"* → Pickup Time: *${res.pickupTime}*,`
+        `🔖 Book ID: ${res.bookId.id} → User: ${res.userId.userName} → Book: "${res.bookId.title}" → Pickup Time: ${res.pickupTime}`
     )
     .join("\n");
 
   await bot.sendMessage(
     chatId,
-    `📚 Current Reservations:\n\n${reservationList}`,
-    {
-      parse_mode: "Markdown",
-    }
+    `📚 Current Reservations:\n\n${reservationList}`
   );
 });
 
