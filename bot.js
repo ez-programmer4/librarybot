@@ -251,14 +251,22 @@ bot.onText(/\/my_reservations/, async (msg) => {
   const message = `✨ *Your Reservations:* ✨\n\n${reservationList}To cancel a reservation, use /cancel_reservation <book_id>.`;
 
   // Send message in chunks if necessary
-  await sendMessageInChunks(
-    chatId,
-    {
-      parse_mode: "Markdown",
-    },
-    message
-  );
+  await sendMessageInChunks(chatId, message);
 });
+
+// Function to send messages in chunks
+async function sendMessageInChunks(chatId, message) {
+  const MAX_MESSAGE_LENGTH = 4096; // Telegram message character limit
+
+  if (message.length > MAX_MESSAGE_LENGTH) {
+    for (let i = 0; i < message.length; i += MAX_MESSAGE_LENGTH) {
+      const msgPart = message.slice(i, i + MAX_MESSAGE_LENGTH);
+      await bot.sendMessage(chatId, msgPart, { parse_mode: "Markdown" });
+    }
+  } else {
+    await bot.sendMessage(chatId, message, { parse_mode: "Markdown" });
+  }
+}
 
 bot.onText(/\/view_reservations/, async (msg) => {
   const chatId = msg.chat.id;
