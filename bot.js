@@ -244,11 +244,11 @@ bot.onText(/\/my_reservations/, async (msg) => {
     .map((res) => {
       const title = res.bookId.title;
       const bookId = res.bookId.id;
-      return `📚 Book ID: **${bookId}**\nTitle: **${title}**\nPickup: **${res.pickupTime}**\n`;
+      return `📚 Book ID: ${bookId}\n 📄 Title: "${title}"\n ⌚Pickup: ${res.pickupTime}\n`;
     })
     .join("\n");
 
-  const message = `✨ Your Reservations: ✨\n\n${reservationList}To cancel a reservation, use **/cancel_reservation <book_id>**.`;
+  const message = `✨ Your Reservations: ✨\n\n${reservationList}\n ⟫⟫ To cancel a reservation, use /cancel_reservation <book_id>.`;
 
   // Send message in chunks if necessary
   await sendMessageInChunks(chatId, message);
