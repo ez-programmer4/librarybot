@@ -73,7 +73,7 @@ bot.on("message", async (msg) => {
           if (!parameter) {
             return bot.sendMessage(
               chatId,
-              "❌ Please provide a book ID to reserve."
+              "❗️ Please specify an ID to reserve a book. Example: /reserve <ID>"
             );
           }
           await handleReserveCommand(chatId, parameter);
@@ -83,7 +83,7 @@ bot.on("message", async (msg) => {
           if (!parameter) {
             return bot.sendMessage(
               chatId,
-              "❌ Please provide a reservation ID to cancel."
+              "❗️ Please specify an ID to cancel a reservation. Example: /cancel_reservation <ID>"
             );
           }
           await handleCancelReservation(chatId, parameter);
@@ -335,13 +335,13 @@ async function handleUnexpectedMessage(chatId, message) {
   // Check if the command is /reserve or /cancel_reservation without an ID
   const hasValidID = message.split(" ").length === 2;
 
-  // If the command is valid but missing an ID, inform the user
+  // Inform the user if they are missing an ID for valid commands
   if (isReserveCommand && !hasValidID) {
     await bot.sendMessage(
       chatId,
       "❗ Please specify an ID to reserve a book. Example: /reserve <ID>"
     );
-    return;
+    return; // Exit the function after sending the message
   }
 
   if (isCancelReservationCommand && !hasValidID) {
@@ -349,7 +349,7 @@ async function handleUnexpectedMessage(chatId, message) {
       chatId,
       "❗ Please specify an ID to cancel a reservation. Example: /cancel_reservation <ID>"
     );
-    return;
+    return; // Exit the function after sending the message
   }
 
   // If it's not a recognized command or input, provide feedback
@@ -360,6 +360,7 @@ async function handleUnexpectedMessage(chatId, message) {
     );
   }
 }
+
 // Start command
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
