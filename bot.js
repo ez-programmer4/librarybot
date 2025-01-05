@@ -265,6 +265,7 @@ bot.onText(/\/view_reservations/, async (msg) => {
   }
 
   const reservations = await Reservation.find().populate("userId bookId");
+
   if (reservations.length === 0) {
     return bot.sendMessage(chatId, "📅 There are no reservations.");
   }
