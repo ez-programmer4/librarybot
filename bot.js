@@ -274,7 +274,7 @@ bot.onText(/\/view_reservations/, async (msg) => {
   if (!isLibrarian(chatId)) {
     return bot.sendMessage(
       chatId,
-      "🚫 You do not have permission to use this command."
+      "You do not have permission to use this command."
     );
   }
 
@@ -287,13 +287,16 @@ bot.onText(/\/view_reservations/, async (msg) => {
   const reservationList = reservations
     .map(
       (res) =>
-        `🔖 Book ID: ${res.bookId.id} → User: ${res.userId.userName} → Book: "${res.bookId.title}" → Pickup Time: ${res.pickupTime}`
+        `🔖 Book ID: *${res.bookId.id}* → User: *${res.userId.userName}* → Book: *"${res.bookId.title}"* → Pickup Time: *${res.pickupTime}*,`
     )
     .join("\n");
 
   await bot.sendMessage(
     chatId,
-    `📚 Current Reservations:\n\n${reservationList}`
+    `📚 Current Reservations:\n\n${reservationList}`,
+    {
+      parse_mode: "Markdown",
+    }
   );
 });
 
@@ -310,10 +313,20 @@ async function sendMessageInChunks(chatId, message) {
     await bot.sendMessage(chatId, message, { reply_markup: backButton });
   }
 }
+// Handle user input for registration
+bot.on("message", async (msg) => {
+  const chatId = msg.chat.id;
 
-// Updated /cancel_reservation command
+  if (userStates[chatId]) {
+    // Check for registration steps
+    await handleRegistrationSteps(chatId, msg);
+  } else {
+    // Handle unexpected messages
+    await handleUnexpectedMessage(chatId, msg.text);
+  }
+});
 
-// Example of handling unexpected messages
+// Function to handle unexpected messages
 async function handleUnexpectedMessage(chatId, message) {
   const isCommand = message.startsWith("/") && validCommands.includes(message);
   const isLanguage = ["Arabic", "Amharic", "AfaanOromo"].includes(message);
@@ -326,7 +339,6 @@ async function handleUnexpectedMessage(chatId, message) {
     );
   }
 }
-
 // Start command
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
