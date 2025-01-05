@@ -251,7 +251,13 @@ bot.onText(/\/my_reservations/, async (msg) => {
   const message = `✨ *Your Reservations:* ✨\n\n${reservationList}To cancel a reservation, use /cancel_reservation <book_id>.`;
 
   // Send message in chunks if necessary
-  await sendMessageInChunks(chatId, message);
+  await sendMessageInChunks(
+    chatId,
+    {
+      parse_mode: "Markdown",
+    },
+    message
+  );
 });
 
 bot.onText(/\/view_reservations/, async (msg) => {
