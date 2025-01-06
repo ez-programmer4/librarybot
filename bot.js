@@ -561,7 +561,7 @@ async function handleLanguageSelection(chatId, language) {
 
   if (categories.length > 0) {
     const inlineButtons = categories.map((cat) => [
-      { text: `📚 ${cat}`, callback_data: cat },
+      { text: `📚 ${cat}`, callback_data: cat }, // Add a book icon to each category
     ]);
 
     // Add a back button to return to language selection
@@ -579,72 +579,11 @@ async function handleLanguageSelection(chatId, language) {
         reply_markup: {
           inline_keyboard: inlineButtons,
         },
-        parse_mode: "Markdown",
+        parse_mode: "Markdown", // Specify the parse mode
       }
     );
-  } else {
-    await bot.sendMessage(
-      chatId,
-      "⚠️ No categories available for the selected language."
-    );
   }
 }
-
-// Handle the back button press for both language and category
-async function handleCallbackQuery(chatId, callbackData) {
-  if (callbackData === "back_to_language") {
-    askLanguageSelection(chatId);
-  } else {
-    // Handle category selection
-    const selectedCategory = callbackData;
-    await handleCategorySelection(chatId, selectedCategory);
-  }
-}
-
-// Function to handle category selection
-async function handleCategorySelection(chatId, category) {
-  // Here you can implement what happens when a category is selected
-  // For example, you can show the books under that category
-
-  const books = await Book.find({ category }); // Fetch books based on the selected category
-
-  if (books.length > 0) {
-    const inlineButtons = books.map((book) => [
-      { text: `📖 ${book.title}`, callback_data: book.id }, // Book title as button
-    ]);
-
-    // Add a back button to return to category selection
-    inlineButtons.push([
-      {
-        text: "🔙 Back to Category Selection",
-        callback_data: "back_to_category",
-      },
-    ]);
-
-    await bot.sendMessage(
-      chatId,
-      `📚 You selected *${category}*. Please choose a *book*:`,
-      {
-        reply_markup: {
-          inline_keyboard: inlineButtons,
-        },
-        parse_mode: "Markdown",
-      }
-    );
-  } else {
-    await bot.sendMessage(chatId, "⚠️ No books available in this category.");
-  }
-}
-
-// Capture callback queries
-bot.on("callback_query", (query) => {
-  const chatId = query.message.chat.id;
-  const callbackData = query.data;
-
-  handleCallbackQuery(chatId, callbackData);
-});
-
-// Note: Ensure you handle the "back_to_category" callback in the handleCallbackQuery function
 
 // Handle the back button press
 async function handleCallbackQuery(chatId, callbackData) {
