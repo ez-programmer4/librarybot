@@ -570,6 +570,7 @@ function askLanguageSelection(chatId) {
 }
 
 async function handleLanguageSelection(chatId, language) {
+  userStates[chatId] = { language };
   const categories = await Book.distinct("category", { language });
 
   if (categories.length > 0) {
@@ -604,7 +605,7 @@ async function handleCallbackQuery(chatId, callbackData) {
     askLanguageSelection(chatId);
   } else if (callbackData === "back_to_category") {
     // Assuming you have a way to retrieve the last selected language
-    const lastSelectedLanguage = ...; // Retrieve this as needed
+    const lastSelectedLanguage = userStates[chatId]?.language; // Retrieve this as needed
     handleLanguageSelection(chatId, lastSelectedLanguage);
   } else {
     // Handle category selection
