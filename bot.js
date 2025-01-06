@@ -140,7 +140,9 @@ async function handleCancelReservation(chatId, bookId) {
 
     // Notify librarian
     const notificationMessage = `📩 User has canceled a reservation:\n- *Title:* *"${book.title}"*\n- *User ID:* *${user._id}*\n- *Name:* *${user.userName}*\n- *Phone:* *${user.phoneNumber}*`;
-    await notifyLibrarian(notificationMessage);
+
+    // Call notifyLibrarian with the message and parse_mode option
+    await notifyLibrarian(notificationMessage, { parse_mode: "Markdown" }); // Include parse_mode
   } catch (error) {
     console.error("Error canceling reservation:", error);
     await handleError(
@@ -179,14 +181,13 @@ async function handleReserveCommand(chatId, bookId) {
 
     book.available = false; // Mark the book as unavailable
     await book.save();
-
     const notificationMessage = `🆕 New reservation by *${user.userName}* (Phone: *${user.phoneNumber}*) for *"${book.title}"*.`;
-    await notifyLibrarian(notificationMessage);
+    await notifyLibrarian(notificationMessage, { parse_mode: "Markdown" }); // Assuming this function handles the message without needing parse_mode
 
     await bot.sendMessage(
       chatId,
       `✅ Successfully reserved: *"${book.title}"*.\nPickup time: *after isha salah*.\n\nTo go back to the menu, type /back.`,
-      { parse_mode: "Markdown" }
+      { parse_mode: "Markdown" } // Ensure parse_mode is set for proper formatting
     );
   } catch (error) {
     console.error("Error reserving book:", error);
@@ -421,14 +422,17 @@ bot.on("callback_query", async (query) => {
         );
         await bot.sendMessage(
           chatId,
-          `🚫 You are already registered as *${existingUser.userName}*.`
+          `🚫 You are already registered as *${existingUser.userName}*.`,
+          { parse_mode: "Markdown" } // Specify parse mode for bold formatting
         );
         return askLanguageSelection(chatId);
       }
 
       userStates[chatId] = { step: 1 };
       console.log(`User ${chatId} is at step 1: asking for full name.`);
-      await bot.sendMessage(chatId, "📝 Please enter your full name:");
+      await bot.sendMessage(chatId, "📝 Please enter your full name:", {
+        parse_mode: "Markdown", // Specify parse mode
+      });
     } catch (error) {
       await handleError(
         chatId,
@@ -438,30 +442,30 @@ bot.on("callback_query", async (query) => {
     }
   } else if (query.data === "help") {
     const helpMessage = `
-🤖 Library Bot Help
+🤖 *Library Bot Help*
 
 Here are the commands you can use:
 
-➡️ 📋 /register: Register yourself to start using the library services.
-   Example: /register
+➡️ 📋 */register*: Register yourself to start using the library services.  
+   Example: */register*
 
-➡️ 🌐 /change_language: Change your preferred language.
-   Example: /change_language
+➡️ 🌐 */change_language*: Change your preferred language.  
+   Example: */change_language*
 
-➡️ 📚 /select_category: Choose a category for books.
+➡️ 📚 */select_category*: Choose a category for books.
 
-➡️ 📖 /reserve_book <book_id>: Reserve a specific book.
-   Example: /reserve_book 112
+➡️ 📖 */reserve_book* <book_id>: Reserve a specific book.  
+   Example: */reserve_book 112*
 
-➡️ 📝 /my_reservations: View your current reservations.
-   Example: /my_reservations
+➡️ 📝 */my_reservations*: View your current reservations.  
+   Example: */my_reservations*
 
-➡️ ❌ /cancel_reservation <number>: Cancel a specific reservation by its number.
-   Example: /cancel_reservation 1
+➡️ ❌ */cancel_reservation* <number>: Cancel a specific reservation by its number.  
+   Example: */cancel_reservation 1*
 
-For more questions, feel free to reach out to us via @IrshadComments_bot! 📩
+For more questions, feel free to reach out to us via *@IrshadComments_bot*! 📩
 `;
-    await bot.sendMessage(chatId, helpMessage);
+    await bot.sendMessage(chatId, helpMessage, { parse_mode: "Markdown" }); // Specify parse mode
   }
 
   // Acknowledge the callback
@@ -528,7 +532,8 @@ async function processPhoneNumber(chatId, phoneNumber) {
   );
 
   await notifyLibrarian(
-    `🆕 New registration: *${user.userName}*,\n Phone: *${phoneNumber}*`
+    `🆕 New registration: *${user.userName}*,\n Phone: *${phoneNumber}*`,
+    { parse_mode: "Markdown" } // Specify parse_mode if needed
   );
   await bot.sendMessage(
     chatId,
@@ -603,11 +608,12 @@ async function handleLanguageSelection(chatId, language) {
 
     const message = await bot.sendMessage(
       chatId,
-      `🌐 You selected *${language}*. Please choose a category:`,
+      `🌐 You selected *${language}*. Please choose a *category*:`,
       {
         reply_markup: {
           inline_keyboard: inlineButtons,
         },
+        parse_mode: "Markdown", // Specify the parse mode
       }
     );
 
@@ -769,7 +775,8 @@ bot.onText(
     await book.save();
 
     await notifyLibrarian(
-      `🆕 New manual reservation for *${user.userName}* for *"${book.title}"*.`
+      `🆕 New manual reservation for *${user.userName}* for *"${book.title}"*.`,
+      { parse_mode: "Markdown" } // Specify parse_mode if needed
     );
     bot.sendMessage(
       chatId,
