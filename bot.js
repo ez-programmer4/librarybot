@@ -205,7 +205,7 @@ async function handleReserveCommand(chatId, bookId) {
 
 async function handleCallbackQuery(chatId, callbackData) {
   if (callbackData === "back_to_language") {
-    await bot.sendMessage(chatId, "🔄 Returning to language selection...");
+    await bot.sendMessage(chatId, "🔄 Returning to language selection......");
     await askLanguageSelection(chatId);
   } else if (callbackData === "back_to_category") {
     const lastSelectedLanguage = userStates[chatId]?.language; // Retrieve the last selected language
