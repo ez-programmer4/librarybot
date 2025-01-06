@@ -203,6 +203,15 @@ async function handleReserveCommand(chatId, bookId) {
   }
 }
 
+bot.on("callback_query", async (query) => {
+  const chatId = query.message.chat.id;
+  const callbackData = query.data;
+
+  // Handle the callback query
+  await handleCallbackQuery(chatId, callbackData);
+});
+
+// Function to handle callback queries
 async function handleCallbackQuery(chatId, callbackData) {
   if (callbackData === "back_to_language") {
     await bot.sendMessage(chatId, "🔄 Returning to language selection......");
@@ -220,7 +229,44 @@ async function handleCallbackQuery(chatId, callbackData) {
       );
     }
   } else {
-    await bot.sendMessage(chatId, "⚠️ Unrecognized action. Please try again.");
+    // If it's not a special callback, treat it as a category selection
+    await handleCategorySelection(chatId, callbackData);
+  }
+}
+
+// Function to handle category selection
+async function handleCategorySelection(chatId, selectedCategory) {
+  // Fetch books for the valid selected category
+  const books = await Book.find({
+    category: selectedCategory,
+    available: true,
+  });
+
+  if (books.length > 0) {
+    const bookList = books
+      .map((book) => `🔖 *ID:* *${book.id}* - *"${book.title}"*`)
+      .join("\n");
+
+    // Prepare inline buttons including the back button
+    const inlineButtons = [
+      [
+        {
+          text: "🔙 Back to Category Selection",
+          callback_data: "back_to_category",
+        },
+      ],
+    ];
+
+    await bot.sendMessage(
+      chatId,
+      `📖 *Available books in* *"${selectedCategory}"*:\n\n${bookList}\n\nTo reserve a book, type /reserve <ID>.`,
+      {
+        parse_mode: "Markdown",
+        reply_markup: {
+          inline_keyboard: inlineButtons,
+        },
+      }
+    );
   }
 }
 // Function to get user reservations
@@ -659,53 +705,6 @@ async function addUser(chatId, userName, phoneNumber) {
   return user;
 }
 
-// Handle language selection
-
-// Handle category selection and list books
-bot.on("callback_query", async (query) => {
-  const chatId = query.message.chat.id;
-  const selectedCategory = query.data;
-
-  // Fetch books for the valid selected category
-  const books = await Book.find({
-    category: selectedCategory,
-    available: true,
-  });
-
-  if (books.length > 0) {
-    const bookList = books
-      .map((book) => `🔖 *ID:* *${book.id}* - *"${book.title}"*`)
-      .join("\n");
-
-    // Prepare inline buttons including the back button
-    const inlineButtons = [
-      [
-        {
-          text: "🔙 Back to Category Selection",
-          callback_data: "back_to_category",
-        },
-      ],
-    ];
-
-    await bot.sendMessage(
-      chatId,
-      `📖 *Available books in* *"${selectedCategory}"*:\n\n${bookList}\n\nTo reserve a book, type /reserve <ID>.`,
-      {
-        parse_mode: "Markdown",
-        reply_markup: {
-          inline_keyboard: inlineButtons,
-        },
-      }
-    );
-  }
-  // If no available books, simply do nothing (no message sent)
-});
-
-// Make sure to call handleCallbackQuery for all callback queries
-bot.on("callback_query", async (query) => {
-  const chatId = query.message.chat.id;
-  await handleCallbackQuery(chatId, query.data);
-});
 async function isCategory(category) {
   const categories = await Book.distinct("category");
   return categories.includes(category);
