@@ -205,25 +205,21 @@ async function handleReserveCommand(chatId, bookId) {
 
 async function handleCallbackQuery(chatId, callbackData) {
   if (callbackData === "back_to_language") {
-    // Clear categories and display language options
     await bot.sendMessage(chatId, "🔄 Returning to language selection...");
-
-    // Call the function to display language options
     await askLanguageSelection(chatId);
   } else if (callbackData === "back_to_category") {
-    // Return to category selection for the last selected language
     const lastSelectedLanguage = userStates[chatId]?.language; // Retrieve the last selected language
-    console.log(lastSelectedLanguage);
+    console.log("Last selected language:", lastSelectedLanguage); // Log the last selected language
+
     if (lastSelectedLanguage) {
-      await handleLanguageSelection(chatId, lastSelectedLanguage); // Display categories for the last selected language
+      await handleLanguageSelection(chatId, lastSelectedLanguage);
     } else {
       await bot.sendMessage(
         chatId,
-        "⚠️ Language selection not found. Please restart."
+        "⚠️ Language selection not found. Please select a language first."
       );
     }
   } else {
-    // Handle other callback data here if needed
     await bot.sendMessage(chatId, "⚠️ Unrecognized action. Please try again.");
   }
 }
@@ -587,6 +583,7 @@ function askLanguageSelection(chatId) {
 
 async function handleLanguageSelection(chatId, language) {
   userStates[chatId] = { language };
+  console.log(userStates);
   const categories = await Book.distinct("category", { language });
 
   if (categories.length > 0) {
