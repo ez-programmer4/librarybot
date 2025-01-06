@@ -548,11 +548,9 @@ function askLanguageSelection(chatId) {
   bot.sendMessage(chatId, "🌐 Please select a language:", {
     reply_markup: {
       inline_keyboard: [
-        [
-          { text: "🌍 Arabic", callback_data: "Arabic" },
-          { text: "🌍 Amharic", callback_data: "Amharic" },
-          { text: "🌍 Afaan Oromoo", callback_data: "AfaanOromo" },
-        ],
+        [{ text: "🌍        Arabic        ", callback_data: "Arabic" }],
+        [{ text: "🌍        Amharic      ", callback_data: "Amharic" }],
+        [{ text: "🌍        Afaan Oromoo  ", callback_data: "AfaanOromo" }],
       ],
     },
   });
