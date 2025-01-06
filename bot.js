@@ -619,18 +619,7 @@ async function handleLanguageSelection(chatId, language) {
 // Handle category selection and list books
 bot.on("callback_query", async (query) => {
   const chatId = query.message.chat.id;
-  const selectedCategory = query.data;
-
-  // Check if the selected category is valid
-  const isValidCategory = await isCategory(selectedCategory);
-
-  if (!isValidCategory) {
-    await bot.answerCallbackQuery(query.id, {
-      text: "❌ Invalid category selected. Please try again.",
-      show_alert: true,
-    });
-    return; // Exit the function if the category is not valid
-  }
+  const selectedCategory = isCategory(query.data);
 
   // Remove the inline keyboard and update the previous message
   await bot.editMessageText(
