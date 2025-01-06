@@ -548,14 +548,67 @@ function askLanguageSelection(chatId) {
   bot.sendMessage(chatId, "🌐 Please select a language:", {
     reply_markup: {
       inline_keyboard: [
-        [{ text: "🌍        Arabic        ", callback_data: "Arabic" }],
-        [{ text: "🌍        Amharic      ", callback_data: "Amharic" }],
-        [{ text: "🌍        Afaan Oromoo  ", callback_data: "AfaanOromo" }],
+        [{ text: "       🌍 Arabic         ", callback_data: "Arabic" }],
+        [{ text: "       🌍 Amharic        ", callback_data: "Amharic" }],
+        [{ text: "       🌍 Afaan Oromoo  ", callback_data: "AfaanOromo" }],
       ],
     },
   });
 }
 
+async function handleLanguageSelection(chatId, language) {
+  const categories = await Book.distinct("category", { language });
+
+  if (categories.length > 0) {
+    const inlineButtons = categories.map((cat) => [
+      { text: `📚 ${cat}`, callback_data: cat }, // Add a book icon to each category
+    ]);
+
+    // Add a back button to return to language selection
+    inlineButtons.push([
+      {
+        text: "🔙 Back to Language Selection",
+        callback_data: "back_to_language",
+      },
+    ]);
+
+    await bot.sendMessage(
+      chatId,
+      `🌐 You selected *${language}*. Please choose a *category*:`,
+      {
+        reply_markup: {
+          inline_keyboard: inlineButtons,
+        },
+        parse_mode: "Markdown", // Specify the parse mode
+      }
+    );
+  } else {
+    // If no categories found, simply do nothing (no message sent)
+    await bot.sendMessage(
+      chatId,
+      "⚠️ No categories available for the selected language."
+    );
+  }
+}
+
+// Handle the back button press
+async function handleCallbackQuery(chatId, callbackData) {
+  if (callbackData === "back_to_language") {
+    askLanguageSelection(chatId);
+  } else {
+    // Handle other callback data (like category selection)
+    const selectedCategory = callbackData;
+    // Implement logic for what happens when a category is selected
+  }
+}
+
+// Assuming you have some mechanism to capture callback queries
+bot.on("callback_query", (query) => {
+  const chatId = query.message.chat.id;
+  const callbackData = query.data;
+
+  handleCallbackQuery(chatId, callbackData);
+});
 bot.on("callback_query", async (query) => {
   const chatId = query.message.chat.id;
   const language = query.data;
@@ -595,30 +648,6 @@ async function addUser(chatId, userName, phoneNumber) {
 }
 
 // Handle language selection
-
-async function handleLanguageSelection(chatId, language) {
-  const categories = await Book.distinct("category", { language });
-
-  if (categories.length > 0) {
-    const inlineButtons = categories.map((cat) => [
-      { text: `📚 ${cat}`, callback_data: cat }, // Add a book icon to each category
-    ]);
-
-    const message = await bot.sendMessage(
-      chatId,
-      `🌐 You selected *${language}*. Please choose a *category*:`,
-      {
-        reply_markup: {
-          inline_keyboard: inlineButtons,
-        },
-        parse_mode: "Markdown", // Specify the parse mode
-      }
-    );
-
-    return message; // Return the message object for later use
-  }
-  // If no categories found, simply do nothing (no message sent)
-}
 
 // Handle category selection and list books
 bot.on("callback_query", async (query) => {
