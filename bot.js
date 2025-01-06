@@ -154,12 +154,6 @@ async function handleCancelReservation(chatId, bookId) {
 }
 
 // Define the back button as a constant
-const backToCategoryButton = [
-  {
-    text: "🔙 Back to Category Selection",
-    callback_data: "back_to_category",
-  },
-];
 
 async function handleReserveCommand(chatId, bookId) {
   try {
@@ -211,9 +205,13 @@ async function handleReserveCommand(chatId, bookId) {
 
 async function handleCallbackQuery(chatId, callbackData) {
   if (callbackData === "back_to_language") {
-    askLanguageSelection(chatId);
+    // Clear categories and display language options
+    await bot.sendMessage(chatId, "🔄 Returning to language selection...");
+
+    // Call the function to display language options
+    await askLanguageSelection(chatId);
   } else {
-    // You can handle other callback data here if needed
+    // Handle other callback data here if needed
     await bot.sendMessage(chatId, "⚠️ Unrecognized action. Please try again.");
   }
 }
