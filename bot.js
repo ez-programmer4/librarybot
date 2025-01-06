@@ -191,14 +191,11 @@ async function handleReserveCommand(chatId, bookId) {
     const notificationMessage = `🆕 New reservation by *${user.userName}* (Phone: *${user.phoneNumber}*) for *"${book.title}"*.`;
     await notifyLibrarian(notificationMessage, { parse_mode: "Markdown" });
 
-    // Send message with back button
+    // Send message without back button
     await bot.sendMessage(
       chatId,
-      `✅ Successfully reserved: *"${book.title}"*.\nPickup time: *after isha salah*.\n\nTo go back to the category selection, click the button below:`,
+      `✅ Successfully reserved: *"${book.title}"*.\nPickup time: *after isha salah*.`,
       {
-        reply_markup: {
-          inline_keyboard: [backToCategoryButton],
-        },
         parse_mode: "Markdown", // Ensure parse_mode is set for proper formatting
       }
     );
@@ -221,9 +218,7 @@ async function handleCategorySelection(chatId, category) {
       { text: `📖 ${book.title}`, callback_data: book.id }, // Book title as button
     ]);
 
-    // Add the back button to return to category selection
-    inlineButtons.push(backToCategoryButton);
-
+    // Send message without back button
     await bot.sendMessage(
       chatId,
       `📚 You selected *${category}*. Please choose a *book*:`,
@@ -238,7 +233,6 @@ async function handleCategorySelection(chatId, category) {
     await bot.sendMessage(chatId, "⚠️ No books available in this category.");
   }
 }
-
 async function handleCallbackQuery(chatId, callbackData) {
   if (callbackData === "back_to_language") {
     askLanguageSelection(chatId);
