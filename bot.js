@@ -598,7 +598,37 @@ async function handleLanguageSelection(chatId, language) {
     );
   }
 }
+async function handleCategorySelection(chatId, category) {
+  // Fetch books based on the selected category
+  const books = await Book.find({ category });
 
+  if (books.length > 0) {
+    const inlineButtons = books.map((book) => [
+      { text: `📖 ${book.title}`, callback_data: book.id }, // Book title as button
+    ]);
+
+    // Add a back button to return to category selection
+    inlineButtons.push([
+      {
+        text: "🔙 Back to Category Selection",
+        callback_data: "back_to_category",
+      },
+    ]);
+
+    await bot.sendMessage(
+      chatId,
+      `📚 You selected *${category}*. Please choose a *book*:`,
+      {
+        reply_markup: {
+          inline_keyboard: inlineButtons,
+        },
+        parse_mode: "Markdown",
+      }
+    );
+  } else {
+    await bot.sendMessage(chatId, "⚠️ No books available in this category.");
+  }
+}
 // Handle the back button press
 async function handleCallbackQuery(chatId, callbackData) {
   if (callbackData === "back_to_language") {
