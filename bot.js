@@ -212,20 +212,9 @@ async function handleReserveCommand(chatId, bookId) {
 async function handleCallbackQuery(chatId, callbackData) {
   if (callbackData === "back_to_language") {
     askLanguageSelection(chatId);
-  } else if (callbackData === "back_to_category") {
-    const lastSelectedLanguage = userStates[chatId]?.language; // Retrieve the last selected language
-    if (lastSelectedLanguage) {
-      handleLanguageSelection(chatId, lastSelectedLanguage);
-    } else {
-      await bot.sendMessage(
-        chatId,
-        "⚠️ Language selection not found. Please restart."
-      );
-    }
   } else {
-    // Handle category selection
-    const selectedCategory = callbackData;
-    await handleCategorySelection(chatId, selectedCategory);
+    // You can handle other callback data here if needed
+    await bot.sendMessage(chatId, "⚠️ Unrecognized action. Please try again.");
   }
 }
 // Function to get user reservations
