@@ -153,8 +153,15 @@ async function handleCancelReservation(chatId, bookId) {
   }
 }
 
-// Centralized reservation handling
-async function handleReserveCommand(chatId, bookId, category) {
+// Define the back button as a constant
+const backToCategoryButton = [
+  {
+    text: "🔙 Back to Category Selection",
+    callback_data: "back_to_category",
+  },
+];
+
+async function handleReserveCommand(chatId, bookId) {
   try {
     const book = await Book.findOne({ id: bookId, available: true });
     if (!book) {
@@ -184,20 +191,13 @@ async function handleReserveCommand(chatId, bookId, category) {
     const notificationMessage = `🆕 New reservation by *${user.userName}* (Phone: *${user.phoneNumber}*) for *"${book.title}"*.`;
     await notifyLibrarian(notificationMessage, { parse_mode: "Markdown" });
 
-    // Add back to category selection button
+    // Send message with back button
     await bot.sendMessage(
       chatId,
       `✅ Successfully reserved: *"${book.title}"*.\nPickup time: *after isha salah*.\n\nTo go back to the category selection, click the button below:`,
       {
         reply_markup: {
-          inline_keyboard: [
-            [
-              {
-                text: "🔙 Back to Category Selection",
-                callback_data: "back_to_category",
-              },
-            ],
-          ],
+          inline_keyboard: [backToCategoryButton],
         },
         parse_mode: "Markdown", // Ensure parse_mode is set for proper formatting
       }
@@ -209,6 +209,53 @@ async function handleReserveCommand(chatId, bookId, category) {
       "⚠️ There was an error processing your reservation. Please try again.",
       `Error saving reservation: ${error.message}`
     );
+  }
+}
+
+async function handleCategorySelection(chatId, category) {
+  // Fetch books based on the selected category
+  const books = await Book.find({ category });
+
+  if (books.length > 0) {
+    const inlineButtons = books.map((book) => [
+      { text: `📖 ${book.title}`, callback_data: book.id }, // Book title as button
+    ]);
+
+    // Add the back button to return to category selection
+    inlineButtons.push(backToCategoryButton);
+
+    await bot.sendMessage(
+      chatId,
+      `📚 You selected *${category}*. Please choose a *book*:`,
+      {
+        reply_markup: {
+          inline_keyboard: inlineButtons,
+        },
+        parse_mode: "Markdown",
+      }
+    );
+  } else {
+    await bot.sendMessage(chatId, "⚠️ No books available in this category.");
+  }
+}
+
+async function handleCallbackQuery(chatId, callbackData) {
+  if (callbackData === "back_to_language") {
+    askLanguageSelection(chatId);
+  } else if (callbackData === "back_to_category") {
+    const lastSelectedLanguage = userStates[chatId]?.language; // Retrieve the last selected language
+    if (lastSelectedLanguage) {
+      handleLanguageSelection(chatId, lastSelectedLanguage);
+    } else {
+      await bot.sendMessage(
+        chatId,
+        "⚠️ Language selection not found. Please restart."
+      );
+    }
+  } else {
+    // Handle category selection
+    const selectedCategory = callbackData;
+    await handleCategorySelection(chatId, selectedCategory);
   }
 }
 // Function to get user reservations
@@ -598,51 +645,38 @@ async function handleLanguageSelection(chatId, language) {
     );
   }
 }
-async function handleCategorySelection(chatId, category) {
-  // Fetch books based on the selected category
-  const books = await Book.find({ category });
 
-  if (books.length > 0) {
-    const inlineButtons = books.map((book) => [
-      { text: `📖 ${book.title}`, callback_data: book.id }, // Book title as button
-    ]);
+// Fetch books based on the selected category
+const books = await Book.find({ category });
 
-    // Add a back button to return to category selection
-    inlineButtons.push([
-      {
-        text: "🔙 Back to Category Selection",
-        callback_data: "back_to_category",
+if (books.length > 0) {
+  const inlineButtons = books.map((book) => [
+    { text: `📖 ${book.title}`, callback_data: book.id }, // Book title as button
+  ]);
+
+  // Add a back button to return to category selection
+  inlineButtons.push([
+    {
+      text: "🔙 Back to Category Selection",
+      callback_data: "back_to_category",
+    },
+  ]);
+
+  await bot.sendMessage(
+    chatId,
+    `📚 You selected *${category}*. Please choose a *book*:`,
+    {
+      reply_markup: {
+        inline_keyboard: inlineButtons,
       },
-    ]);
+      parse_mode: "Markdown",
+    }
+  );
+} else {
+  await bot.sendMessage(chatId, "⚠️ No books available in this category.");
+}
 
-    await bot.sendMessage(
-      chatId,
-      `📚 You selected *${category}*. Please choose a *book*:`,
-      {
-        reply_markup: {
-          inline_keyboard: inlineButtons,
-        },
-        parse_mode: "Markdown",
-      }
-    );
-  } else {
-    await bot.sendMessage(chatId, "⚠️ No books available in this category.");
-  }
-}
 // Handle the back button press
-async function handleCallbackQuery(chatId, callbackData) {
-  if (callbackData === "back_to_language") {
-    askLanguageSelection(chatId);
-  } else if (callbackData === "back_to_category") {
-    // Assuming you have a way to retrieve the last selected language
-    const lastSelectedLanguage = userStates[chatId]?.language; // Retrieve this as needed
-    handleLanguageSelection(chatId, lastSelectedLanguage);
-  } else {
-    // Handle category selection
-    const selectedCategory = callbackData;
-    await handleCategorySelection(chatId, selectedCategory);
-  }
-}
 
 // Assuming you have some mechanism to capture callback queries
 bot.on("callback_query", (query) => {
