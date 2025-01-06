@@ -210,6 +210,17 @@ async function handleCallbackQuery(chatId, callbackData) {
 
     // Call the function to display language options
     await askLanguageSelection(chatId);
+  } else if (callbackData === "back_to_category") {
+    // Return to category selection for the last selected language
+    const lastSelectedLanguage = userStates[chatId]?.language; // Retrieve the last selected language
+    if (lastSelectedLanguage) {
+      await handleLanguageSelection(chatId, lastSelectedLanguage); // Display categories for the last selected language
+    } else {
+      await bot.sendMessage(
+        chatId,
+        "⚠️ Language selection not found. Please restart."
+      );
+    }
   } else {
     // Handle other callback data here if needed
     await bot.sendMessage(chatId, "⚠️ Unrecognized action. Please try again.");
@@ -668,15 +679,35 @@ bot.on("callback_query", async (query) => {
       .map((book) => `🔖 *ID:* *${book.id}* - *"${book.title}"*`)
       .join("\n");
 
+    // Prepare inline buttons including the back button
+    const inlineButtons = [
+      [
+        {
+          text: "🔙 Back to Category Selection",
+          callback_data: "back_to_category",
+        },
+      ],
+    ];
+
     await bot.sendMessage(
       chatId,
       `📖 *Available books in* *"${selectedCategory}"*:\n\n${bookList}\n\nTo reserve a book, type /reserve <ID>.`,
-      { parse_mode: "Markdown" }
+      {
+        parse_mode: "Markdown",
+        reply_markup: {
+          inline_keyboard: inlineButtons,
+        },
+      }
     );
   }
   // If no available books, simply do nothing (no message sent)
 });
 
+// Make sure to call handleCallbackQuery for all callback queries
+bot.on("callback_query", async (query) => {
+  const chatId = query.message.chat.id;
+  await handleCallbackQuery(chatId, query.data);
+});
 async function isCategory(category) {
   const categories = await Book.distinct("category");
   return categories.includes(category);
