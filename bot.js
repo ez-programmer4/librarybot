@@ -154,7 +154,7 @@ async function handleCancelReservation(chatId, bookId) {
 }
 
 // Centralized reservation handling
-async function handleReserveCommand(chatId, bookId) {
+async function handleReserveCommand(chatId, bookId, category) {
   try {
     const book = await Book.findOne({ id: bookId, available: true });
     if (!book) {
@@ -182,12 +182,25 @@ async function handleReserveCommand(chatId, bookId) {
     book.available = false; // Mark the book as unavailable
     await book.save();
     const notificationMessage = `🆕 New reservation by *${user.userName}* (Phone: *${user.phoneNumber}*) for *"${book.title}"*.`;
-    await notifyLibrarian(notificationMessage, { parse_mode: "Markdown" }); // Assuming this function handles the message without needing parse_mode
+    await notifyLibrarian(notificationMessage, { parse_mode: "Markdown" });
 
+    // Add back to category selection button
     await bot.sendMessage(
       chatId,
-      `✅ Successfully reserved: *"${book.title}"*.\nPickup time: *after isha salah*.\n\nTo go back to the menu, type /back.`,
-      { parse_mode: "Markdown" } // Ensure parse_mode is set for proper formatting
+      `✅ Successfully reserved: *"${book.title}"*.\nPickup time: *after isha salah*.\n\nTo go back to the category selection, click the button below:`,
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: "🔙 Back to Category Selection",
+                callback_data: "back_to_category",
+              },
+            ],
+          ],
+        },
+        parse_mode: "Markdown", // Ensure parse_mode is set for proper formatting
+      }
     );
   } catch (error) {
     console.error("Error reserving book:", error);
@@ -589,10 +602,14 @@ async function handleLanguageSelection(chatId, language) {
 async function handleCallbackQuery(chatId, callbackData) {
   if (callbackData === "back_to_language") {
     askLanguageSelection(chatId);
+  } else if (callbackData === "back_to_category") {
+    // Assuming you have a way to retrieve the last selected language
+    const lastSelectedLanguage = ...; // Retrieve this as needed
+    handleLanguageSelection(chatId, lastSelectedLanguage);
   } else {
-    // Handle other callback data (like category selection)
+    // Handle category selection
     const selectedCategory = callbackData;
-    // Implement logic for what happens when a category is selected
+    await handleCategorySelection(chatId, selectedCategory);
   }
 }
 
