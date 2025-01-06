@@ -213,6 +213,7 @@ async function handleCallbackQuery(chatId, callbackData) {
   } else if (callbackData === "back_to_category") {
     // Return to category selection for the last selected language
     const lastSelectedLanguage = userStates[chatId]?.language; // Retrieve the last selected language
+    console.log(lastSelectedLanguage);
     if (lastSelectedLanguage) {
       await handleLanguageSelection(chatId, lastSelectedLanguage); // Display categories for the last selected language
     } else {
