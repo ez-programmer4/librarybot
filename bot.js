@@ -549,10 +549,10 @@ function askLanguageSelection(chatId) {
     reply_markup: {
       inline_keyboard: [
         [
-          { text: "Arabic", callback_data: "Arabic" },
-          { text: "Amharic", callback_data: "Amharic" },
+          { text: "🌍 Arabic", callback_data: "Arabic" },
+          { text: "🌍 Amharic", callback_data: "Amharic" },
+          { text: "🌍 Afaan Oromoo", callback_data: "AfaanOromo" },
         ],
-        [{ text: "Afaan Oromoo", callback_data: "AfaanOromo" }],
       ],
     },
   });
