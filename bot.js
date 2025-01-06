@@ -619,18 +619,9 @@ async function handleLanguageSelection(chatId, language) {
 // Handle category selection and list books
 bot.on("callback_query", async (query) => {
   const chatId = query.message.chat.id;
-  const selectedCategory = isCategory(query.data);
+  const selectedCategory = query.data;
 
-  // Remove the inline keyboard and update the previous message
-  await bot.editMessageText(
-    `📚 You selected the category: *${selectedCategory}*. Loading available books...`,
-    {
-      chat_id: chatId,
-      message_id: query.message.message_id,
-      parse_mode: "Markdown",
-    }
-  );
-
+  // Fetch books for the valid selected category
   const books = await Book.find({
     category: selectedCategory,
     available: true,
@@ -649,6 +640,11 @@ bot.on("callback_query", async (query) => {
   }
   // If no available books, simply do nothing (no message sent)
 });
+
+async function isCategory(category) {
+  const categories = await Book.distinct("category");
+  return categories.includes(category);
+}
 
 // Example for category selection
 // if (userStates[chatId] && userStates[chatId].awaitingCategory) {
