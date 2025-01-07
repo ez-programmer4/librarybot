@@ -157,6 +157,7 @@ async function handleReserveCommand(chatId, bookId) {
       "What would you like to do next?",
       backButton
     );
+    return confirmationMessage.message_id;
   } catch (error) {
     console.error("Error reserving book:", error);
     await handleError(
@@ -232,12 +233,17 @@ async function handleCallbackQuery(chatId, callbackData, messageId, queryId) {
   const validLanguages = ["Arabic", "Amharic", "AfaanOromo"];
 
   if (callbackData === "back_to_language") {
+    await bot.deleteMessage(chatId, messageId);
     await bot.sendMessage(chatId, "🔄 Returning to language selection...");
     await askLanguageSelection(chatId);
+    return;
   } else if (callbackData === "back_to_main_menu") {
+    await bot.deleteMessage(chatId, messageId);
     await bot.sendMessage(chatId, "🔙 Returning to the main menu...");
     await askLanguageSelection(chatId);
+    return;
   } else if (callbackData === "back_to_category") {
+    await bot.deleteMessage(chatId, messageId);
     const lastSelectedLanguage = userStates[chatId]?.language;
     if (lastSelectedLanguage) {
       await handleLanguageSelection(chatId, lastSelectedLanguage);
@@ -246,6 +252,7 @@ async function handleCallbackQuery(chatId, callbackData, messageId, queryId) {
         chatId,
         "⚠️ Language selection not found. Please select a language first."
       );
+      return;
     }
   } else if (validLanguages.includes(callbackData)) {
     userStates[chatId] = { language: callbackData };
