@@ -100,7 +100,6 @@ async function handleCommand(chatId, text) {
   }
 }
 
-// Handle reservation command
 async function handleReserveCommand(chatId, bookId) {
   try {
     const book = await Book.findOne({ id: bookId, available: true });
@@ -131,10 +130,32 @@ async function handleReserveCommand(chatId, bookId) {
       `🆕 New reservation by *${user.userName}* (Phone: *${user.phoneNumber}*) for *"${book.title}"*.`,
       { parse_mode: "Markdown" }
     );
+
+    // Send confirmation message with a back button
     await bot.sendMessage(
       chatId,
       `✅ Successfully reserved: *"${book.title}"*.\nPickup time: *after isha salah*.`,
       { parse_mode: "Markdown" }
+    );
+
+    // Prepare back to main menu inline button
+    const backButton = {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: "🔙 Back to Main Menu",
+              callback_data: "back_to_main_menu",
+            },
+          ],
+        ],
+      },
+    };
+
+    await bot.sendMessage(
+      chatId,
+      "What would you like to do next?",
+      backButton
     );
   } catch (error) {
     console.error("Error reserving book:", error);
@@ -212,6 +233,9 @@ async function handleCallbackQuery(chatId, callbackData, messageId, queryId) {
 
   if (callbackData === "back_to_language") {
     await bot.sendMessage(chatId, "🔄 Returning to language selection...");
+    await askLanguageSelection(chatId);
+  } else if (callbackData === "back_to_main_menu") {
+    await bot.sendMessage(chatId, "🔙 Returning to the main menu...");
     await askLanguageSelection(chatId);
   } else if (callbackData === "back_to_category") {
     const lastSelectedLanguage = userStates[chatId]?.language;
