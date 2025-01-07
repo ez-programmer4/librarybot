@@ -341,14 +341,11 @@ For more questions, feel free to reach out to us via @IrshadComments_bot! 📩
   // Handle language selection
   if (validLanguages.includes(callbackData)) {
     userStates[chatId] = { language: callbackData };
-    await bot.editMessageText(
-      `🌐 You have selected *${callbackData}*. Thank you!`,
-      {
-        chat_id: chatId,
-        message_id: messageId,
-        parse_mode: "Markdown",
-      }
-    );
+    await bot.editMessageText(`🌐 You have selected *${callbackData}*. `, {
+      chat_id: chatId,
+      message_id: messageId,
+      parse_mode: "Markdown",
+    });
     await handleLanguageSelection(chatId, callbackData);
     return;
   }
@@ -960,7 +957,7 @@ bot.onText(
     await book.save();
 
     await notifyLibrarian(
-      `🆕 New manual reservation for ${user.userName}\n for "${book.title}".`,
+      `🆕 New manual reservation for ${user.userName} for "${book.title}".`,
       { parse_mode: "Markdown" } // Specify parse_mode if needed
     );
     bot.sendMessage(
@@ -970,54 +967,6 @@ bot.onText(
     );
   }
 );
-
-bot.onText(/\/librarian_cancel_reservation (\d+)/, async (msg, match) => {
-  const chatId = msg.chat.id;
-  const bookId = match[1]; // This is the numeric ID of the book provided by the user
-
-  if (!isLibrarian(chatId)) {
-    return bot.sendMessage(
-      chatId,
-      "🚫 You do not have permission to use this command."
-    );
-  }
-
-  console.log(`Received book ID: ${bookId}`);
-
-  // Find the book by its numeric ID
-  const book = await Book.findOne({ id: bookId });
-  if (!book) {
-    return bot.sendMessage(
-      chatId,
-      "❌ No book found with the given ID. Please check and try again."
-    );
-  }
-
-  // Find the reservation using the book's ObjectId
-  const reservation = await Reservation.findOne({ bookId: book._id }).populate(
-    "userId"
-  );
-  if (!reservation) {
-    return bot.sendMessage(
-      chatId,
-      "❌ No reservation found for the given book ID. Please check and try again."
-    );
-  }
-
-  // Mark the book as available again
-  book.available = true; // Mark the book as available again
-  await book.save();
-
-  // Delete the reservation
-  await Reservation.findByIdAndDelete(reservation._id);
-
-  // Ensure to correctly access the title of the book
-  bot.sendMessage(
-    chatId,
-    `✅ Reservation for *"${book.title}"* has been successfully canceled.`,
-    { parse_mode: "Markdown" }
-  );
-});
 
 bot.onText(/\/change_language/, (msg) => {
   const chatId = msg.chat.id;
