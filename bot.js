@@ -1,4 +1,3 @@
-// Add this function to handle text messages
 const TelegramBot = require("node-telegram-bot-api");
 const express = require("express");
 const mongoose = require("mongoose");
@@ -142,7 +141,8 @@ async function handleCancelReservation(chatId, bookId) {
     // Notify librarian
     const notificationMessage = `📩 User has canceled a reservation:\n- *Title:* *"${book.title}"*\n- *User ID:* *${user._id}*\n- *Name:* *${user.userName}*\n- *Phone:* *${user.phoneNumber}*`;
 
-    await notifyLibrarian(notificationMessage, { parse_mode: "Markdown" });
+    // Call notifyLibrarian with the message and parse_mode option
+    await notifyLibrarian(notificationMessage, { parse_mode: "Markdown" }); // Include parse_mode
   } catch (error) {
     console.error("Error canceling reservation:", error);
     await handleError(
@@ -153,7 +153,8 @@ async function handleCancelReservation(chatId, bookId) {
   }
 }
 
-// Function to handle reservation
+// Define the back button as a constant
+
 async function handleReserveCommand(chatId, bookId) {
   try {
     const book = await Book.findOne({ id: bookId, available: true });
@@ -184,11 +185,12 @@ async function handleReserveCommand(chatId, bookId) {
     const notificationMessage = `🆕 New reservation by *${user.userName}* (Phone: *${user.phoneNumber}*) for *"${book.title}"*.`;
     await notifyLibrarian(notificationMessage, { parse_mode: "Markdown" });
 
+    // Send message without back button
     await bot.sendMessage(
       chatId,
       `✅ Successfully reserved: *"${book.title}"*.\nPickup time: *after isha salah*.`,
       {
-        parse_mode: "Markdown",
+        parse_mode: "Markdown", // Ensure parse_mode is set for proper formatting
       }
     );
   } catch (error) {
@@ -201,60 +203,76 @@ async function handleReserveCommand(chatId, bookId) {
   }
 }
 
-// Language selection handling
-async function handleLanguageSelection(chatId, language) {
-  userStates[chatId] = { language };
-  console.log(`User ${chatId} selected language: ${language}`);
-  console.log(userStates);
+bot.on("callback_query", async (query) => {
+  const chatId = query.message.chat.id;
+  const callbackData = query.data;
 
-  const categories = await Book.distinct("category", { language });
+  // Handle the callback query
+  await handleCallbackQuery(chatId, callbackData);
+});
 
-  if (categories.length > 0) {
-    const inlineButtons = categories.map((cat) => [
-      { text: `📚 ${cat}`, callback_data: cat },
-    ]);
+// Function to handle callback queries
+async function handleCallbackQuery(chatId, callbackData) {
+  if (callbackData === "back_to_language") {
+    await bot.sendMessage(chatId, "🔄 Returning to language selection......");
+    await askLanguageSelection(chatId);
+  } else if (callbackData === "back_to_category") {
+    const lastSelectedLanguage = userStates[chatId]?.language; // Retrieve the last selected language
+    console.log("Last selected language:", lastSelectedLanguage); // Log the last selected language
 
-    inlineButtons.push([
-      {
-        text: "🔙 Back to Language Selection",
-        callback_data: "back_to_language",
-      },
-    ]);
-
-    await bot.sendMessage(
-      chatId,
-      `🌐 You selected *${language}*. Please choose a *category*:`,
-      {
-        reply_markup: { inline_keyboard: inlineButtons },
-        parse_mode: "Markdown",
-      }
-    );
+    if (lastSelectedLanguage) {
+      await handleLanguageSelection(chatId, lastSelectedLanguage);
+    } else {
+      await bot.sendMessage(
+        chatId,
+        "⚠️ Language selection not found. Please select a language first."
+      );
+    }
   } else {
-    await bot.sendMessage(
-      chatId,
-      "⚠️ No categories available for this language."
-    );
+    // If it's not a special callback, treat it as a category selection
+    await handleCategorySelection(chatId, callbackData);
   }
 }
 
-// Function to ask for language selection
-function askLanguageSelection(chatId) {
-  bot.sendMessage(chatId, "🌐 Please select a language:", {
-    reply_markup: {
-      inline_keyboard: [
-        [{ text: "🌍 Arabic", callback_data: "Arabic" }],
-        [{ text: "🌍 Amharic", callback_data: "Amharic" }],
-        [{ text: "🌍 Afaan Oromoo", callback_data: "AfaanOromo" }],
-      ],
-    },
+// Function to handle category selection
+async function handleCategorySelection(chatId, selectedCategory) {
+  // Fetch books for the valid selected category
+  const books = await Book.find({
+    category: selectedCategory,
+    available: true,
   });
-}
 
-// Function to fetch user reservations
+  if (books.length > 0) {
+    const bookList = books
+      .map((book) => `🔖 *ID:* *${book.id}* - *"${book.title}"*`)
+      .join("\n");
+
+    // Prepare inline buttons including the back button
+    const inlineButtons = [
+      [
+        {
+          text: "🔙 Back to Category Selection",
+          callback_data: "back_to_category",
+        },
+      ],
+    ];
+
+    await bot.sendMessage(
+      chatId,
+      `📖 *Available books in* *"${selectedCategory}"*:\n\n${bookList}\n\nTo reserve a book, type /reserve <ID>.`,
+      {
+        parse_mode: "Markdown",
+        reply_markup: {
+          inline_keyboard: inlineButtons,
+        },
+      }
+    );
+  }
+}
+// Function to get user reservations
 async function getUserReservations(userId) {
   return await Reservation.find({ userId }).populate("bookId");
 }
-
 // Centralized function to create back button
 const backButton = {
   reply_markup: {
@@ -271,11 +289,10 @@ bot.on("callback_query", async (query) => {
       chat_id: chatId,
       message_id: query.message.message_id,
     });
-    return askLanguageSelection(chatId);
+    return askLanguageSelection(chatId); // Adjust this to return to your desired menu
   }
 });
 
-// Handle user reservations
 bot.onText(/\/my_reservations/, async (msg) => {
   const chatId = msg.chat.id;
   const user = await User.findOne({ chatId });
@@ -305,12 +322,13 @@ bot.onText(/\/my_reservations/, async (msg) => {
 
   const message = `✨ Your Reservations: ✨\n\n${reservationList}\n ⟫⟫ To cancel a reservation, use /cancel_reservation <book_id>.`;
 
+  // Send message in chunks if necessary
   await sendMessageInChunks(chatId, message);
 });
 
 // Function to send messages in chunks
 async function sendMessageInChunks(chatId, message) {
-  const MAX_MESSAGE_LENGTH = 4096;
+  const MAX_MESSAGE_LENGTH = 4096; // Telegram message character limit
 
   if (message.length > MAX_MESSAGE_LENGTH) {
     for (let i = 0; i < message.length; i += MAX_MESSAGE_LENGTH) {
@@ -322,7 +340,6 @@ async function sendMessageInChunks(chatId, message) {
   }
 }
 
-// Handle view reservations
 bot.onText(/\/view_reservations/, async (msg) => {
   const chatId = msg.chat.id;
 
@@ -349,17 +366,34 @@ bot.onText(/\/view_reservations/, async (msg) => {
   await bot.sendMessage(
     chatId,
     `📚 Current Reservations:\n\n${reservationList}`,
-    { parse_mode: "Markdown" }
+    {
+      parse_mode: "Markdown",
+    }
   );
 });
 
-// Handle unexpected messages during registration
+// Function to send messages in chunks
+async function sendMessageInChunks(chatId, message) {
+  const MAX_MESSAGE_LENGTH = 4096; // Telegram message character limit
+
+  if (message.length > MAX_MESSAGE_LENGTH) {
+    for (let i = 0; i < message.length; i += MAX_MESSAGE_LENGTH) {
+      const msgPart = message.slice(i, i + MAX_MESSAGE_LENGTH);
+      await bot.sendMessage(chatId, msgPart, { reply_markup: backButton });
+    }
+  } else {
+    await bot.sendMessage(chatId, message, { reply_markup: backButton });
+  }
+}
+// Handle user input for registration
 bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
 
   if (userStates[chatId]) {
+    // Check for registration steps
     await handleRegistrationSteps(chatId, msg);
   } else {
+    // Handle unexpected messages
     await handleUnexpectedMessage(chatId, msg.text);
   }
 });
@@ -372,14 +406,16 @@ async function handleUnexpectedMessage(chatId, message) {
   const isCancelReservationCommand = message.startsWith("/cancel_reservation");
   const isLanguage = ["Arabic", "Amharic", "AfaanOromo"].includes(message);
 
+  // Check if the command is /reserve or /cancel_reservation without an ID
   const hasValidID = message.split(" ").length === 2;
 
+  // If the command is valid but missing an ID, inform the user
   if (isReserveCommand && !hasValidID) {
     await bot.sendMessage(
       chatId,
       "❗ Please specify an ID to reserve a book. Example: /reserve <ID>"
     );
-    return;
+    return; // Exit the function after sending the message
   }
 
   if (isCancelReservationCommand && !hasValidID) {
@@ -387,9 +423,10 @@ async function handleUnexpectedMessage(chatId, message) {
       chatId,
       "❗ Please specify an ID to cancel a reservation. Example: /cancel_reservation <ID>"
     );
-    return;
+    return; // Exit the function after sending the message
   }
 
+  // If it's not a recognized command or input, provide feedback
   if (!isCommand && !isLanguage) {
     await bot.sendMessage(
       chatId,
@@ -397,6 +434,8 @@ async function handleUnexpectedMessage(chatId, message) {
     );
   }
 }
+
+// Add this function to handle text messages
 bot.on("message", (msg) => {
   const chatId = msg.chat.id;
   const messageText = msg.text;
@@ -573,6 +612,50 @@ async function processPhoneNumber(chatId, phoneNumber) {
   );
   delete userStates[chatId]; // Clear the registration state
   return askLanguageSelection(chatId);
+}
+
+// Ask for language selection
+function askLanguageSelection(chatId) {
+  bot.sendMessage(chatId, "🌐 Please select a language:", {
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: "       🌍 Arabic         ", callback_data: "Arabic" }],
+        [{ text: "       🌍 Amharic        ", callback_data: "Amharic" }],
+        [{ text: "       🌍 Afaan Oromoo  ", callback_data: "AfaanOromo" }],
+      ],
+    },
+  });
+}
+
+async function handleLanguageSelection(chatId, language) {
+  userStates[chatId] = { language };
+  console.log(userStates);
+  const categories = await Book.distinct("category", { language });
+
+  if (categories.length > 0) {
+    const inlineButtons = categories.map((cat) => [
+      { text: `📚 ${cat}`, callback_data: cat }, // Add a book icon to each category
+    ]);
+
+    // Add a back button to return to language selection
+    inlineButtons.push([
+      {
+        text: "🔙 Back to Language Selection",
+        callback_data: "back_to_language",
+      },
+    ]);
+
+    await bot.sendMessage(
+      chatId,
+      `🌐 You selected *${language}*. Please choose a *category*:`,
+      {
+        reply_markup: {
+          inline_keyboard: inlineButtons,
+        },
+        parse_mode: "Markdown", // Specify the parse mode
+      }
+    );
+  }
 }
 
 // Handle the back button press
