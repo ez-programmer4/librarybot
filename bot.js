@@ -213,6 +213,9 @@ bot.on("callback_query", async (query) => {
 async function handleCallbackQuery(chatId, callbackData) {
   console.log("Received callback data:", callbackData); // Debugging log
 
+  // Define valid languages
+  const validLanguages = ["Arabic", "Amharic", "AfaanOromo"];
+
   if (callbackData === "back_to_language") {
     await bot.sendMessage(chatId, "🔄 Returning to language selection...");
     await askLanguageSelection(chatId);
@@ -221,7 +224,7 @@ async function handleCallbackQuery(chatId, callbackData) {
     console.log("Last selected language:", lastSelectedLanguage);
 
     if (lastSelectedLanguage) {
-      // Call the function to show categories based on the last selected language
+      // Show categories based on the last selected language without changing user state
       await handleLanguageSelection(chatId, lastSelectedLanguage);
     } else {
       await bot.sendMessage(
@@ -229,15 +232,14 @@ async function handleCallbackQuery(chatId, callbackData) {
         "⚠️ Language selection not found. Please select a language first."
       );
     }
+  } else if (validLanguages.includes(callbackData)) {
+    // Update user state only for valid language selections
+    userStates[chatId] = { language: callbackData };
+    console.log(`User ${chatId} selected language: ${callbackData}`);
+    await handleLanguageSelection(chatId, callbackData);
   } else {
-    // Update user state only if it's a valid language selection
-    const validLanguages = ["Arabic", "Amharic", "AfaanOromo"]; // Define your valid languages
-    if (validLanguages.includes(callbackData)) {
-      await handleLanguageSelection(chatId, callbackData);
-    } else {
-      // If it's a category selection
-      await handleCategorySelection(chatId, callbackData);
-    }
+    // Handle category selection
+    await handleCategorySelection(chatId, callbackData);
   }
 }
 
