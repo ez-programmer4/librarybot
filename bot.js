@@ -202,72 +202,41 @@ async function handleReserveCommand(chatId, bookId) {
     );
   }
 }
-bot.on("callback_query", async (query) => {
-  const chatId = query.message.chat.id;
-  const callbackData = query.data;
+async function handleLanguageSelection(chatId, language) {
+  userStates[chatId] = { language };
+  console.log(`User ${chatId} selected language: ${language}`);
+  console.log(userStates); // Log the user states
 
-  // Handle the callback query
-  await handleCallbackQuery(chatId, callbackData);
-});
-async function handleCallbackQuery(chatId, callbackData) {
-  console.log("Received callback data:", callbackData); // Debugging log
+  const categories = await Book.distinct("category", { language });
 
-  // Define valid languages
-  const validLanguages = ["Arabic", "Amharic", "AfaanOromo"];
+  if (categories.length > 0) {
+    const inlineButtons = categories.map((cat) => [
+      { text: `📚 ${cat}`, callback_data: cat },
+    ]);
 
-  if (callbackData === "back_to_language") {
-    await bot.sendMessage(chatId, "🔄 Returning to language selection...");
-    await askLanguageSelection(chatId);
-  } else if (callbackData === "back_to_category") {
-    const lastSelectedLanguage = userStates[chatId]?.language;
-    console.log("Last selected language:", lastSelectedLanguage);
-  }
-  if (validLanguages.includes(callbackData)) {
-    // Update user state only for valid language selections
-    userStates[chatId] = { language: callbackData };
-    console.log(`User ${chatId} selected language: ${callbackData}`);
-    await handleLanguageSelection(chatId, callbackData);
-  } else {
-    // Handle category selection
-    await handleCategorySelection(chatId, callbackData);
-  }
-}
-
-// Function to handle category selection
-async function handleCategorySelection(chatId, selectedCategory) {
-  // Fetch books for the valid selected category
-  const books = await Book.find({
-    category: selectedCategory,
-    available: true,
-  });
-
-  if (books.length > 0) {
-    const bookList = books
-      .map((book) => `🔖 *ID:* *${book.id}* - *"${book.title}"*`)
-      .join("\n");
-
-    // Prepare inline buttons including the back button
-    const inlineButtons = [
-      [
-        {
-          text: "🔙 Back to Category Selection",
-          callback_data: "back_to_category",
-        },
-      ],
-    ];
+    // Add a back button to return to language selection
+    inlineButtons.push([
+      {
+        text: "🔙 Back to Language Selection",
+        callback_data: "back_to_language",
+      },
+    ]);
 
     await bot.sendMessage(
       chatId,
-      `📖 *Available books in* *"${selectedCategory}"*:\n\n${bookList}\n\nTo reserve a book, type /reserve <ID>.`,
+      `🌐 You selected *${language}*. Please choose a *category*:`,
       {
-        parse_mode: "Markdown",
         reply_markup: {
           inline_keyboard: inlineButtons,
         },
+        parse_mode: "Markdown", // Specify the parse mode
       }
     );
   } else {
-    await bot.sendMessage(chatId, "❌ No books available in this category.");
+    await bot.sendMessage(
+      chatId,
+      "⚠️ No categories available for this language."
+    );
   }
 }
 
@@ -625,44 +594,6 @@ async function processPhoneNumber(chatId, phoneNumber) {
   );
   delete userStates[chatId]; // Clear the registration state
   return askLanguageSelection(chatId);
-}
-
-async function handleLanguageSelection(chatId, language) {
-  userStates[chatId] = { language };
-  console.log(`User ${chatId} selected language: ${language}`);
-  console.log(userStates); // Log the user states
-
-  const categories = await Book.distinct("category", { language });
-
-  if (categories.length > 0) {
-    const inlineButtons = categories.map((cat) => [
-      { text: `📚 ${cat}`, callback_data: cat },
-    ]);
-
-    // Add a back button to return to language selection
-    inlineButtons.push([
-      {
-        text: "🔙 Back to Language Selection",
-        callback_data: "back_to_language",
-      },
-    ]);
-
-    await bot.sendMessage(
-      chatId,
-      `🌐 You selected *${language}*. Please choose a *category*:`,
-      {
-        reply_markup: {
-          inline_keyboard: inlineButtons,
-        },
-        parse_mode: "Markdown", // Specify the parse mode
-      }
-    );
-  } else {
-    await bot.sendMessage(
-      chatId,
-      "⚠️ No categories available for this language."
-    );
-  }
 }
 
 // Handle the back button press
