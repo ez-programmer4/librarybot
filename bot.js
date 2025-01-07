@@ -279,7 +279,19 @@ async function handleCategorySelection(chatId, selectedCategory) {
     await bot.sendMessage(chatId, "❌ No books available in this category.");
   }
 }
-// Function to get user reservations
+
+// Function to ask for language selection
+function askLanguageSelection(chatId) {
+  bot.sendMessage(chatId, "🌐 Please select a language:", {
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: "🌍 Arabic", callback_data: "Arabic" }],
+        [{ text: "🌍 Amharic", callback_data: "Amharic" }],
+        [{ text: "🌍 Afaan Oromoo", callback_data: "AfaanOromo" }],
+      ],
+    },
+  });
+}
 async function getUserReservations(userId) {
   return await Reservation.find({ userId }).populate("bookId");
 }
@@ -622,18 +634,6 @@ async function processPhoneNumber(chatId, phoneNumber) {
   );
   delete userStates[chatId]; // Clear the registration state
   return askLanguageSelection(chatId);
-}
-
-function askLanguageSelection(chatId) {
-  bot.sendMessage(chatId, "🌐 Please select a language:", {
-    reply_markup: {
-      inline_keyboard: [
-        [{ text: "🌍 Arabic", callback_data: "Arabic" }],
-        [{ text: "🌍 Amharic", callback_data: "Amharic" }],
-        [{ text: "🌍 Afaan Oromoo", callback_data: "AfaanOromo" }],
-      ],
-    },
-  });
 }
 
 async function handleLanguageSelection(chatId, language) {
