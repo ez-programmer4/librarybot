@@ -221,17 +221,8 @@ async function handleCallbackQuery(chatId, callbackData) {
   } else if (callbackData === "back_to_category") {
     const lastSelectedLanguage = userStates[chatId]?.language;
     console.log("Last selected language:", lastSelectedLanguage);
-
-    if (lastSelectedLanguage) {
-      // Show categories based on the last selected language without changing user state
-      await handleLanguageSelection(chatId, lastSelectedLanguage);
-    } else {
-      await bot.sendMessage(
-        chatId,
-        "⚠️ Language selection not found. Please select a language first."
-      );
-    }
-  } else if (validLanguages.includes(callbackData)) {
+  }
+  if (validLanguages.includes(callbackData)) {
     // Update user state only for valid language selections
     userStates[chatId] = { language: callbackData };
     console.log(`User ${chatId} selected language: ${callbackData}`);
