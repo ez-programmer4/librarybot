@@ -254,7 +254,7 @@ async function handleCallbackQuery(chatId, callbackData, messageId, queryId) {
   if (callbackData === "back_to_main_menu") {
     await bot.deleteMessage(chatId, messageId);
     await bot.sendMessage(chatId, "🔙 Returning to the main menu...");
-    await askMainMenu(chatId); // Ensure it goes to the main menu
+    await askLanguageSelection(chatId); // Ensure it goes to the main menu
     return;
   }
 
@@ -737,16 +737,77 @@ bot.onText(/\/my_reservations/, async (msg) => {
     .map((res) => {
       const title = res.bookId.title;
       const bookId = res.bookId.id;
-      return `📚 Book ID: ${bookId}\n 📄 Title: "${title}"\n ⌚Pickup: ${res.pickupTime}\n`;
+      return `📚 Book ID: ${bookId}\n 📄 Title: "${title}"\n ⌚ Pickup: ${res.pickupTime}\n`;
     })
     .join("\n");
 
-  const message = `✨ Your Reservations: ✨\n\n${reservationList}\n ⟫⟫ To cancel a reservation, use /cancel_reservation <book_id>.`;
+  const message = `✨ Your Reservations: ✨\n\n${reservationList}\n⟫⟫ To cancel a reservation, use /cancel_reservation <book_id>.`;
 
   // Send message in chunks if necessary
   await sendMessageInChunks(chatId, message);
 });
 
+// Helper function to send messages in chunks if they are too long
+async function sendMessageInChunks(chatId, message) {
+  const maxLength = 4096; // Telegram message character limit
+  if (message.length <= maxLength) {
+    await bot.sendMessage(chatId, message, { parse_mode: "Markdown" });
+  } else {
+    // Split message into chunks
+    const chunks = [];
+    let currentChunk = "";
+
+    const messages = message.split("\n"); // Split by line for better chunking
+    for (const line of messages) {
+      if ((currentChunk + line).length <= maxLength) {
+        currentChunk += line + "\n";
+      } else {
+        chunks.push(currentChunk);
+        currentChunk = line + "\n"; // Start a new chunk
+      }
+    }
+    // Push the last chunk if it has content
+    if (currentChunk) {
+      chunks.push(currentChunk);
+    }
+
+    // Send each chunk as a separate message
+    for (const chunk of chunks) {
+      await bot.sendMessage(chatId, chunk, { parse_mode: "Markdown" });
+    }
+  }
+}
+bot.onText(/\/register/, async (msg) => {
+  const chatId = msg.chat.id;
+  console.log(`User ${chatId} initiated registration via /register command.`);
+
+  try {
+    const existingUser = await User.findOne({ chatId });
+    if (existingUser) {
+      console.log(
+        `User ${chatId} is already registered as ${existingUser.userName}.`
+      );
+      await bot.sendMessage(
+        chatId,
+        `🚫 You are already registered as *${existingUser.userName}*.`,
+        { parse_mode: "Markdown" }
+      );
+      return askLanguageSelection(chatId); // Redirect to language selection
+    }
+
+    userStates[chatId] = { step: 1 }; // Set user state for registration
+    console.log(`User ${chatId} is at step 1: asking for full name.`);
+    await bot.sendMessage(chatId, "📝 Please enter your full name:", {
+      parse_mode: "Markdown",
+    });
+  } catch (error) {
+    await handleError(
+      chatId,
+      "⚠️ An error occurred during registration. Please try again.",
+      `Error during registration initiation: ${error.message}`
+    );
+  }
+});
 // Function to send messages in chunks
 async function sendMessageInChunks(chatId, message) {
   const MAX_MESSAGE_LENGTH = 4096; // Telegram message character limit
