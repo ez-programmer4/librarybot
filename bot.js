@@ -242,29 +242,57 @@ async function handleCallbackQuery(chatId, callbackData, messageId, queryId) {
 
   const validLanguages = ["Arabic", "Amharic", "AfaanOromo"];
 
+  // Handle back to language selection
   if (callbackData === "back_to_language") {
     await bot.deleteMessage(chatId, messageId);
     await bot.sendMessage(chatId, "🔄 Returning to language selection...");
     await askLanguageSelection(chatId);
     return;
-  } else if (callbackData === "back_to_main_menu") {
+  }
+
+  // Handle back to main menu
+  if (callbackData === "back_to_main_menu") {
     await bot.deleteMessage(chatId, messageId);
     await bot.sendMessage(chatId, "🔙 Returning to the main menu...");
-    await askLanguageSelection(chatId);
+    await askLanguageSelection(chatId); // Ensure it goes to the main menu
     return;
-  } else if (callbackData === "back_to_category") {
+  }
+
+  // Handle back to category selection
+  if (callbackData === "back_to_category") {
     await bot.deleteMessage(chatId, messageId);
+    await bot.sendMessage(chatId, "🔄 Returning to category selection...");
     const lastSelectedLanguage = userStates[chatId]?.language;
     if (lastSelectedLanguage) {
-      await handleLanguageSelection(chatId, lastSelectedLanguage);
+      await handleCategorySelection(chatId, lastSelectedLanguage);
     } else {
       await bot.sendMessage(
         chatId,
         "⚠️ Language selection not found. Please select a language first."
       );
-      return;
     }
-  } else if (validLanguages.includes(callbackData)) {
+    return;
+  }
+
+  // Handle Help command
+  if (callbackData === "help") {
+    await bot.deleteMessage(chatId, messageId);
+    await bot.sendMessage(chatId, "❓ Here is some help information...");
+    return;
+  }
+
+  // Handle Register command
+  if (callbackData === "register") {
+    await bot.deleteMessage(chatId, messageId);
+    await bot.sendMessage(
+      chatId,
+      "🚀 Please provide your information to register..."
+    );
+    return;
+  }
+
+  // Handle language selection
+  if (validLanguages.includes(callbackData)) {
     userStates[chatId] = { language: callbackData };
     await bot.editMessageText(
       `🌐 You have selected *${callbackData}*. Thank you!`,
@@ -275,15 +303,21 @@ async function handleCallbackQuery(chatId, callbackData, messageId, queryId) {
       }
     );
     await handleLanguageSelection(chatId, callbackData);
-  } else {
-    await handleCategorySelection(chatId, callbackData);
+    return;
   }
+
+  // If none of the above, handle category selection
+  await handleCategorySelection(chatId, callbackData);
 
   // Acknowledge the callback
   await bot.answerCallbackQuery(queryId);
 }
 // Handle category selection
-async function handleCategorySelection(chatId, selectedCategory) {
+async function handleCategorySelection(
+  chatId,
+  selectedCategory,
+  skipNoBooksMessage = false
+) {
   const books = await Book.find({
     category: selectedCategory,
     available: true,
@@ -310,7 +344,7 @@ async function handleCategorySelection(chatId, selectedCategory) {
         reply_markup: { inline_keyboard: inlineButtons },
       }
     );
-  } else {
+  } else if (!skipNoBooksMessage) {
     await bot.sendMessage(chatId, "❌ No books available in this category.");
   }
 }
