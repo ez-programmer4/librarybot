@@ -860,7 +860,6 @@ async function sendMessageInChunks(chatId, message) {
   if (message.length <= maxLength) {
     await bot.sendMessage(chatId, message, {
       parse_mode: "Markdown",
-      ...backButton,
     });
   } else {
     // Split message into chunks
@@ -885,7 +884,6 @@ async function sendMessageInChunks(chatId, message) {
     for (const chunk of chunks) {
       await bot.sendMessage(chatId, chunk, {
         parse_mode: "Markdown",
-        ...backButton,
       });
     }
   }
