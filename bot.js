@@ -129,7 +129,7 @@ async function handleReserveCommand(chatId, bookId) {
     await book.save();
 
     await notifyLibrarian(
-      `🆕 New reservation by *${user.userName}* (Phone: *${user.phoneNumber}*) for *"${book.title}"*.`,
+      `🆕 New reservation by : ${user.userName}\n (Phone: *${user.phoneNumber}*) \n for *"${book.title}"*.`,
       { parse_mode: "Markdown" }
     );
 
@@ -175,34 +175,57 @@ async function handleReserveCommand(chatId, bookId) {
 async function handleCancelReservation(chatId, bookId) {
   try {
     const user = await User.findOne({ chatId });
-    if (!user)
+    if (!user) {
       return bot.sendMessage(
         chatId,
         "🚫 You need to register first using /register."
       );
+    }
+
+    const book = await Book.findOne({ id: bookId });
+    if (!book) {
+      return bot.sendMessage(chatId, "❌ No book found with that ID.");
+    }
 
     const reservation = await Reservation.findOne({
-      bookId: await Book.findOne({ id: bookId }).select("_id"),
+      bookId: book._id,
       userId: user._id,
     }).populate("bookId");
-    if (!reservation)
+
+    if (!reservation) {
       return bot.sendMessage(
         chatId,
         "❌ No reservation found with that book ID or it does not belong to you."
       );
+    }
 
-    const book = reservation.bookId;
+    // Mark the book as available and delete the reservation
     book.available = true;
     await book.save();
     await Reservation.findByIdAndDelete(reservation._id);
 
+    // Create an inline keyboard for the back button
+    const backButton = {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: "🔙 Back to Main Menu",
+              callback_data: "back_to_main_menu", // Adjust this to your desired action
+            },
+          ],
+        ],
+      },
+    };
+
     await bot.sendMessage(
       chatId,
       `✅ You have successfully canceled the reservation for *"${book.title}"*.`,
-      { parse_mode: "Markdown" }
+      { parse_mode: "Markdown", ...backButton }
     );
+
     await notifyLibrarian(
-      `📩 User has canceled a reservation:\n- *Title:* *"${book.title}"*\n- *User ID:* *${user._id}*\n- *Name:* *${user.userName}*\n- *Phone:* *${user.phoneNumber}*`,
+      `📩 User has canceled a reservation:\n- Title:"${book.title}" \n- User ID: ${user._id}\n- Name: ${user.userName}\n- Phone: ${user.phoneNumber}`,
       { parse_mode: "Markdown" }
     );
   } catch (error) {
@@ -569,7 +592,7 @@ async function processPhoneNumber(chatId, phoneNumber) {
   );
 
   await notifyLibrarian(
-    `🆕 New registration: *${user.userName}*,\n Phone: *${phoneNumber}*`,
+    `🆕 New registration: ${user.userName},\n Phone: ${phoneNumber}`,
     { parse_mode: "Markdown" } // Specify parse_mode if needed
   );
   await bot.sendMessage(
@@ -937,7 +960,7 @@ bot.onText(
     await book.save();
 
     await notifyLibrarian(
-      `🆕 New manual reservation for *${user.userName}* for *"${book.title}"*.`,
+      `🆕 New manual reservation for ${user.userName}\n for "${book.title}".`,
       { parse_mode: "Markdown" } // Specify parse_mode if needed
     );
     bot.sendMessage(
