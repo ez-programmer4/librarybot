@@ -856,15 +856,38 @@ bot.onText(/\/view_reservations/, async (msg) => {
 
 // Function to send messages in chunks
 async function sendMessageInChunks(chatId, message) {
-  const MAX_MESSAGE_LENGTH = 4096; // Telegram message character limit
-
-  if (message.length > MAX_MESSAGE_LENGTH) {
-    for (let i = 0; i < message.length; i += MAX_MESSAGE_LENGTH) {
-      const msgPart = message.slice(i, i + MAX_MESSAGE_LENGTH);
-      await bot.sendMessage(chatId, msgPart, { reply_markup: backButton });
-    }
+  const maxLength = 4096; // Telegram message character limit
+  if (message.length <= maxLength) {
+    await bot.sendMessage(chatId, message, {
+      parse_mode: "Markdown",
+      ...backButton,
+    });
   } else {
-    await bot.sendMessage(chatId, message, { reply_markup: backButton });
+    // Split message into chunks
+    const chunks = [];
+    let currentChunk = "";
+
+    const messages = message.split("\n"); // Split by line for better chunking
+    for (const line of messages) {
+      if ((currentChunk + line).length <= maxLength) {
+        currentChunk += line + "\n";
+      } else {
+        chunks.push(currentChunk);
+        currentChunk = line + "\n"; // Start a new chunk
+      }
+    }
+    // Push the last chunk if it has content
+    if (currentChunk) {
+      chunks.push(currentChunk);
+    }
+
+    // Send each chunk as a separate message
+    for (const chunk of chunks) {
+      await bot.sendMessage(chatId, chunk, {
+        parse_mode: "Markdown",
+        ...backButton,
+      });
+    }
   }
 }
 
