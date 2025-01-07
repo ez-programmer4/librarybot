@@ -202,7 +202,6 @@ async function handleReserveCommand(chatId, bookId) {
     );
   }
 }
-
 bot.on("callback_query", async (query) => {
   const chatId = query.message.chat.id;
   const callbackData = query.data;
@@ -214,7 +213,7 @@ bot.on("callback_query", async (query) => {
 // Function to handle callback queries
 async function handleCallbackQuery(chatId, callbackData) {
   if (callbackData === "back_to_language") {
-    await bot.sendMessage(chatId, "🔄 Returning to language selection......");
+    await bot.sendMessage(chatId, "🔄 Returning to language selection...");
     await askLanguageSelection(chatId);
   } else if (callbackData === "back_to_category") {
     const lastSelectedLanguage = userStates[chatId]?.language; // Retrieve the last selected language
@@ -267,6 +266,8 @@ async function handleCategorySelection(chatId, selectedCategory) {
         },
       }
     );
+  } else {
+    await bot.sendMessage(chatId, "❌ No books available in this category.");
   }
 }
 // Function to get user reservations
