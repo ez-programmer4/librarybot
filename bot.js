@@ -199,7 +199,7 @@ bot.on("callback_query", async (query) => {
 });
 
 // Updated handleCallbackQuery function
-async function handleCallbackQuery(chatId, callbackData) {
+async function handleCallbackQuery(chatId, callbackData, messageId) {
   console.log("Received callback data:", callbackData);
 
   const validLanguages = ["Arabic", "Amharic", "AfaanOromo"];
@@ -223,7 +223,7 @@ async function handleCallbackQuery(chatId, callbackData) {
       `🌐 You have selected *${callbackData}*. Thank you!`,
       {
         chat_id: chatId,
-        message_id: query.message.message_id,
+        message_id: messageId,
         parse_mode: "Markdown",
       }
     );
@@ -234,7 +234,6 @@ async function handleCallbackQuery(chatId, callbackData) {
 
   await bot.answerCallbackQuery(query.id);
 }
-
 // Handle category selection
 async function handleCategorySelection(chatId, selectedCategory) {
   const books = await Book.find({
