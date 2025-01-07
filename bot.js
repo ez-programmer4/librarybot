@@ -203,15 +203,28 @@ async function handleReserveCommand(chatId, bookId) {
   }
 }
 
-// Function to handle callback queries
+// Handle the callback query
+bot.on("callback_query", async (query) => {
+  const chatId = query.message.chat.id;
+  const callbackData = query.data;
+
+  // Process the callback
+  await handleCallbackQuery(chatId, callbackData);
+});
+
+// Updated handleCallbackQuery function
 async function handleCallbackQuery(chatId, callbackData) {
+  console.log("Received callback data:", callbackData); // Debugging log
+
+  // Valid languages
+  const validLanguages = ["Arabic", "Amharic", "AfaanOromo"];
+
   if (callbackData === "back_to_language") {
-    await bot.sendMessage(chatId, "🔄 Returning to language selection......");
+    await bot.sendMessage(chatId, "🔄 Returning to language selection...");
     await askLanguageSelection(chatId);
   } else if (callbackData === "back_to_category") {
-    await handleCategorySelection(chatId);
-    const lastSelectedLanguage = userStates[chatId]?.language; // Retrieve the last selected language
-    console.log("Last selected language:", lastSelectedLanguage); // Log the last selected language
+    const lastSelectedLanguage = userStates[chatId]?.language;
+    console.log("Last selected language:", lastSelectedLanguage);
 
     if (lastSelectedLanguage) {
       await handleLanguageSelection(chatId, lastSelectedLanguage);
@@ -221,12 +234,31 @@ async function handleCallbackQuery(chatId, callbackData) {
         "⚠️ Language selection not found. Please select a language first."
       );
     }
+  } else if (validLanguages.includes(callbackData)) {
+    // Update user state for valid language selections
+    userStates[chatId] = { language: callbackData };
+    console.log(`User ${chatId} selected language: ${callbackData}`);
+
+    // Send confirmation message for language selection
+    await bot.editMessageText(
+      `🌐 You have selected *${callbackData}*. Thank you!`,
+      {
+        chat_id: chatId,
+        message_id: query.message.message_id,
+        parse_mode: "Markdown",
+      }
+    );
+
+    // Proceed to the next action after confirming the language
+    await handleLanguageSelection(chatId, callbackData);
   } else {
-    // If it's not a special callback, treat it as a category selection
+    // Handle category selection
     await handleCategorySelection(chatId, callbackData);
   }
-}
 
+  // Acknowledge the callback
+  await bot.answerCallbackQuery(query.id);
+}
 // Function to handle category selection
 async function handleCategorySelection(chatId, selectedCategory) {
   // Fetch books for the valid selected category
@@ -653,25 +685,6 @@ async function handleLanguageSelection(chatId, language) {
 
 // Handle the back button press
 
-// Assuming you have some mechanism to capture callback queries
-bot.on("callback_query", (query) => {
-  const chatId = query.message.chat.id;
-  const callbackData = query.data;
-
-  handleCallbackQuery(chatId, callbackData);
-});
-
-// Only send the confirmation message for language selection
-if (["Arabic", "Amharic", "AfaanOromo"].includes(language)) {
-  await bot.editMessageText(`🌐 You have selected *${language}*. Thank you!`, {
-    chat_id: chatId,
-    message_id: query.message.message_id,
-    parse_mode: "Markdown",
-  });
-}
-
-// Acknowledge the callback
-bot.answerCallbackQuery(query.id);
 async function addUser(chatId, userName, phoneNumber) {
   let user = await User.findOne({ phoneNumber });
   if (!user) {
