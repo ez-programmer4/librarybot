@@ -212,12 +212,14 @@ bot.on("callback_query", async (query) => {
 
 // Function to handle callback queries
 async function handleCallbackQuery(chatId, callbackData) {
+  console.log("Received callback data:", callbackData); // Add this line for debugging
+
   if (callbackData === "back_to_language") {
     await bot.sendMessage(chatId, "🔄 Returning to language selection...");
     await askLanguageSelection(chatId);
   } else if (callbackData === "back_to_category") {
-    const lastSelectedLanguage = userStates[chatId]?.language; // Retrieve the last selected language
-    console.log("Last selected language:", lastSelectedLanguage); // Log the last selected language
+    const lastSelectedLanguage = userStates[chatId]?.language;
+    console.log("Last selected language:", lastSelectedLanguage);
 
     if (lastSelectedLanguage) {
       await handleLanguageSelection(chatId, lastSelectedLanguage);
@@ -228,7 +230,6 @@ async function handleCallbackQuery(chatId, callbackData) {
       );
     }
   } else {
-    // If it's not a special callback, treat it as a category selection
     await handleCategorySelection(chatId, callbackData);
   }
 }
@@ -615,14 +616,13 @@ async function processPhoneNumber(chatId, phoneNumber) {
   return askLanguageSelection(chatId);
 }
 
-// Ask for language selection
 function askLanguageSelection(chatId) {
   bot.sendMessage(chatId, "🌐 Please select a language:", {
     reply_markup: {
       inline_keyboard: [
-        [{ text: "       🌍 Arabic         ", callback_data: "Arabic" }],
-        [{ text: "       🌍 Amharic        ", callback_data: "Amharic" }],
-        [{ text: "       🌍 Afaan Oromoo  ", callback_data: "AfaanOromo" }],
+        [{ text: "🌍 Arabic", callback_data: "Arabic" }],
+        [{ text: "🌍 Amharic", callback_data: "Amharic" }],
+        [{ text: "🌍 Afaan Oromoo", callback_data: "AfaanOromo" }],
       ],
     },
   });
@@ -630,12 +630,14 @@ function askLanguageSelection(chatId) {
 
 async function handleLanguageSelection(chatId, language) {
   userStates[chatId] = { language };
-  console.log(userStates);
+  console.log(`User ${chatId} selected language: ${language}`);
+  console.log(userStates); // Log the user states
+
   const categories = await Book.distinct("category", { language });
 
   if (categories.length > 0) {
     const inlineButtons = categories.map((cat) => [
-      { text: `📚 ${cat}`, callback_data: cat }, // Add a book icon to each category
+      { text: `📚 ${cat}`, callback_data: cat },
     ]);
 
     // Add a back button to return to language selection
@@ -655,6 +657,11 @@ async function handleLanguageSelection(chatId, language) {
         },
         parse_mode: "Markdown", // Specify the parse mode
       }
+    );
+  } else {
+    await bot.sendMessage(
+      chatId,
+      "⚠️ No categories available for this language."
     );
   }
 }
