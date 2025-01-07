@@ -209,7 +209,6 @@ bot.on("callback_query", async (query) => {
   // Handle the callback query
   await handleCallbackQuery(chatId, callbackData);
 });
-
 async function handleCallbackQuery(chatId, callbackData) {
   console.log("Received callback data:", callbackData); // Debugging log
 
