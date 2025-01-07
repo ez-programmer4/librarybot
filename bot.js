@@ -103,18 +103,20 @@ async function handleCommand(chatId, text) {
 async function handleReserveCommand(chatId, bookId) {
   try {
     const book = await Book.findOne({ id: bookId, available: true });
-    if (!book)
+    if (!book) {
       return bot.sendMessage(
         chatId,
         "❌ Invalid book ID or the book is not available."
       );
+    }
 
     const user = await User.findOne({ chatId });
-    if (!user)
+    if (!user) {
       return bot.sendMessage(
         chatId,
         "🚫 You need to register first using /register."
       );
+    }
 
     const reservation = new Reservation({
       userId: user._id,
@@ -132,7 +134,7 @@ async function handleReserveCommand(chatId, bookId) {
     );
 
     // Send confirmation message with a back button
-    await bot.sendMessage(
+    const confirmationMessage = await bot.sendMessage(
       chatId,
       `✅ Successfully reserved: *"${book.title}"*.\nPickup time: *after isha salah*.`,
       { parse_mode: "Markdown" }
@@ -157,6 +159,8 @@ async function handleReserveCommand(chatId, bookId) {
       "What would you like to do next?",
       backButton
     );
+
+    // Return the confirmation message ID for later deletion
     return confirmationMessage.message_id;
   } catch (error) {
     console.error("Error reserving book:", error);
@@ -167,7 +171,6 @@ async function handleReserveCommand(chatId, bookId) {
     );
   }
 }
-
 // Handle cancellation of reservation
 async function handleCancelReservation(chatId, bookId) {
   try {
@@ -212,6 +215,13 @@ async function handleCancelReservation(chatId, bookId) {
   }
 }
 
+async function handleError(chatId, userMessage, logMessage) {
+  // Send the user a generic error message
+  await bot.sendMessage(chatId, userMessage);
+
+  // Log the detailed error to the console or a logging service
+  console.error(logMessage);
+}
 // Handle the callback query
 bot.on("callback_query", async (query) => {
   const chatId = query.message.chat.id;
