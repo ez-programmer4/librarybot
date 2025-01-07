@@ -1,3 +1,4 @@
+// Add this function to handle text messages
 const TelegramBot = require("node-telegram-bot-api");
 const express = require("express");
 const mongoose = require("mongoose");
@@ -141,8 +142,7 @@ async function handleCancelReservation(chatId, bookId) {
     // Notify librarian
     const notificationMessage = `📩 User has canceled a reservation:\n- *Title:* *"${book.title}"*\n- *User ID:* *${user._id}*\n- *Name:* *${user.userName}*\n- *Phone:* *${user.phoneNumber}*`;
 
-    // Call notifyLibrarian with the message and parse_mode option
-    await notifyLibrarian(notificationMessage, { parse_mode: "Markdown" }); // Include parse_mode
+    await notifyLibrarian(notificationMessage, { parse_mode: "Markdown" });
   } catch (error) {
     console.error("Error canceling reservation:", error);
     await handleError(
@@ -153,8 +153,7 @@ async function handleCancelReservation(chatId, bookId) {
   }
 }
 
-// Define the back button as a constant
-
+// Function to handle reservation
 async function handleReserveCommand(chatId, bookId) {
   try {
     const book = await Book.findOne({ id: bookId, available: true });
@@ -185,12 +184,11 @@ async function handleReserveCommand(chatId, bookId) {
     const notificationMessage = `🆕 New reservation by *${user.userName}* (Phone: *${user.phoneNumber}*) for *"${book.title}"*.`;
     await notifyLibrarian(notificationMessage, { parse_mode: "Markdown" });
 
-    // Send message without back button
     await bot.sendMessage(
       chatId,
       `✅ Successfully reserved: *"${book.title}"*.\nPickup time: *after isha salah*.`,
       {
-        parse_mode: "Markdown", // Ensure parse_mode is set for proper formatting
+        parse_mode: "Markdown",
       }
     );
   } catch (error) {
@@ -202,10 +200,12 @@ async function handleReserveCommand(chatId, bookId) {
     );
   }
 }
+
+// Language selection handling
 async function handleLanguageSelection(chatId, language) {
   userStates[chatId] = { language };
   console.log(`User ${chatId} selected language: ${language}`);
-  console.log(userStates); // Log the user states
+  console.log(userStates);
 
   const categories = await Book.distinct("category", { language });
 
@@ -214,7 +214,6 @@ async function handleLanguageSelection(chatId, language) {
       { text: `📚 ${cat}`, callback_data: cat },
     ]);
 
-    // Add a back button to return to language selection
     inlineButtons.push([
       {
         text: "🔙 Back to Language Selection",
@@ -226,10 +225,8 @@ async function handleLanguageSelection(chatId, language) {
       chatId,
       `🌐 You selected *${language}*. Please choose a *category*:`,
       {
-        reply_markup: {
-          inline_keyboard: inlineButtons,
-        },
-        parse_mode: "Markdown", // Specify the parse mode
+        reply_markup: { inline_keyboard: inlineButtons },
+        parse_mode: "Markdown",
       }
     );
   } else {
@@ -252,9 +249,12 @@ function askLanguageSelection(chatId) {
     },
   });
 }
+
+// Function to fetch user reservations
 async function getUserReservations(userId) {
   return await Reservation.find({ userId }).populate("bookId");
 }
+
 // Centralized function to create back button
 const backButton = {
   reply_markup: {
@@ -271,10 +271,11 @@ bot.on("callback_query", async (query) => {
       chat_id: chatId,
       message_id: query.message.message_id,
     });
-    return askLanguageSelection(chatId); // Adjust this to return to your desired menu
+    return askLanguageSelection(chatId);
   }
 });
 
+// Handle user reservations
 bot.onText(/\/my_reservations/, async (msg) => {
   const chatId = msg.chat.id;
   const user = await User.findOne({ chatId });
@@ -304,13 +305,12 @@ bot.onText(/\/my_reservations/, async (msg) => {
 
   const message = `✨ Your Reservations: ✨\n\n${reservationList}\n ⟫⟫ To cancel a reservation, use /cancel_reservation <book_id>.`;
 
-  // Send message in chunks if necessary
   await sendMessageInChunks(chatId, message);
 });
 
 // Function to send messages in chunks
 async function sendMessageInChunks(chatId, message) {
-  const MAX_MESSAGE_LENGTH = 4096; // Telegram message character limit
+  const MAX_MESSAGE_LENGTH = 4096;
 
   if (message.length > MAX_MESSAGE_LENGTH) {
     for (let i = 0; i < message.length; i += MAX_MESSAGE_LENGTH) {
@@ -322,6 +322,7 @@ async function sendMessageInChunks(chatId, message) {
   }
 }
 
+// Handle view reservations
 bot.onText(/\/view_reservations/, async (msg) => {
   const chatId = msg.chat.id;
 
@@ -348,34 +349,17 @@ bot.onText(/\/view_reservations/, async (msg) => {
   await bot.sendMessage(
     chatId,
     `📚 Current Reservations:\n\n${reservationList}`,
-    {
-      parse_mode: "Markdown",
-    }
+    { parse_mode: "Markdown" }
   );
 });
 
-// Function to send messages in chunks
-async function sendMessageInChunks(chatId, message) {
-  const MAX_MESSAGE_LENGTH = 4096; // Telegram message character limit
-
-  if (message.length > MAX_MESSAGE_LENGTH) {
-    for (let i = 0; i < message.length; i += MAX_MESSAGE_LENGTH) {
-      const msgPart = message.slice(i, i + MAX_MESSAGE_LENGTH);
-      await bot.sendMessage(chatId, msgPart, { reply_markup: backButton });
-    }
-  } else {
-    await bot.sendMessage(chatId, message, { reply_markup: backButton });
-  }
-}
-// Handle user input for registration
+// Handle unexpected messages during registration
 bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
 
   if (userStates[chatId]) {
-    // Check for registration steps
     await handleRegistrationSteps(chatId, msg);
   } else {
-    // Handle unexpected messages
     await handleUnexpectedMessage(chatId, msg.text);
   }
 });
@@ -388,16 +372,14 @@ async function handleUnexpectedMessage(chatId, message) {
   const isCancelReservationCommand = message.startsWith("/cancel_reservation");
   const isLanguage = ["Arabic", "Amharic", "AfaanOromo"].includes(message);
 
-  // Check if the command is /reserve or /cancel_reservation without an ID
   const hasValidID = message.split(" ").length === 2;
 
-  // If the command is valid but missing an ID, inform the user
   if (isReserveCommand && !hasValidID) {
     await bot.sendMessage(
       chatId,
       "❗ Please specify an ID to reserve a book. Example: /reserve <ID>"
     );
-    return; // Exit the function after sending the message
+    return;
   }
 
   if (isCancelReservationCommand && !hasValidID) {
@@ -405,10 +387,9 @@ async function handleUnexpectedMessage(chatId, message) {
       chatId,
       "❗ Please specify an ID to cancel a reservation. Example: /cancel_reservation <ID>"
     );
-    return; // Exit the function after sending the message
+    return;
   }
 
-  // If it's not a recognized command or input, provide feedback
   if (!isCommand && !isLanguage) {
     await bot.sendMessage(
       chatId,
@@ -416,8 +397,6 @@ async function handleUnexpectedMessage(chatId, message) {
     );
   }
 }
-
-// Add this function to handle text messages
 bot.on("message", (msg) => {
   const chatId = msg.chat.id;
   const messageText = msg.text;
