@@ -190,16 +190,22 @@ async function handleCancelReservation(chatId, bookId) {
   }
 }
 
-// Handle callback queries
+// Handle the callback query
 bot.on("callback_query", async (query) => {
   const chatId = query.message.chat.id;
   const callbackData = query.data;
 
-  await handleCallbackQuery(chatId, callbackData);
+  // Pass message_id and query_id to handleCallbackQuery
+  await handleCallbackQuery(
+    chatId,
+    callbackData,
+    query.message.message_id,
+    query.id
+  );
 });
 
 // Updated handleCallbackQuery function
-async function handleCallbackQuery(chatId, callbackData, messageId) {
+async function handleCallbackQuery(chatId, callbackData, messageId, queryId) {
   console.log("Received callback data:", callbackData);
 
   const validLanguages = ["Arabic", "Amharic", "AfaanOromo"];
@@ -232,7 +238,8 @@ async function handleCallbackQuery(chatId, callbackData, messageId) {
     await handleCategorySelection(chatId, callbackData);
   }
 
-  await bot.answerCallbackQuery(query.id);
+  // Acknowledge the callback
+  await bot.answerCallbackQuery(queryId);
 }
 // Handle category selection
 async function handleCategorySelection(chatId, selectedCategory) {
