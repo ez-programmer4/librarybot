@@ -203,20 +203,13 @@ async function handleReserveCommand(chatId, bookId) {
   }
 }
 
-bot.on("callback_query", async (query) => {
-  const chatId = query.message.chat.id;
-  const callbackData = query.data;
-
-  // Handle the callback query
-  await handleCallbackQuery(chatId, callbackData);
-});
-
 // Function to handle callback queries
 async function handleCallbackQuery(chatId, callbackData) {
   if (callbackData === "back_to_language") {
     await bot.sendMessage(chatId, "🔄 Returning to language selection......");
     await askLanguageSelection(chatId);
   } else if (callbackData === "back_to_category") {
+    await handleCategorySelection(chatId);
     const lastSelectedLanguage = userStates[chatId]?.language; // Retrieve the last selected language
     console.log("Last selected language:", lastSelectedLanguage); // Log the last selected language
 
@@ -667,28 +660,18 @@ bot.on("callback_query", (query) => {
 
   handleCallbackQuery(chatId, callbackData);
 });
-bot.on("callback_query", async (query) => {
-  const chatId = query.message.chat.id;
-  const language = query.data;
 
-  // Handle language selection
-  await handleLanguageSelection(chatId, language);
+// Only send the confirmation message for language selection
+if (["Arabic", "Amharic", "AfaanOromo"].includes(language)) {
+  await bot.editMessageText(`🌐 You have selected *${language}*. Thank you!`, {
+    chat_id: chatId,
+    message_id: query.message.message_id,
+    parse_mode: "Markdown",
+  });
+}
 
-  // Only send the confirmation message for language selection
-  if (["Arabic", "Amharic", "AfaanOromo"].includes(language)) {
-    await bot.editMessageText(
-      `🌐 You have selected *${language}*. Thank you!`,
-      {
-        chat_id: chatId,
-        message_id: query.message.message_id,
-        parse_mode: "Markdown",
-      }
-    );
-  }
-
-  // Acknowledge the callback
-  bot.answerCallbackQuery(query.id);
-});
+// Acknowledge the callback
+bot.answerCallbackQuery(query.id);
 async function addUser(chatId, userName, phoneNumber) {
   let user = await User.findOne({ phoneNumber });
   if (!user) {
@@ -710,14 +693,6 @@ async function isCategory(category) {
   return categories.includes(category);
 }
 
-// Example for category selection
-// if (userStates[chatId] && userStates[chatId].awaitingCategory) {
-//   return bot.sendMessage(
-//     chatId,
-//     "⚠️ Please select a category using the inline keyboard."
-//   );
-// }
-// Function to check if the message is a valid category
 async function isCategory(category) {
   const categories = await Book.distinct("category");
   return categories.includes(category);
@@ -920,42 +895,7 @@ bot.on("message", async (msg) => {
     }
   }
 });
-// bot.onText(/\/cancel_own_reservation (\d+)/, async (msg, match) => {
-//   const chatId = msg.chat.id;
-//   const reservationId = match[1];
 
-//   const user = await User.findOne({ chatId });
-//   if (!user) {
-//     return bot.sendMessage(
-//       chatId,
-//       "You need to register first using /register."
-//     );
-//   }
-
-//   const reservation = await Reservation.findOne({
-//     _id: reservationId,
-//     userId: user._id,
-//   });
-//   if (!reservation) {
-//     return bot.sendMessage(
-//       chatId,
-//       "You do not have a reservation with that ID."
-//     );
-//   }
-
-//   const book = await Book.findById(reservation.bookId);
-//   if (book) {
-//     book.available = true; // Mark the book as available
-//     await book.save();
-//   }
-
-//   await Reservation.findByIdAndDelete(reservationId);
-//   bot.sendMessage(
-//     chatId,
-//     `You have successfully canceled your reservation for "${book.title}".`
-//   );
-// });
-// Remove book from the database
 bot.onText(/\/remove_book (\w+) (.+) (\d+)/, async (msg, match) => {
   const chatId = msg.chat.id;
 
