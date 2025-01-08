@@ -137,7 +137,12 @@ async function handleReserveCommand(chatId, bookId) {
     console.log(`Book ID ${bookId} marked as unavailable.`);
 
     await notifyLibrarian(
-      `🆕 New reservation by: ${user.userName}\n (Phone: *${user.phoneNumber}*) \n for *"${book.title}"*.`,
+      `🆕 New reservation by: ${
+        user.userName
+      }\n (Phone: *${user.phoneNumber.replace(
+        /([_*`])/g,
+        "\\$1"
+      )}*) \n for *"${book.title.replace(/([_*`])/g, "\\$1")}"*.`,
       { parse_mode: "Markdown" }
     );
 
