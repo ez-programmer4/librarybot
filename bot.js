@@ -538,8 +538,6 @@ For more questions, feel free to reach out to us via *@IrshadComments_bot*! 📩
   bot.answerCallbackQuery(query.id);
 });
 
-const userStates = {};
-
 async function handleRegistrationSteps(chatId, msg) {
   try {
     // Initialize user state if not already done
