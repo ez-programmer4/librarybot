@@ -102,8 +102,11 @@ async function handleCommand(chatId, text) {
 
 async function handleReserveCommand(chatId, bookId) {
   try {
+    console.log(`User ${chatId} is trying to reserve book ID: ${bookId}`);
+
     const book = await Book.findOne({ id: bookId, available: true });
     if (!book) {
+      console.log(`Book with ID ${bookId} not found or not available.`);
       return bot.sendMessage(
         chatId,
         "❌ Invalid book ID or the book is not available."
@@ -112,6 +115,9 @@ async function handleReserveCommand(chatId, bookId) {
 
     const user = await User.findOne({ chatId });
     if (!user) {
+      console.log(
+        `User with chat ID ${chatId} not found. User needs to register.`
+      );
       return bot.sendMessage(
         chatId,
         "🚫 You need to register first using /register."
@@ -124,23 +130,23 @@ async function handleReserveCommand(chatId, bookId) {
       pickupTime: "after isha salah",
     });
     await reservation.save();
+    console.log(`Reservation saved: ${reservation}`);
 
     book.available = false; // Mark the book as unavailable
     await book.save();
+    console.log(`Book ID ${bookId} marked as unavailable.`);
 
     await notifyLibrarian(
-      `🆕 New reservation by : ${user.userName}\n (Phone: *${user.phoneNumber}*) \n for *"${book.title}"*.`,
+      `🆕 New reservation by: ${user.userName}\n (Phone: *${user.phoneNumber}*) \n for *"${book.title}"*.`,
       { parse_mode: "Markdown" }
     );
 
-    // Send confirmation message with a back button
     const confirmationMessage = await bot.sendMessage(
       chatId,
       `✅ Successfully reserved: *"${book.title}"*.\nPickup time: *after isha salah*. \n 📚 to view current reservation : type /my_reservation`,
       { parse_mode: "Markdown" }
     );
 
-    // Prepare back to main menu inline button
     const backButton = {
       reply_markup: {
         inline_keyboard: [
@@ -160,7 +166,6 @@ async function handleReserveCommand(chatId, bookId) {
       backButton
     );
 
-    // Return the confirmation message ID for later deletion
     return confirmationMessage.message_id;
   } catch (error) {
     console.error("Error reserving book:", error);
@@ -439,7 +444,7 @@ bot.onText(/\/start/, (msg) => {
   
   Please choose an option below:
       
-      KJUMJ IRSHAD 1445
+                 KJUMJ IRSHAD 1445
         •┈┈••✦📖✦••┈┈••✦📖✦••┈┈•
   `;
 
@@ -598,6 +603,21 @@ async function processPhoneNumber(chatId, phoneNumber) {
   delete userStates[chatId]; // Clear the registration state
   return askLanguageSelection(chatId);
 }
+async function addUser(chatId, userName, phoneNumber) {
+  let user = await User.findOne({ phoneNumber });
+  if (!user) {
+    user = new User({ userName, phoneNumber, chatId }); // Ensure chatId is included
+    await user.save();
+    console.log(
+      `New user created: ${user.userName}, Phone: ${phoneNumber}, Chat ID: ${chatId}`
+    );
+  } else {
+    console.log(
+      `User with phone number ${phoneNumber} already exists. Returning existing user.`
+    );
+  }
+  return user;
+}
 
 // Ask for language selection
 function askLanguageSelection(chatId) {
@@ -644,22 +664,6 @@ async function handleLanguageSelection(chatId, language) {
 }
 
 // Handle the back button press
-
-async function addUser(chatId, userName, phoneNumber) {
-  let user = await User.findOne({ phoneNumber });
-  if (!user) {
-    user = new User({ userName, phoneNumber, chatId }); // Ensure chatId is included
-    await user.save();
-    console.log(
-      `New user created: ${user.userName}, Phone: ${phoneNumber}, Chat ID: ${chatId}`
-    );
-  } else {
-    console.log(
-      `User with phone number ${phoneNumber} already exists. Returning existing user.`
-    );
-  }
-  return user;
-}
 
 async function isCategory(category) {
   const categories = await Book.distinct("category");
