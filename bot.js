@@ -136,7 +136,7 @@ async function handleReserveCommand(chatId, bookId) {
     // Send confirmation message with a back button
     const confirmationMessage = await bot.sendMessage(
       chatId,
-      `✅ Successfully reserved: *"${book.title}"*.\nPickup time: *after isha salah*.`,
+      `✅ Successfully reserved: *"${book.title}"*.\nPickup time: *after isha salah*. \n 📚 to view current reservation : type /my_reservation`,
       { parse_mode: "Markdown" }
     );
 
@@ -432,14 +432,15 @@ bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
   const welcomeMessage = `
 
-          ❖◉◉◉◉◉❖◉◉◉◉◉◉❖◉◉◉◉◉◉❖
-        اَلسَّلاَ مُ عَلَيْكُمْ وَرَحْمَةُ اللهِ وَبَرَكَاتُهُ
+          •┈┈••✦📖✦••┈┈••✦📖✦••┈┈•
+        اَلسَّلاَمُ عَلَيْكُمْ وَرَحْمَةُ اللهِ وَبَرَكَاتُهُ
         
   🎉 *Welcome to the KJUMJ IRSHAD Library Booking Bot!* 📚
   
   Please choose an option below:
-
-        ❖◉◉◉◉◉❖◉◉◉◉◉◉❖◉◉◉◉◉◉❖
+      
+      KJUMJ IRSHAD 1445
+        •┈┈••✦📖✦••┈┈••✦📖✦••┈┈•
   `;
 
   const options = {
@@ -447,7 +448,7 @@ bot.onText(/\/start/, (msg) => {
       inline_keyboard: [
         [
           { text: "📝 Register", callback_data: "register" },
-          { text: "❓ Help", callback_data: "help" },
+          { text: "🤔 Help", callback_data: "help" },
         ],
       ],
     },
@@ -759,7 +760,7 @@ bot.onText(/\/my_reservations/, async (msg) => {
     })
     .join("\n");
 
-  const message = `✨ Your Reservations: ✨\n\n${reservationList}\n⟫⟫ To cancel a reservation, use /cancel_reservation <book_id>.`;
+  const message = `✨ Your Reservations: ✨\n\n${reservationList}\n⟫⟫  To cancel a reservation, use  /cancel_reservation <book_id>.`;
 
   // Send message in chunks if necessary
   await sendMessageInChunks(chatId, message);
