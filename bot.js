@@ -285,7 +285,7 @@ async function handleCallbackQuery(chatId, callbackData, messageId, queryId) {
   if (callbackData === "back_to_category") {
     await bot.deleteMessage(chatId, messageId);
     await bot.sendMessage(chatId, "🔄 Returning to category selection...");
-    const lastSelectedLanguage = userStates[chatId]?.language;
+    const lastSelectedLanguage = userStates[chatId]?.category;
     console.log(userStates);
     console.log(lastSelectedLanguage);
     if (lastSelectedLanguage) {
