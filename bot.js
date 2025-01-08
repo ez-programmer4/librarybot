@@ -538,44 +538,46 @@ For more questions, feel free to reach out to us via *@IrshadComments_bot*! 📩
   bot.answerCallbackQuery(query.id);
 });
 
-async function handleRegistrationSteps(chatId, msg) {
-  try {
-    // Initialize user state if not already done
-    if (!userStates[chatId]) {
-      userStates[chatId] = { step: 1 };
-    }
+// Handle user input for registration
+bot.on("message", async (msg) => {
+  const chatId = msg.chat.id;
 
-    if (userStates[chatId].step === 1) {
-      // User provided full name
-      userStates[chatId].userName = msg.text;
-      userStates[chatId].step = 2; // Move to the next step
-      console.log(`User ${chatId} provided full name: ${msg.text}`);
-
-      // Ask for phone number
-      return bot.sendMessage(
+  if (userStates[chatId] && userStates[chatId].step === 1) {
+    console.log(`User ${chatId} provided full name: ${msg.text}`);
+    try {
+      const userName = msg.text; // Save the user's full name
+      const newUser = new User({ chatId, userName }); // Create a new user in the database
+      await newUser.save(); // Save the user to the database
+      await bot.sendMessage(
         chatId,
-        "📞 Please enter your phone number (must start with 09 and be 10 digits long):"
+        `✅ Registration successful! Welcome, *${userName}*!`
+      );
+      delete userStates[chatId]; // Clear the user state
+    } catch (error) {
+      await handleError(
+        chatId,
+        "⚠️ An error occurred while saving your registration. Please try again.",
+        `Error during registration saving: ${error.message}`
       );
     }
-    // Continue handling further steps...
-  } catch (error) {
-    console.error("Error during registration:", error);
-    await handleError(
-      chatId,
-      "⚠️ There was an error processing your registration. Please try again.",
-      `Error saving registration: ${error.message}`
-    );
   }
+});
+// Notify librarian
+async function notifyLibrarian(message) {
+  await bot.sendMessage(librarianChatId, message);
 }
 
-// Function to handle incoming messages
-async function handleMessage(chatId, msg) {
-  if (msg.text === "/start") {
-    // Start registration flow
-    await bot.sendMessage(chatId, "Welcome! Click to register:");
-    // Here you would initiate the registration function as needed
-  } else {
-    await handleRegistrationSteps(chatId, msg);
+async function handleRegistrationSteps(chatId, msg) {
+  if (userStates[chatId].step === 1) {
+    userStates[chatId].userName = msg.text;
+    userStates[chatId].step = 2;
+    console.log(`User ${chatId} provided full name: ${msg.text}`);
+    return bot.sendMessage(
+      chatId,
+      "📞 Please enter your phone number (must start with 09 and be 10 digits long):"
+    );
+  } else if (userStates[chatId].step === 2) {
+    return await processPhoneNumber(chatId, msg.text);
   }
 }
 
@@ -590,45 +592,22 @@ async function processPhoneNumber(chatId, phoneNumber) {
     );
   }
 
-  const verificationCode = Math.floor(100000 + Math.random() * 900000); // Generate a 6-digit code
-  await sendSMS(phoneNumber, verificationCode); // Function to send SMS
-  userStates[chatId].verificationCode = verificationCode; // Store verification code
-  userStates[chatId].step = 3; // Move to next step
+  const user = await addUser(chatId, userStates[chatId].userName, phoneNumber);
+  console.log(
+    `User ${chatId} registered with name: ${user.userName}, phone: ${phoneNumber}`
+  );
 
+  await notifyLibrarian(
+    `🆕 New registration: ${user.userName},\n Phone: ${phoneNumber}`,
+    { parse_mode: "Markdown" } // Specify parse_mode if needed
+  );
   await bot.sendMessage(
     chatId,
-    "✅ A verification code has been sent to your phone. Please enter it:"
+    `✓ Registration successful! Welcome, *${user.userName}*! 🎉`
   );
+  delete userStates[chatId]; // Clear the registration state
+  return askLanguageSelection(chatId);
 }
-
-async function verifyCode(chatId, code) {
-  if (code == userStates[chatId].verificationCode) {
-    const user = await addUser(
-      chatId,
-      userStates[chatId].userName,
-      userStates[chatId].phoneNumber
-    );
-    console.log(
-      `User ${chatId} registered with name: ${user.userName}, phone: ${user.phoneNumber}`
-    );
-
-    await notifyLibrarian(
-      `🆕 New registration: ${user.userName},\n Phone: ${user.phoneNumber}`
-    );
-    await bot.sendMessage(
-      chatId,
-      `✓ Registration successful! Welcome, *${user.userName}*! 🎉`
-    );
-    delete userStates[chatId]; // Clear the registration state
-    return askLanguageSelection(chatId);
-  } else {
-    await bot.sendMessage(
-      chatId,
-      "❌ Incorrect verification code. Please try again."
-    );
-  }
-}
-
 async function addUser(chatId, userName, phoneNumber) {
   let user = await User.findOne({ phoneNumber });
   if (!user) {
@@ -645,16 +624,6 @@ async function addUser(chatId, userName, phoneNumber) {
   return user;
 }
 
-// Function to handle incoming messages
-async function handleMessage(chatId, msg) {
-  if (msg.text === "/start") {
-    // Start registration flow
-    await bot.sendMessage(chatId, "Welcome! Click to register:");
-    // Show register button or call the registration function
-  } else {
-    await handleRegistrationSteps(chatId, msg);
-  }
-}
 // Ask for language selection
 function askLanguageSelection(chatId) {
   bot.sendMessage(chatId, "🌐 Please select a language:", {
