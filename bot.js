@@ -568,18 +568,56 @@ async function notifyLibrarian(message) {
 }
 
 async function handleRegistrationSteps(chatId, msg) {
-  if (userStates[chatId].step === 1) {
-    userStates[chatId].userName = msg.text;
-    userStates[chatId].step = 2;
-    console.log(`User ${chatId} provided full name: ${msg.text}`);
-    return bot.sendMessage(
+  try {
+    if (userStates[chatId].step === 1) {
+      // User provided full name
+      userStates[chatId].userName = msg.text;
+      userStates[chatId].step = 2; // Move to the next step
+      console.log(`User ${chatId} provided full name: ${msg.text}`);
+      return bot.sendMessage(
+        chatId,
+        "📞 Please enter your phone number (must start with 09 and be 10 digits long):"
+      );
+    } else if (userStates[chatId].step === 2) {
+      // User provided phone number
+      const phoneRegex = /^09\d{8}$/;
+      if (!phoneRegex.test(msg.text)) {
+        return bot.sendMessage(
+          chatId,
+          "❌ Invalid phone number. Please enter a valid phone number starting with 09 and consisting of 10 digits."
+        );
+      }
+
+      userStates[chatId].phoneNumber = msg.text; // Save phone number
+      userStates[chatId].step = 3; // Move to the next step
+      console.log(`User ${chatId} provided phone number: ${msg.text}`);
+
+      // Now save the user to the database
+      const user = new User({
+        chatId: chatId,
+        userName: userStates[chatId].userName,
+        phoneNumber: userStates[chatId].phoneNumber,
+      });
+
+      await user.save();
+      console.log(`User ${chatId} registered successfully:`, user);
+
+      await bot.sendMessage(
+        chatId,
+        `🎉 Registration successful! Welcome, ${user.userName}!`
+      );
+
+      // Clear the user state
+      delete userStates[chatId];
+      return;
+    }
+  } catch (error) {
+    console.error("Error during registration:", error);
+    await handleError(
       chatId,
-      "📞 Please enter your phone number (must start with 09 and be 10 digits long):"
+      "⚠️ There was an error processing your registration. Please try again.",
+      `Error saving registration: ${error.message}`
     );
-  } else if (userStates[chatId].step === 2) {
-    return await processPhoneNumber(chatId, msg.text);
-  } else if (userStates[chatId].step === 3) {
-    return await verifyCode(chatId, msg.text); // New step for verification
   }
 }
 
