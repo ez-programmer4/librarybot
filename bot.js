@@ -285,7 +285,7 @@ async function handleCallbackQuery(chatId, callbackData, messageId, queryId) {
   if (callbackData === "back_to_category") {
     await bot.deleteMessage(chatId, messageId);
     await bot.sendMessage(chatId, "🔄 Returning to category selection...");
-    const lastSelectedLanguage = userStates[chatId]?.category;
+    const lastSelectedLanguage = userStates[chatId]?.language;
     if (lastSelectedLanguage) {
       await handleCategorySelection(chatId, lastSelectedLanguage);
     } else {
@@ -341,11 +341,14 @@ For more questions, feel free to reach out to us via @IrshadComments_bot! 📩
   // Handle language selection
   if (validLanguages.includes(callbackData)) {
     userStates[chatId] = { language: callbackData };
-    await bot.editMessageText(`🌐 You have selected *${callbackData}*. `, {
-      chat_id: chatId,
-      message_id: messageId,
-      parse_mode: "Markdown",
-    });
+    await bot.editMessageText(
+      `🌐 You have selected *${callbackData}*.!`,
+      {
+        chat_id: chatId,
+        message_id: messageId,
+        parse_mode: "Markdown",
+      }
+    );
     await handleLanguageSelection(chatId, callbackData);
     return;
   }
@@ -360,15 +363,12 @@ For more questions, feel free to reach out to us via @IrshadComments_bot! 📩
 async function handleCategorySelection(
   chatId,
   selectedCategory,
-  skipNoBooksMessage = false
+  
 ) {
   const books = await Book.find({
     category: selectedCategory,
     available: true,
   });
-
-  // Store the selected category
-  userStates[chatId] = { ...userStates[chatId], category: selectedCategory };
 
   if (books.length > 0) {
     const bookList = books
@@ -391,9 +391,7 @@ async function handleCategorySelection(
         reply_markup: { inline_keyboard: inlineButtons },
       }
     );
-  } else if (!skipNoBooksMessage) {
-    await bot.sendMessage(chatId, "❌ No books available in this category.");
-  }
+  
 }
 
 // Handle unexpected messages
@@ -1111,7 +1109,49 @@ const isLibrarian = (chatId) => {
 };
 
 // Librarian can cancel a reservation
+bot.onText(/\/librarian_cancel_reservation (\d+)/, async (msg, match) => {
+  const chatId = msg.chat.id;
+  const bookId = match[1]; // This is the numeric ID of the book provided by the user
 
+  if (!isLibrarian(chatId)) {
+    return bot.sendMessage(
+      chatId,
+      "🚫 You do not have permission to use this command."
+    );
+  }
+
+  // Find the book by its numeric ID
+  const book = await Book.findOne({ id: bookId });
+  if (!book) {
+    return bot.sendMessage(
+      chatId,
+      "❌ No book found with the given ID. Please check and try again."
+    );
+  }
+
+  // Find the reservation by book ID using the book's ObjectId
+  const reservation = await Reservation.findOne({ bookId: book._id }).populate(
+    "userId"
+  );
+  if (!reservation) {
+    return bot.sendMessage(
+      chatId,
+      "❌ No reservation found for the given book ID. Please check and try again."
+    );
+  }
+
+  // Mark the book as available again
+  book.available = true;
+  await book.save();
+
+  // Delete the reservation
+  await Reservation.findByIdAndDelete(reservation._id);
+  bot.sendMessage(
+    chatId,
+    `✅ Reservation for *"${reservation.bookId.title}"* has been successfully canceled.`,
+    { parse_mode: "Markdown" }
+  );
+});
 bot.onText(/\/help/, (msg) => {
   const chatId = msg.chat.id;
 
