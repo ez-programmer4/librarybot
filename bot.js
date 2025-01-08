@@ -285,7 +285,7 @@ async function handleCallbackQuery(chatId, callbackData, messageId, queryId) {
   if (callbackData === "back_to_category") {
     await bot.deleteMessage(chatId, messageId);
     await bot.sendMessage(chatId, "🔄 Returning to category selection...");
-    const lastSelectedLanguage = userStates[chatId]?.language;
+    const lastSelectedLanguage = userStates[chatId]?.category;
     if (lastSelectedLanguage) {
       await handleCategorySelection(chatId, lastSelectedLanguage);
     } else {
@@ -362,6 +362,8 @@ async function handleCategorySelection(chatId, selectedCategory) {
     category: selectedCategory,
     available: true,
   });
+
+  userStates[chatId] = { ...userStates[chatId], category: selectedCategory };
 
   if (books.length > 0) {
     const bookList = books
