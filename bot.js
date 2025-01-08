@@ -341,14 +341,11 @@ For more questions, feel free to reach out to us via @IrshadComments_bot! 📩
   // Handle language selection
   if (validLanguages.includes(callbackData)) {
     userStates[chatId] = { language: callbackData };
-    await bot.editMessageText(
-      `🌐 You have selected *${callbackData}*.!`,
-      {
-        chat_id: chatId,
-        message_id: messageId,
-        parse_mode: "Markdown",
-      }
-    );
+    await bot.editMessageText(`🌐 You have selected *${callbackData}*.!`, {
+      chat_id: chatId,
+      message_id: messageId,
+      parse_mode: "Markdown",
+    });
     await handleLanguageSelection(chatId, callbackData);
     return;
   }
@@ -360,11 +357,7 @@ For more questions, feel free to reach out to us via @IrshadComments_bot! 📩
   await bot.answerCallbackQuery(queryId);
 }
 // Handle category selection
-async function handleCategorySelection(
-  chatId,
-  selectedCategory,
-  
-) {
+async function handleCategorySelection(chatId, selectedCategory) {
   const books = await Book.find({
     category: selectedCategory,
     available: true,
@@ -391,7 +384,7 @@ async function handleCategorySelection(
         reply_markup: { inline_keyboard: inlineButtons },
       }
     );
-  
+  }
 }
 
 // Handle unexpected messages
