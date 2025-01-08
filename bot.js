@@ -567,8 +567,16 @@ async function notifyLibrarian(message) {
   await bot.sendMessage(librarianChatId, message);
 }
 
+// Object to store user registration states
+const userStates = {};
+
 async function handleRegistrationSteps(chatId, msg) {
   try {
+    // Initialize user state if not already done
+    if (!userStates[chatId]) {
+      userStates[chatId] = { step: 1 };
+    }
+
     if (userStates[chatId].step === 1) {
       // User provided full name
       userStates[chatId].userName = msg.text;
@@ -580,7 +588,7 @@ async function handleRegistrationSteps(chatId, msg) {
       );
     } else if (userStates[chatId].step === 2) {
       // User provided phone number
-      const phoneRegex = /^09\d{8}$/;
+      const phoneRegex = /^09\d{8}$/; // Regex for validating phone number
       if (!phoneRegex.test(msg.text)) {
         return bot.sendMessage(
           chatId,
@@ -589,7 +597,6 @@ async function handleRegistrationSteps(chatId, msg) {
       }
 
       userStates[chatId].phoneNumber = msg.text; // Save phone number
-      userStates[chatId].step = 3; // Move to the next step
       console.log(`User ${chatId} provided phone number: ${msg.text}`);
 
       // Now save the user to the database
@@ -618,6 +625,17 @@ async function handleRegistrationSteps(chatId, msg) {
       "⚠️ There was an error processing your registration. Please try again.",
       `Error saving registration: ${error.message}`
     );
+  }
+}
+
+// Function to handle incoming messages
+async function handleMessage(chatId, msg) {
+  if (msg.text === "/start") {
+    // Start registration flow
+    await bot.sendMessage(chatId, "Welcome! Click to register:");
+    // Show register button or call the registration function
+  } else {
+    await handleRegistrationSteps(chatId, msg);
   }
 }
 
