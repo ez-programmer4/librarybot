@@ -550,29 +550,14 @@ async function handleRegistrationSteps(chatId, msg) {
       userStates[chatId].userName = msg.text;
       userStates[chatId].step = 2; // Move to the next step
       console.log(`User ${chatId} provided full name: ${msg.text}`);
+
+      // Ask for phone number
       return bot.sendMessage(
         chatId,
         "📞 Please enter your phone number (must start with 09 and be 10 digits long):"
       );
-    } else if (userStates[chatId].step === 2) {
-      // User provided phone number
-      const phoneRegex = /^09\d{8}$/; // Regex for validating phone number
-      if (!phoneRegex.test(msg.text)) {
-        return bot.sendMessage(
-          chatId,
-          "❌ Invalid phone number. Please enter a valid phone number starting with 09 and consisting of 10 digits."
-        );
-      }
-
-      userStates[chatId].phoneNumber = msg.text; // Save phone number
-      console.log(`User ${chatId} provided phone number: ${msg.text}`);
-      await processPhoneNumber(chatId, msg.text);
-      return; // Exit the function after processing phone number
-    } else if (userStates[chatId].step === 3) {
-      // User provided verification code
-      await verifyCode(chatId, msg.text);
-      return; // Exit the function after verifying code
     }
+    // Continue handling further steps...
   } catch (error) {
     console.error("Error during registration:", error);
     await handleError(
@@ -580,6 +565,17 @@ async function handleRegistrationSteps(chatId, msg) {
       "⚠️ There was an error processing your registration. Please try again.",
       `Error saving registration: ${error.message}`
     );
+  }
+}
+
+// Function to handle incoming messages
+async function handleMessage(chatId, msg) {
+  if (msg.text === "/start") {
+    // Start registration flow
+    await bot.sendMessage(chatId, "Welcome! Click to register:");
+    // Here you would initiate the registration function as needed
+  } else {
+    await handleRegistrationSteps(chatId, msg);
   }
 }
 
