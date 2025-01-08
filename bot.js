@@ -401,7 +401,16 @@ async function handleCategorySelection(chatId, selectedCategory) {
   }
 }
 
-// Handle unexpected messages
+async function handleMessage(chatId, msg) {
+  // Check if the user is in a registration state
+  if (userStates[chatId]) {
+    await handleRegistrationSteps(chatId, msg);
+  } else {
+    // Handle other commands or unexpected messages
+    await handleUnexpectedMessage(chatId, msg);
+  }
+}
+
 async function handleUnexpectedMessage(chatId, message) {
   const isCommand =
     message.startsWith("/") &&
