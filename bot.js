@@ -289,7 +289,7 @@ async function handleCallbackQuery(chatId, callbackData, messageId, queryId) {
     console.log(userStates);
     console.log(lastSelectedLanguage);
     if (lastSelectedLanguage) {
-      await handleCategorySelection(chatId, lastSelectedLanguage);
+      await handleLanguageSelection(chatId, lastSelectedLanguage);
     } else {
       await bot.sendMessage(
         chatId,
