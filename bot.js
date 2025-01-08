@@ -136,20 +136,20 @@ async function handleReserveCommand(chatId, bookId) {
     await book.save();
     console.log(`Book ID ${bookId} marked as unavailable.`);
 
+    // Prepare message without formatting
+    const messageToLibrarian = `🆕 New reservation by: ${user.userName}\n(Phone: ${user.phoneNumber})\nfor "${book.title}".`;
+    console.log("Message to Librarian:", messageToLibrarian); // Log the message
+
+    // Notify the librarian without Markdown
     await notifyLibrarian(
-      `🆕 New reservation by: ${
-        user.userName
-      }\n (Phone: *${user.phoneNumber.replace(
-        /([_*`])/g,
-        "\\$1"
-      )}*) \n for *"${book.title.replace(/([_*`])/g, "\\$1")}"*.`,
-      { parse_mode: "Markdown" }
+      messageToLibrarian,
+      { parse_mode: "HTML" } // Using HTML for uniformity, if preferred
     );
 
+    // Confirmation message without formatting
     const confirmationMessage = await bot.sendMessage(
       chatId,
-      `✅ Successfully reserved: *"${book.title}"*.\nPickup time: *after isha salah*. \n 📚 to view current reservation : type /my_reservation`,
-      { parse_mode: "Markdown" }
+      `✅ Successfully reserved: "${book.title}".\nPickup time: after isha salah.\n📚 To view current reservation, type /my_reservation.`
     );
 
     const backButton = {
