@@ -578,6 +578,8 @@ async function handleRegistrationSteps(chatId, msg) {
     );
   } else if (userStates[chatId].step === 2) {
     return await processPhoneNumber(chatId, msg.text);
+  } else if (userStates[chatId].step === 3) {
+    return await verifyCode(chatId, msg.text); // New step for verification
   }
 }
 
@@ -592,21 +594,43 @@ async function processPhoneNumber(chatId, phoneNumber) {
     );
   }
 
-  const user = await addUser(chatId, userStates[chatId].userName, phoneNumber);
-  console.log(
-    `User ${chatId} registered with name: ${user.userName}, phone: ${phoneNumber}`
-  );
+  const verificationCode = Math.floor(100000 + Math.random() * 900000); // Generate a 6-digit code
+  await sendSMS(phoneNumber, verificationCode); // Function to send SMS
+  userStates[chatId].verificationCode = verificationCode; // Store verification code
+  userStates[chatId].step = 3; // Move to next step
 
-  await notifyLibrarian(
-    `🆕 New registration: ${user.userName},\n Phone: ${phoneNumber}`,
-    { parse_mode: "Markdown" } // Specify parse_mode if needed
-  );
   await bot.sendMessage(
     chatId,
-    `✓ Registration successful! Welcome, *${user.userName}*! 🎉`
+    "✅ A verification code has been sent to your phone. Please enter it:"
   );
-  delete userStates[chatId]; // Clear the registration state
-  return askLanguageSelection(chatId);
+}
+
+async function verifyCode(chatId, code) {
+  if (code == userStates[chatId].verificationCode) {
+    const user = await addUser(
+      chatId,
+      userStates[chatId].userName,
+      userStates[chatId].phoneNumber
+    );
+    console.log(
+      `User ${chatId} registered with name: ${user.userName}, phone: ${user.phoneNumber}`
+    );
+
+    await notifyLibrarian(
+      `🆕 New registration: ${user.userName},\n Phone: ${user.phoneNumber}`
+    );
+    await bot.sendMessage(
+      chatId,
+      `✓ Registration successful! Welcome, *${user.userName}*! 🎉`
+    );
+    delete userStates[chatId]; // Clear the registration state
+    return askLanguageSelection(chatId);
+  } else {
+    await bot.sendMessage(
+      chatId,
+      "❌ Incorrect verification code. Please try again."
+    );
+  }
 }
 async function addUser(chatId, userName, phoneNumber) {
   let user = await User.findOne({ phoneNumber });
