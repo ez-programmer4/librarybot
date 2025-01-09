@@ -551,32 +551,34 @@ For more questions, feel free to reach out to us via *@IrshadComments_bot*! 📩
 // Handle user input for registration
 // Handle user input for registration
 async function handleRegistrationSteps(chatId, msg) {
+  // Step 1: User has provided their full name
   if (userStates[chatId].step === 1) {
-    // Step 1: User has provided their full name
     userStates[chatId].userName = msg.text; // Save the user's full name
     userStates[chatId].step = 2; // Move to the next step
     await bot.sendMessage(
       chatId,
       "📞 Please enter your phone number (must start with 09 and be 10 digits long):"
     );
-  } else if (userStates[chatId].step === 2) {
-    // Step 2: Validate the user's phone number
-    await processPhoneNumber(chatId, msg.text);
+  }
+  // Step 2: User is providing their phone number
+  else if (userStates[chatId].step === 2) {
+    await processPhoneNumber(chatId, msg.text); // Validate the user's phone number
   }
 }
 
 async function processPhoneNumber(chatId, phoneNumber) {
   console.log(`User ${chatId} provided phone number: ${phoneNumber}`);
   const phoneRegex = /^09\d{8}$/; // Matches phone numbers starting with 09 and followed by 8 digits
-  console.log(phoneRegex.test(phoneNumber));
+  console.log(phoneRegex.test(phoneNumber)); // Log the result of the regex test
 
+  // Validate phone number format
   if (!phoneRegex.test(phoneNumber)) {
     await bot.sendMessage(
       chatId,
       "❌ Invalid phone number. Please enter a valid phone number starting with 09 and consisting of 10 digits."
     );
 
-    // Optionally prompt for the phone number again
+    // Prompt for the phone number again
     await bot.sendMessage(
       chatId,
       "📞 Please enter your phone number (must start with 09 and be 10 digits long):"
@@ -584,10 +586,11 @@ async function processPhoneNumber(chatId, phoneNumber) {
     return; // Stop processing if the number is invalid
   }
 
+  // Proceed to add user if phone number is valid
   try {
     const user = await addUser(
       chatId,
-      userStates[chatId].userName,
+      userStates[chatId].userName, // Use the name stored from step 1
       phoneNumber
     );
     console.log(
@@ -602,7 +605,7 @@ async function processPhoneNumber(chatId, phoneNumber) {
       `✓ Registration successful! Welcome, *${user.userName}*! 🎉`
     );
     delete userStates[chatId]; // Clear the registration state
-    return askLanguageSelection(chatId);
+    return askLanguageSelection(chatId); // Proceed to the next step
   } catch (error) {
     console.error(`Error during registration saving: ${error.message}`); // Log detailed error
     await handleError(
@@ -612,6 +615,7 @@ async function processPhoneNumber(chatId, phoneNumber) {
     );
   }
 }
+
 // Add a new user or return existing user
 async function addUser(chatId, userName, phoneNumber) {
   try {
@@ -638,7 +642,6 @@ async function addUser(chatId, userName, phoneNumber) {
 async function notifyLibrarian(message) {
   await bot.sendMessage(librarianChatId, message);
 }
-
 // Ask for language selection
 function askLanguageSelection(chatId) {
   bot.sendMessage(chatId, "🌐 Please select a language:", {
