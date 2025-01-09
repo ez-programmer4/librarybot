@@ -410,20 +410,20 @@ async function handleMessage(chatId, msg) {
   }
 }
 
-async function handleRegistrationSteps(chatId, msg) {
-  if (userStates[chatId].step === 1) {
-    // Step 1: User has provided their full name
-    userStates[chatId].userName = msg.text; // Save the user's full name
-    userStates[chatId].step = 2; // Move to the next step
-    await bot.sendMessage(
-      chatId,
-      "📞 Please enter your phone number (must start with 09 and be 10 digits long):"
-    );
-  } else if (userStates[chatId].step === 2) {
-    // Step 2: Process the user's phone number
-    await processPhoneNumber(chatId, msg.text);
-  }
-}
+// async function handleRegistrationSteps(chatId, msg) {
+//   if (userStates[chatId].step === 1) {
+//     // Step 1: User has provided their full name
+//     userStates[chatId].userName = msg.text; // Save the user's full name
+//     userStates[chatId].step = 2; // Move to the next step
+//     await bot.sendMessage(
+//       chatId,
+//       "📞 Please enter your phone number (must start with 09 and be 10 digits long):"
+//     );
+//   } else if (userStates[chatId].step === 2) {
+//     // Step 2: Process the user's phone number
+//     await processPhoneNumber(chatId, msg.text);
+//   }
+// }
 
 async function handleUnexpectedMessage(chatId, message) {
   // Check if message has text property
@@ -565,28 +565,22 @@ For more questions, feel free to reach out to us via *@IrshadComments_bot*! 📩
 
 // Handle user input for registration
 // Handle user input for registration
-bot.on("message", async (msg) => {
-  const chatId = msg.chat.id;
-
-  if (userStates[chatId] && userStates[chatId].step === 1) {
-    console.log(`User ${chatId} provided full name: ${msg.text}`);
+async function handleRegistrationSteps(chatId, msg) {
+  if (userStates[chatId].step === 1) {
+    // Step 1: User has provided their full name
     userStates[chatId].userName = msg.text; // Save the user's full name
     userStates[chatId].step = 2; // Move to the next step
     await bot.sendMessage(
       chatId,
       "📞 Please enter your phone number (must start with 09 and be 10 digits long):"
     );
-    return; // Exit after asking for phone number
-  }
-
-  if (userStates[chatId] && userStates[chatId].step === 2) {
+  } else if (userStates[chatId].step === 2) {
+    // Step 2: Process the user's phone number
     await processPhoneNumber(chatId, msg.text);
-  } else {
-    await handleUnexpectedMessage(chatId, msg); // Call the updated unexpected message handler
   }
-});
+}
 
-// Process phone number input
+// The processPhoneNumber function remains unchanged
 async function processPhoneNumber(chatId, phoneNumber) {
   console.log(`User ${chatId} provided phone number: ${phoneNumber}`);
   const phoneRegex = /^09\d{8}$/; // Matches phone numbers starting with 09 and followed by 8 digits
