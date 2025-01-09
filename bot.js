@@ -521,6 +521,7 @@ bot.on("callback_query", async (query) => {
 });
 
 // Handle user input for registration
+// Handle user input for registration
 bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
 
@@ -532,10 +533,65 @@ bot.on("message", async (msg) => {
     return; // Exit after asking for contact
   }
 
-  if (userStates[chatId] && userStates[chatId].step === 3 && msg.contact) {
-    await processContact(chatId, msg.contact);
+  // Check if the message contains contact information
+  if (userStates[chatId] && userStates[chatId].step === 2) {
+    if (msg.contact) {
+      await processContact(chatId, msg.contact);
+    } else {
+      await bot.sendMessage(
+        chatId,
+        "❌ Please share your contact using the button."
+      );
+    }
   }
 });
+
+// Process shared contact information
+async function processContact(chatId, contact) {
+  // Ensure contact is defined
+  if (!contact || !contact.phone_number) {
+    return bot.sendMessage(chatId, "❌ No valid contact information received.");
+  }
+
+  const phoneNumber = contact.phone_number;
+  console.log(`User ${chatId} shared contact: ${phoneNumber}`);
+
+  const phoneRegex = /^09\d{8}$/;
+
+  if (!phoneRegex.test(phoneNumber)) {
+    return bot.sendMessage(
+      chatId,
+      "❌ Invalid phone number. Please ensure it starts with 09 and consists of 10 digits."
+    );
+  }
+
+  try {
+    const user = await addUser(
+      chatId,
+      userStates[chatId].userName,
+      phoneNumber
+    );
+    console.log(
+      `User ${chatId} registered with name: ${user.userName}, phone: ${phoneNumber}`
+    );
+
+    await notifyLibrarian(
+      `🆕 New registration: ${user.userName},\n Phone: ${phoneNumber}`
+    );
+    await bot.sendMessage(
+      chatId,
+      `✓ Registration successful! Welcome, *${user.userName}*! 🎉`
+    );
+    delete userStates[chatId]; // Clear the registration state
+    return askLanguageSelection(chatId);
+  } catch (error) {
+    await handleError(
+      chatId,
+      "⚠️ An error occurred while saving your registration. Please try again.",
+      `Error during registration saving: ${error.message}`
+    );
+  }
+}
 
 // Ask user to share their contact
 async function askForContactShare(chatId) {
