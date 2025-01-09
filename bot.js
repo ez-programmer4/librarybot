@@ -559,22 +559,27 @@ async function handleRegistrationSteps(chatId, msg) {
       chatId,
       "📞 Please enter your phone number (must start with 09 and be 10 digits long):"
     );
-    console.log(userStates[chatId].step);
   } else if (userStates[chatId].step === 2) {
-    // Step 2: Process the user's phone number
+    // Step 2: Validate the user's phone number
     await processPhoneNumber(chatId, msg.text);
   }
 }
 
-// The processPhoneNumber function remains unchanged
 async function processPhoneNumber(chatId, phoneNumber) {
   console.log(`User ${chatId} provided phone number: ${phoneNumber}`);
   const phoneRegex = /^09\d{8}$/; // Matches phone numbers starting with 09 and followed by 8 digits
   console.log(phoneRegex.test(phoneNumber));
+
   if (!phoneRegex.test(phoneNumber)) {
     await bot.sendMessage(
       chatId,
       "❌ Invalid phone number. Please enter a valid phone number starting with 09 and consisting of 10 digits."
+    );
+
+    // Optionally prompt for the phone number again
+    await bot.sendMessage(
+      chatId,
+      "📞 Please enter your phone number (must start with 09 and be 10 digits long):"
     );
     return; // Stop processing if the number is invalid
   }
