@@ -522,6 +522,7 @@ bot.on("callback_query", async (query) => {
 
 // Handle user input for registration
 // Handle user input for registration
+// Handle user input for registration
 bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
 
@@ -538,6 +539,7 @@ bot.on("message", async (msg) => {
 
   // Check if the user is in step 2 and whether a contact was shared
   if (userStates[chatId] && userStates[chatId].step === 2) {
+    // Check if the message contains a contact
     if (msg.contact) {
       await processContact(chatId, msg.contact);
     } else {
@@ -562,6 +564,11 @@ async function processContact(chatId, contact) {
   // Check if the phone number is in international format and convert it if necessary
   if (phoneNumber.startsWith("+251")) {
     phoneNumber = "09" + phoneNumber.slice(4); // Convert to local format
+  } else if (!phoneNumber.startsWith("09")) {
+    return bot.sendMessage(
+      chatId,
+      "❌ Invalid phone number format. Please ensure it starts with 09 or +251."
+    );
   }
 
   console.log(`User ${chatId} shared contact: ${phoneNumber}`);
@@ -602,7 +609,6 @@ async function processContact(chatId, contact) {
     );
   }
 }
-
 // Ask user to share their contact
 async function askForContactShare(chatId) {
   const options = {
