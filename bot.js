@@ -565,6 +565,7 @@ async function handleRegistrationSteps(chatId, msg) {
 
     userStates[chatId].userName = userName; // Save the user's full name
     userStates[chatId].step = 2; // Move to the next step
+    userStates[chatId].step = 3;
     await bot.sendMessage(
       chatId,
       "📞 Please enter your phone number (must start with 09 and be 10 digits long):"
