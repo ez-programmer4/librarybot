@@ -549,70 +549,65 @@ For more questions, feel free to reach out to us via *@IrshadComments_bot*! 📩
 });
 
 // Handle user input for registration
+const PHONE_REGEX = /^09\d{8}$/; // Matches phone numbers starting with 09 and followed by 8 digits
+
 async function handleRegistrationSteps(chatId, msg) {
-  // Step 1: User has provided their full name
-  if (userStates[chatId].step === 1) {
-    const userName = msg.text.trim(); // Trim any leading/trailing spaces
+  const step = userStates[chatId]?.step;
 
-    // Validate that the name is not empty
-    if (!userName) {
-      await bot.sendMessage(
-        chatId,
-        "❌ Full name cannot be empty. Please try again:"
-      );
-      return;
-    }
+  if (step === 1) {
+    await handleNameStep(chatId, msg.text);
+  } else if (step === 2) {
+    await handlePhonePrompt(chatId);
+  } else if (step === 3) {
+    await processPhoneNumber(chatId, msg.text);
+  }
+}
 
-    userStates[chatId].userName = userName; // Save the user's full name
-    userStates[chatId].step = 2; // Move to the next step
+async function handleNameStep(chatId, userName) {
+  userName = userName.trim(); // Trim any leading/trailing spaces
 
-    await bot.sendMessage(chatId, `welcome ${userStates[chatId].userName}`);
-  } else if (userStates[chatId].step === 2) {
+  if (!userName) {
     await bot.sendMessage(
       chatId,
-      "📞 Please enter your phone number (must start with 09 and be 10 digits long):"
+      "❌ Full name cannot be empty. Please try again:"
     );
-    userStates[chatId].step = 3;
+    return;
   }
-  // Step 2: User is providing their phone number
-  else if (userStates[chatId].step === 3) {
-    await processPhoneNumber(chatId, msg.text); // Validate the user's phone number
-  }
+
+  userStates[chatId].userName = userName; // Save the user's full name
+  userStates[chatId].step = 2; // Move to the next step
+
+  await bot.sendMessage(chatId, `Welcome, ${userStates[chatId].userName}!`);
+}
+
+async function handlePhonePrompt(chatId) {
+  await bot.sendMessage(
+    chatId,
+    "📞 Please enter your phone number (must start with 09 and be 10 digits long):"
+  );
+  userStates[chatId].step = 3;
 }
 
 async function processPhoneNumber(chatId, phoneNumber) {
   console.log(`User ${chatId} provided phone number: ${phoneNumber}`);
-  const phoneRegex = /^09\d{8}$/; // Matches phone numbers starting with 09 and followed by 8 digits
-  console.log(phoneRegex.test(phoneNumber)); // Log the result of the regex test
 
-  // Validate phone number format
-  if (!phoneRegex.test(phoneNumber)) {
+  if (!PHONE_REGEX.test(phoneNumber)) {
     await bot.sendMessage(
       chatId,
       "❌ Invalid phone number. Please enter a valid phone number starting with 09 and consisting of 10 digits."
     );
-
-    // Prompt for the phone number again
-    await bot.sendMessage(
-      chatId,
-      "📞 Please enter your phone number (must start with 09 and be 10 digits long):"
-    );
+    await handlePhonePrompt(chatId);
     return; // Stop processing if the number is invalid
   }
 
-  // Proceed to add user if phone number is valid
   try {
     const user = await addUser(
       chatId,
-      userStates[chatId].userName, // Use the name stored from step 1
+      userStates[chatId].userName,
       phoneNumber
     );
-    console.log(
-      `User ${chatId} registered with name: ${user.userName}, phone: ${phoneNumber}`
-    );
-
     await notifyLibrarian(
-      `🆕 New registration: ${user.userName},\n Phone: ${phoneNumber}`
+      `🆕 New registration: ${user.userName}, Phone: ${phoneNumber}`
     );
     await bot.sendMessage(
       chatId,
@@ -622,16 +617,15 @@ async function processPhoneNumber(chatId, phoneNumber) {
     delete userStates[chatId]; // Clear the registration state
     return askLanguageSelection(chatId); // Proceed to the next step
   } catch (error) {
-    console.error(`Error during registration saving: ${error.message}`); // Log detailed error
+    console.error(`Error during registration saving: ${error.message}`);
     await handleError(
       chatId,
       "⚠️ An error occurred while saving your registration. Please try again.",
-      `Error during registration saving: ${error.message}`
+      `Error: ${error.message}`
     );
   }
 }
 
-// Add a new user or return existing user
 async function addUser(chatId, userName, phoneNumber) {
   try {
     let user = await User.findOne({ phoneNumber });
@@ -648,12 +642,11 @@ async function addUser(chatId, userName, phoneNumber) {
     }
     return user;
   } catch (error) {
-    console.error(`Error adding user: ${error.message}`); // Log detailed error
+    console.error(`Error adding user: ${error.message}`);
     throw error; // Rethrow to handle in the calling function
   }
 }
 
-// Notify librarian
 async function notifyLibrarian(message) {
   await bot.sendMessage(librarianChatId, message);
 }
