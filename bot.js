@@ -412,6 +412,12 @@ async function handleMessage(chatId, msg) {
 }
 
 async function handleUnexpectedMessage(chatId, message) {
+  // Check if message has text property
+  if (!message.text) {
+    await bot.sendMessage(chatId, "❓ Please send a text message to continue.");
+    return; // Exit if there's no text
+  }
+
   const messageText = message.text; // Access the message text
   const isCommand =
     messageText.startsWith("/") &&
@@ -451,6 +457,11 @@ async function handleUnexpectedMessage(chatId, message) {
   }
 }
 
+// Add this function to handle text messages
+bot.on("message", (msg) => {
+  const chatId = msg.chat.id;
+  handleMessage(chatId, msg); // Call handleMessage instead of handleUnexpectedMessage
+});
 // Add this function to handle text messages
 bot.on("message", (msg) => {
   const chatId = msg.chat.id;
