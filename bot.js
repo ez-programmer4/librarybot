@@ -428,7 +428,6 @@ async function handleRegistrationSteps(chatId, msg) {
 async function handleUnexpectedMessage(chatId, message) {
   // Check if message has text property
   if (!message.text) {
-    await bot.sendMessage(chatId, "❓ Please send a text message to continue.");
     return; // Exit if there's no text
   }
 
@@ -443,17 +442,7 @@ async function handleUnexpectedMessage(chatId, message) {
   const isLanguage = ["Arabic", "Amharic", "AfaanOromo"].includes(messageText);
   const hasValidID = messageText.split(" ").length === 2;
 
-  if (userStates[chatId] && userStates[chatId].step === 1) {
-    await bot.sendMessage(
-      chatId,
-      "❓ Please enter your full name to continue registration."
-    );
-  } else if (userStates[chatId] && userStates[chatId].step === 2) {
-    await bot.sendMessage(
-      chatId,
-      "❓ Please enter your phone number (must start with 09 and be 10 digits long)."
-    );
-  } else if (isReserveCommand && !hasValidID) {
+  if (isReserveCommand && !hasValidID) {
     await bot.sendMessage(
       chatId,
       "❗ Please specify an ID to reserve a book. Example: /reserve <ID>"
