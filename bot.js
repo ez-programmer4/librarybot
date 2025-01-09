@@ -855,6 +855,7 @@ async function sendMessageInChunks(chatId, message) {
 bot.onText(/\/view_reservations/, async (msg) => {
   const chatId = msg.chat.id;
 
+  // Check if the user is a librarian
   if (!isLibrarian(chatId)) {
     return bot.sendMessage(
       chatId,
@@ -862,19 +863,23 @@ bot.onText(/\/view_reservations/, async (msg) => {
     );
   }
 
+  // Fetch reservations from the database
   const reservations = await Reservation.find().populate("userId bookId");
 
+  // Handle no reservations
   if (reservations.length === 0) {
     return bot.sendMessage(chatId, "📅 There are no reservations.");
   }
 
+  // Format the reservation list
   const reservationList = reservations
     .map(
       (res) =>
-        `🔖 Book ID: *${res.bookId.id}* → User: *${res.userId.userName}* → Book: *"${res.bookId.title}"* → Pickup Time: *${res.pickupTime}*,`
+        `🔖 Book ID: *${res.bookId.id}* → User: *${res.userId.userName}* → Book: *"${res.bookId.title}"* → Pickup Time: *${res.pickupTime}*`
     )
     .join("\n");
 
+  // Send the list of reservations
   await bot.sendMessage(
     chatId,
     `📚 Current Reservations:\n\n${reservationList}`,
