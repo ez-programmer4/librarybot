@@ -565,14 +565,17 @@ async function handleRegistrationSteps(chatId, msg) {
 
     userStates[chatId].userName = userName; // Save the user's full name
     userStates[chatId].step = 2; // Move to the next step
-    userStates[chatId].step = 3;
+
+    await bot.sendMessage(chatId, `welcome ${userStates[chatId].userName}`);
+  } else if (userStates[chatId].step === 2) {
     await bot.sendMessage(
       chatId,
       "📞 Please enter your phone number (must start with 09 and be 10 digits long):"
     );
+    userStates[chatId].step = 3;
   }
   // Step 2: User is providing their phone number
-  else if (userStates[chatId].step === 2) {
+  else if (userStates[chatId].step === 3) {
     await processPhoneNumber(chatId, msg.text); // Validate the user's phone number
   }
 }
