@@ -481,7 +481,7 @@ bot.onText(/\/start/, (msg) => {
 
 const userStates = {};
 
-// Handle button callbacks for Register and Help
+// Handle button callbacks for Register
 bot.on("callback_query", async (query) => {
   const chatId = query.message.chat.id;
 
@@ -516,99 +516,32 @@ bot.on("callback_query", async (query) => {
     }
   }
 
-  // Acknowledge the callback
   bot.answerCallbackQuery(query.id);
 });
 
 // Handle user input for registration
-// Handle user input for registration
-// Handle user input for registration
 bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
 
-  // Log the incoming message for debugging
-  console.log("Received message:", msg);
-
-  if (userStates[chatId] && userStates[chatId].step === 1) {
+  // Handle step 1: Collect full name
+  if (userStates[chatId]?.step === 1) {
     console.log(`User ${chatId} provided full name: ${msg.text}`);
-    userStates[chatId].userName = msg.text; // Save the user's full name
-    userStates[chatId].step = 2; // Move to the next step
-    await askForContactShare(chatId);
-    return; // Exit after asking for contact
+    userStates[chatId].userName = msg.text; // Save user's full name
+    userStates[chatId].step = 2; // Move to step 2
+    return askForContactShare(chatId); // Ask for contact
   }
 
-  // Check if the user is in step 2 and whether a contact was shared
-  if (userStates[chatId] && userStates[chatId].step === 2) {
-    // Check if the message contains a contact
-    if (msg.contact) {
-      await processContact(chatId, msg.contact);
-    } else {
-      await bot.sendMessage(
-        chatId,
-        "❌ Please share your contact using the button."
-      );
-    }
+  // Handle step 2: Process shared contact
+  if (userStates[chatId]?.step === 2 && msg.contact) {
+    await processContact(chatId, msg.contact);
+  } else if (userStates[chatId]?.step === 2) {
+    await bot.sendMessage(
+      chatId,
+      "❌ Please share your contact using the provided button."
+    );
   }
 });
 
-// Process shared contact information
-async function processContact(chatId, contact) {
-  // Ensure contact is defined and has the phone_number property
-  if (!contact || !contact.phone_number) {
-    return bot.sendMessage(chatId, "❌ No valid contact information received.");
-  }
-
-  // Get the phone number and normalize it
-  let phoneNumber = contact.phone_number;
-
-  // Check if the phone number is in international format and convert it if necessary
-  if (phoneNumber.startsWith("+251")) {
-    phoneNumber = "09" + phoneNumber.slice(4); // Convert to local format
-  } else if (!phoneNumber.startsWith("09")) {
-    return bot.sendMessage(
-      chatId,
-      "❌ Invalid phone number format. Please ensure it starts with 09 or +251."
-    );
-  }
-
-  console.log(`User ${chatId} shared contact: ${phoneNumber}`);
-
-  const phoneRegex = /^09\d{8}$/; // Local format validation
-
-  if (!phoneRegex.test(phoneNumber)) {
-    return bot.sendMessage(
-      chatId,
-      "❌ Invalid phone number. Please ensure it starts with 09 and consists of 10 digits."
-    );
-  }
-
-  try {
-    const user = await addUser(
-      chatId,
-      userStates[chatId].userName,
-      phoneNumber
-    );
-    console.log(
-      `User ${chatId} registered with name: ${user.userName}, phone: ${phoneNumber}`
-    );
-
-    await notifyLibrarian(
-      `🆕 New registration: ${user.userName},\n Phone: ${phoneNumber}`
-    );
-    await bot.sendMessage(
-      chatId,
-      `✓ Registration successful! Welcome, *${user.userName}*! 🎉`
-    );
-    delete userStates[chatId]; // Clear the registration state
-    return askLanguageSelection(chatId);
-  } catch (error) {
-    await handleError(
-      chatId,
-      "⚠️ An error occurred while saving your registration. Please try again.",
-      `Error during registration saving: ${error.message}`
-    );
-  }
-}
 // Ask user to share their contact
 async function askForContactShare(chatId) {
   const options = {
@@ -616,7 +549,7 @@ async function askForContactShare(chatId) {
       keyboard: [
         [
           {
-            text: "Share Contact",
+            text: "📞 Share Contact",
             request_contact: true,
           },
         ],
@@ -635,17 +568,25 @@ async function askForContactShare(chatId) {
 
 // Process shared contact information
 async function processContact(chatId, contact) {
-  const phoneNumber = contact.phone_number;
-  console.log(`User ${chatId} shared contact: ${phoneNumber}`);
+  if (!contact?.phone_number) {
+    return bot.sendMessage(chatId, "❌ No valid contact information received.");
+  }
 
-  const phoneRegex = /^09\d{8}$/;
+  let phoneNumber = contact.phone_number;
 
-  if (!phoneRegex.test(phoneNumber)) {
+  // Normalize phone number to local format (09...)
+  if (phoneNumber.startsWith("+251")) {
+    phoneNumber = "09" + phoneNumber.slice(4);
+  }
+
+  if (!/^09\d{8}$/.test(phoneNumber)) {
     return bot.sendMessage(
       chatId,
-      "❌ Invalid phone number. Please ensure it starts with 09 and consists of 10 digits."
+      "❌ Invalid phone number format. Please ensure it starts with 09 or +251 and has 10 digits."
     );
   }
+
+  console.log(`User ${chatId} shared contact: ${phoneNumber}`);
 
   try {
     const user = await addUser(
@@ -658,13 +599,15 @@ async function processContact(chatId, contact) {
     );
 
     await notifyLibrarian(
-      `🆕 New registration: ${user.userName},\n Phone: ${phoneNumber}`
+      `🆕 New registration: ${user.userName}\n📞 Phone: ${phoneNumber}`
     );
     await bot.sendMessage(
       chatId,
-      `✓ Registration successful! Welcome, *${user.userName}*! 🎉`
+      `✅ Registration successful! Welcome, *${user.userName}*! 🎉`,
+      { parse_mode: "Markdown" }
     );
-    delete userStates[chatId]; // Clear the registration state
+
+    delete userStates[chatId]; // Clear registration state
     return askLanguageSelection(chatId);
   } catch (error) {
     await handleError(
@@ -677,24 +620,15 @@ async function processContact(chatId, contact) {
 
 // Add a new user or return existing user
 async function addUser(chatId, userName, phoneNumber) {
-  try {
-    let user = await User.findOne({ phoneNumber });
-    if (!user) {
-      user = new User({ userName, phoneNumber, chatId }); // Ensure chatId is included
-      await user.save();
-      console.log(
-        `New user created: ${user.userName}, Phone: ${phoneNumber}, Chat ID: ${chatId}`
-      );
-    } else {
-      console.log(
-        `User with phone number ${phoneNumber} already exists. Returning existing user.`
-      );
-    }
-    return user;
-  } catch (error) {
-    console.error(`Error adding user: ${error.message}`);
-    throw error; // Rethrow to handle in calling function
+  let user = await User.findOne({ phoneNumber });
+  if (!user) {
+    user = new User({ userName, phoneNumber, chatId });
+    await user.save();
+    console.log(`New user created: ${user.userName}, Phone: ${phoneNumber}`);
+  } else {
+    console.log(`User with phone number ${phoneNumber} already exists.`);
   }
+  return user;
 }
 
 // Notify librarian
