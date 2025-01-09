@@ -548,7 +548,6 @@ For more questions, feel free to reach out to us via *@IrshadComments_bot*! 📩
   bot.answerCallbackQuery(query.id);
 });
 
-// Handle user input for registration
 const PHONE_REGEX = /^09\d{8}$/; // Matches phone numbers starting with 09 and followed by 8 digits
 
 async function handleRegistrationSteps(chatId, msg) {
@@ -600,6 +599,17 @@ async function processPhoneNumber(chatId, phoneNumber) {
     return; // Stop processing if the number is invalid
   }
 
+  // Check for duplicate phone number
+  const existingUser = await User.findOne({ phoneNumber });
+  if (existingUser) {
+    await bot.sendMessage(
+      chatId,
+      "❌ This phone number is already registered. Please enter a different phone number."
+    );
+    await handlePhonePrompt(chatId);
+    return; // Stop processing if the number is already registered
+  }
+
   try {
     const user = await addUser(
       chatId,
@@ -615,38 +625,32 @@ async function processPhoneNumber(chatId, phoneNumber) {
       { parse_mode: "Markdown" }
     );
     delete userStates[chatId]; // Clear the registration state
-    return askLanguageSelection(chatId); // Proceed to the next step
   } catch (error) {
-    console.error(`Error during registration saving: ${error.message}`);
+    console.error(`Error during registration saving: ${error.message}`); // Log detailed error
     await handleError(
       chatId,
       "⚠️ An error occurred while saving your registration. Please try again.",
-      `Error: ${error.message}`
+      `Error during registration saving: ${error.message}`
     );
   }
 }
 
+// Add a new user or return existing user
 async function addUser(chatId, userName, phoneNumber) {
   try {
-    let user = await User.findOne({ phoneNumber });
-    if (!user) {
-      user = new User({ userName, phoneNumber, chatId });
-      await user.save();
-      console.log(
-        `New user created: ${user.userName}, Phone: ${phoneNumber}, Chat ID: ${chatId}`
-      );
-    } else {
-      console.log(
-        `User with phone number ${phoneNumber} already exists. Returning existing user.`
-      );
-    }
+    const user = new User({ userName, phoneNumber, chatId });
+    await user.save();
+    console.log(
+      `New user created: ${user.userName}, Phone: ${phoneNumber}, Chat ID: ${chatId}`
+    );
     return user;
   } catch (error) {
-    console.error(`Error adding user: ${error.message}`);
+    console.error(`Error adding user: ${error.message}`); // Log detailed error
     throw error; // Rethrow to handle in the calling function
   }
 }
 
+// Notify librarian
 async function notifyLibrarian(message) {
   await bot.sendMessage(librarianChatId, message);
 }
