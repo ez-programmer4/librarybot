@@ -549,11 +549,21 @@ For more questions, feel free to reach out to us via *@IrshadComments_bot*! 📩
 });
 
 // Handle user input for registration
-// Handle user input for registration
 async function handleRegistrationSteps(chatId, msg) {
   // Step 1: User has provided their full name
   if (userStates[chatId].step === 1) {
-    userStates[chatId].userName = msg.text; // Save the user's full name
+    const userName = msg.text.trim(); // Trim any leading/trailing spaces
+
+    // Validate that the name is not empty
+    if (!userName) {
+      await bot.sendMessage(
+        chatId,
+        "❌ Full name cannot be empty. Please try again:"
+      );
+      return;
+    }
+
+    userStates[chatId].userName = userName; // Save the user's full name
     userStates[chatId].step = 2; // Move to the next step
     await bot.sendMessage(
       chatId,
@@ -602,7 +612,8 @@ async function processPhoneNumber(chatId, phoneNumber) {
     );
     await bot.sendMessage(
       chatId,
-      `✓ Registration successful! Welcome, *${user.userName}*! 🎉`
+      `✅ Registration successful! Welcome, *${user.userName}*! 🎉`,
+      { parse_mode: "Markdown" }
     );
     delete userStates[chatId]; // Clear the registration state
     return askLanguageSelection(chatId); // Proceed to the next step
@@ -642,6 +653,7 @@ async function addUser(chatId, userName, phoneNumber) {
 async function notifyLibrarian(message) {
   await bot.sendMessage(librarianChatId, message);
 }
+
 // Ask for language selection
 function askLanguageSelection(chatId) {
   bot.sendMessage(chatId, "🌐 Please select a language:", {
