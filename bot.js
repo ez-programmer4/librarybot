@@ -410,21 +410,6 @@ async function handleMessage(chatId, msg) {
   }
 }
 
-// async function handleRegistrationSteps(chatId, msg) {
-//   if (userStates[chatId].step === 1) {
-//     // Step 1: User has provided their full name
-//     userStates[chatId].userName = msg.text; // Save the user's full name
-//     userStates[chatId].step = 2; // Move to the next step
-//     await bot.sendMessage(
-//       chatId,
-//       "📞 Please enter your phone number (must start with 09 and be 10 digits long):"
-//     );
-//   } else if (userStates[chatId].step === 2) {
-//     // Step 2: Process the user's phone number
-//     await processPhoneNumber(chatId, msg.text);
-//   }
-// }
-
 async function handleUnexpectedMessage(chatId, message) {
   // Check if message has text property
   if (!message.text) {
