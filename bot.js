@@ -480,7 +480,6 @@ bot.onText(/\/start/, (msg) => {
 });
 
 // Registration state management
-// Registration state management
 const userStates = {};
 
 // Handle button callbacks for Register and Help
@@ -566,6 +565,10 @@ bot.on("message", async (msg) => {
   if (userStates[chatId] && userStates[chatId].step === 2) {
     await processPhoneNumber(chatId, msg.text);
   }
+
+  if (userStates[chatId] && userStates[chatId].step === 3) {
+    await confirmPhoneNumber(chatId, msg.text);
+  }
 });
 
 // Process phone number input
@@ -580,31 +583,50 @@ async function processPhoneNumber(chatId, phoneNumber) {
     );
   }
 
-  try {
-    const user = await addUser(
-      chatId,
-      userStates[chatId].userName,
-      phoneNumber
-    );
-    console.log(
-      `User ${chatId} registered with name: ${user.userName}, phone: ${phoneNumber}`
-    );
+  userStates[chatId].phoneNumber = phoneNumber; // Save the phone number
+  userStates[chatId].step = 3; // Move to confirmation step
+  await bot.sendMessage(
+    chatId,
+    `📞 You entered: *${phoneNumber}*. Is this correct? (Reply with "yes" or "no")`,
+    {
+      parse_mode: "Markdown",
+    }
+  );
+}
 
-    await notifyLibrarian(
-      `🆕 New registration: ${user.userName},\n Phone: ${phoneNumber}`
-    );
-    await bot.sendMessage(
-      chatId,
-      `✓ Registration successful! Welcome, *${user.userName}*! 🎉`
-    );
-    delete userStates[chatId]; // Clear the registration state
-    return askLanguageSelection(chatId);
-  } catch (error) {
-    await handleError(
-      chatId,
-      "⚠️ An error occurred while saving your registration. Please try again.",
-      `Error during registration saving: ${error.message}`
-    );
+// Confirm phone number
+async function confirmPhoneNumber(chatId, response) {
+  if (response.toLowerCase() === "yes") {
+    const phoneNumber = userStates[chatId].phoneNumber;
+    try {
+      const user = await addUser(
+        chatId,
+        userStates[chatId].userName,
+        phoneNumber
+      );
+      console.log(
+        `User ${chatId} registered with name: ${user.userName}, phone: ${phoneNumber}`
+      );
+
+      await notifyLibrarian(
+        `🆕 New registration: ${user.userName},\n Phone: ${phoneNumber}`
+      );
+      await bot.sendMessage(
+        chatId,
+        `✓ Registration successful! Welcome, *${user.userName}*! 🎉`
+      );
+      delete userStates[chatId]; // Clear the registration state
+      return askLanguageSelection(chatId);
+    } catch (error) {
+      await handleError(
+        chatId,
+        "⚠️ An error occurred while saving your registration. Please try again.",
+        `Error during registration saving: ${error.message}`
+      );
+    }
+  } else {
+    await bot.sendMessage(chatId, "❌ Please enter your phone number again:");
+    userStates[chatId].step = 2; // Go back to the phone number step
   }
 }
 
