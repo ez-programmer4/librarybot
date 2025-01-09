@@ -400,6 +400,26 @@ async function handleCategorySelection(chatId, selectedCategory) {
     );
   }
 }
+async function handleRegistrationSteps(chatId, msg) {
+  if (userStates[chatId].step === 1) {
+    // Step 1: User has provided their full name
+    userStates[chatId].userName = msg.text; // Save the user's full name
+    userStates[chatId].step = 2; // Move to the next step
+    await bot.sendMessage(
+      chatId,
+      "📞 Please enter your phone number (must start with 09 and be 10 digits long):"
+    );
+  } else if (userStates[chatId].step === 2) {
+    // Step 2: Process the user's phone number
+    await processPhoneNumber(chatId, msg.text);
+  } else {
+    // If the step is not recognized, you might want to handle it
+    await bot.sendMessage(
+      chatId,
+      "❓ Unexpected step in registration. Please start over."
+    );
+  }
+}
 
 async function handleMessage(chatId, msg) {
   // Check if the user is in a registration state
