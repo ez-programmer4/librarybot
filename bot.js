@@ -832,37 +832,7 @@ async function sendMessageInChunks(chatId, message) {
     }
   }
 }
-bot.onText(/\/register/, async (msg) => {
-  const chatId = msg.chat.id;
-  console.log(`User ${chatId} initiated registration via /register command.`);
 
-  try {
-    const existingUser = await User.findOne({ chatId });
-    if (existingUser) {
-      console.log(
-        `User ${chatId} is already registered as ${existingUser.userName}.`
-      );
-      await bot.sendMessage(
-        chatId,
-        `🚫 You are already registered as *${existingUser.userName}*.`,
-        { parse_mode: "Markdown" }
-      );
-      return askLanguageSelection(chatId); // Redirect to language selection
-    }
-
-    userStates[chatId] = { step: 1 }; // Set user state for registration
-    console.log(`User ${chatId} is at step 1: asking for full name.`);
-    await bot.sendMessage(chatId, "📝 Please enter your full name:", {
-      parse_mode: "Markdown",
-    });
-  } catch (error) {
-    await handleError(
-      chatId,
-      "⚠️ An error occurred during registration. Please try again.",
-      `Error during registration initiation: ${error.message}`
-    );
-  }
-});
 // Function to send messages in chunks
 async function sendMessageInChunks(chatId, message) {
   const MAX_MESSAGE_LENGTH = 4096; // Telegram message character limit
