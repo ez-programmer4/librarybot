@@ -53,7 +53,7 @@ bot.on("message", async (msg) => {
     if (msg.text.startsWith("/")) {
       await handleCommand(chatId, msg.text);
     } else {
-      // await handleUnexpectedMessage(chatId, msg.text);
+      await handleUnexpectedMessage(chatId, msg.text);
     }
   } catch (error) {
     console.error("Error processing message:", error);
@@ -401,49 +401,49 @@ async function handleCategorySelection(chatId, selectedCategory) {
   }
 }
 
-// async function handleMessage(chatId, msg) {
-//   // Check if the user is in a registration state
-//   if (userStates[chatId]) {
-//     await handleRegistrationSteps(chatId, msg);
-//   } else {
-//     // Handle other commands or unexpected messages
-//     await handleUnexpectedMessage(chatId, msg);
-//   }
-// }
+async function handleMessage(chatId, msg) {
+  // Check if the user is in a registration state
+  if (userStates[chatId]) {
+    await handleRegistrationSteps(chatId, msg);
+  } else {
+    // Handle other commands or unexpected messages
+    await handleUnexpectedMessage(chatId, msg);
+  }
+}
 
-// async function handleUnexpectedMessage(chatId, message) {
-//   const isCommand =
-//     message.startsWith("/") &&
-//     validCommands.some((cmd) => message.startsWith(cmd));
-//   const isReserveCommand = message.startsWith("/reserve");
-//   const isCancelReservationCommand = message.startsWith("/cancel_reservation");
-//   const isLanguage = ["Arabic", "Amharic", "AfaanOromo"].includes(message);
-//   const hasValidID = message.split(" ").length === 2;
+async function handleUnexpectedMessage(chatId, message) {
+  const isCommand =
+    message.startsWith("/") &&
+    validCommands.some((cmd) => message.startsWith(cmd));
+  const isReserveCommand = message.startsWith("/reserve");
+  const isCancelReservationCommand = message.startsWith("/cancel_reservation");
+  const isLanguage = ["Arabic", "Amharic", "AfaanOromo"].includes(message);
+  const hasValidID = message.split(" ").length === 2;
 
-//   if (isReserveCommand && !hasValidID) {
-//     await bot.sendMessage(
-//       chatId,
-//       "❗ Please specify an ID to reserve a book. Example: /reserve <ID>"
-//     );
-//   } else if (isCancelReservationCommand && !hasValidID) {
-//     await bot.sendMessage(
-//       chatId,
-//       "❗ Please specify an ID to cancel a reservation. Example: /cancel_reservation <ID>"
-//     );
-//   } else if (!isCommand && !isLanguage) {
-//     await bot.sendMessage(
-//       chatId,
-//       "❓ I didn't understand that. Please type /help to see available commands."
-//     );
-//   }
-// }
+  if (isReserveCommand && !hasValidID) {
+    await bot.sendMessage(
+      chatId,
+      "❗ Please specify an ID to reserve a book. Example: /reserve <ID>"
+    );
+  } else if (isCancelReservationCommand && !hasValidID) {
+    await bot.sendMessage(
+      chatId,
+      "❗ Please specify an ID to cancel a reservation. Example: /cancel_reservation <ID>"
+    );
+  } else if (!isCommand && !isLanguage) {
+    await bot.sendMessage(
+      chatId,
+      "❓ I didn't understand that. Please type /help to see available commands."
+    );
+  }
+}
 
 // Add this function to handle text messages
 bot.on("message", (msg) => {
   const chatId = msg.chat.id;
   const messageText = msg.text;
 
-  // handleUnexpectedMessage(chatId, messageText);
+  handleUnexpectedMessage(chatId, messageText);
 });
 
 // Start command
