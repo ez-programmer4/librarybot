@@ -525,6 +525,9 @@ bot.on("callback_query", async (query) => {
 bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
 
+  // Log the incoming message for debugging
+  console.log("Received message:", msg);
+
   if (userStates[chatId] && userStates[chatId].step === 1) {
     console.log(`User ${chatId} provided full name: ${msg.text}`);
     userStates[chatId].userName = msg.text; // Save the user's full name
@@ -533,7 +536,7 @@ bot.on("message", async (msg) => {
     return; // Exit after asking for contact
   }
 
-  // Check if the message contains contact information
+  // Check if the user is in step 2 and whether a contact was shared
   if (userStates[chatId] && userStates[chatId].step === 2) {
     if (msg.contact) {
       await processContact(chatId, msg.contact);
@@ -546,7 +549,6 @@ bot.on("message", async (msg) => {
   }
 });
 
-// Process shared contact information
 // Process shared contact information
 async function processContact(chatId, contact) {
   // Ensure contact is defined and has the phone_number property
