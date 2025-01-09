@@ -547,16 +547,24 @@ bot.on("message", async (msg) => {
 });
 
 // Process shared contact information
+// Process shared contact information
 async function processContact(chatId, contact) {
-  // Ensure contact is defined
+  // Ensure contact is defined and has the phone_number property
   if (!contact || !contact.phone_number) {
     return bot.sendMessage(chatId, "❌ No valid contact information received.");
   }
 
-  const phoneNumber = contact.phone_number;
+  // Get the phone number and normalize it
+  let phoneNumber = contact.phone_number;
+
+  // Check if the phone number is in international format and convert it if necessary
+  if (phoneNumber.startsWith("+251")) {
+    phoneNumber = "09" + phoneNumber.slice(4); // Convert to local format
+  }
+
   console.log(`User ${chatId} shared contact: ${phoneNumber}`);
 
-  const phoneRegex = /^09\d{8}$/;
+  const phoneRegex = /^09\d{8}$/; // Local format validation
 
   if (!phoneRegex.test(phoneNumber)) {
     return bot.sendMessage(
