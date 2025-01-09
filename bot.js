@@ -570,7 +570,7 @@ async function handleRegistrationSteps(chatId, msg) {
 async function processPhoneNumber(chatId, phoneNumber) {
   console.log(`User ${chatId} provided phone number: ${phoneNumber}`);
   const phoneRegex = /^09\d{8}$/; // Matches phone numbers starting with 09 and followed by 8 digits
-
+  console.log(phoneRegex.test(phoneNumber));
   if (!phoneRegex.test(phoneNumber)) {
     await bot.sendMessage(
       chatId,
