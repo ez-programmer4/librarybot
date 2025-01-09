@@ -412,15 +412,28 @@ async function handleMessage(chatId, msg) {
 }
 
 async function handleUnexpectedMessage(chatId, message) {
+  const messageText = message.text; // Access the message text
   const isCommand =
-    message.startsWith("/") &&
-    validCommands.some((cmd) => message.startsWith(cmd));
-  const isReserveCommand = message.startsWith("/reserve");
-  const isCancelReservationCommand = message.startsWith("/cancel_reservation");
-  const isLanguage = ["Arabic", "Amharic", "AfaanOromo"].includes(message);
-  const hasValidID = message.split(" ").length === 2;
+    messageText.startsWith("/") &&
+    validCommands.some((cmd) => messageText.startsWith(cmd));
+  const isReserveCommand = messageText.startsWith("/reserve");
+  const isCancelReservationCommand = messageText.startsWith(
+    "/cancel_reservation"
+  );
+  const isLanguage = ["Arabic", "Amharic", "AfaanOromo"].includes(messageText);
+  const hasValidID = messageText.split(" ").length === 2;
 
-  if (isReserveCommand && !hasValidID) {
+  if (userStates[chatId] && userStates[chatId].step === 1) {
+    await bot.sendMessage(
+      chatId,
+      "❓ Please enter your full name to continue registration."
+    );
+  } else if (userStates[chatId] && userStates[chatId].step === 2) {
+    await bot.sendMessage(
+      chatId,
+      "❓ Please enter your phone number (must start with 09 and be 10 digits long)."
+    );
+  } else if (isReserveCommand && !hasValidID) {
     await bot.sendMessage(
       chatId,
       "❗ Please specify an ID to reserve a book. Example: /reserve <ID>"
@@ -441,9 +454,7 @@ async function handleUnexpectedMessage(chatId, message) {
 // Add this function to handle text messages
 bot.on("message", (msg) => {
   const chatId = msg.chat.id;
-  const messageText = msg.text;
-
-  handleUnexpectedMessage(chatId, messageText);
+  handleMessage(chatId, msg); // Call handleMessage instead of handleUnexpectedMessage
 });
 
 // Start command
@@ -479,8 +490,6 @@ bot.onText(/\/start/, (msg) => {
   });
 });
 
-// Registration state management
-// Registration state management
 const userStates = {};
 
 // Handle button callbacks for Register and Help
@@ -519,26 +528,18 @@ bot.on("callback_query", async (query) => {
   } else if (query.data === "help") {
     const helpMessage = `
 🤖 *Library Bot Help*
-
 Here are the commands you can use:
-
 ➡️ 📋 */register*: Register yourself to start using the library services.  
    Example: */register*
-
 ➡️ 🌐 */change_language*: Change your preferred language.  
    Example: */change_language*
-
 ➡️ 📚 */select_category*: Choose a category for books.
-
 ➡️ 📖 */reserve_book* <book_id>: Reserve a specific book.  
    Example: */reserve_book 112*
-
 ➡️ 📝 */my_reservations*: View your current reservations.  
    Example: */my_reservations*
-
 ➡️ ❌ */cancel_reservation* <number>: Cancel a specific reservation by its number.  
    Example: */cancel_reservation 1*
-
 For more questions, feel free to reach out to us via *@IrshadComments_bot*! 📩
 `;
     await bot.sendMessage(chatId, helpMessage, { parse_mode: "Markdown" });
@@ -548,6 +549,7 @@ For more questions, feel free to reach out to us via *@IrshadComments_bot*! 📩
   bot.answerCallbackQuery(query.id);
 });
 
+// Handle user input for registration
 // Handle user input for registration
 bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
@@ -565,6 +567,8 @@ bot.on("message", async (msg) => {
 
   if (userStates[chatId] && userStates[chatId].step === 2) {
     await processPhoneNumber(chatId, msg.text);
+  } else {
+    await handleUnexpectedMessage(chatId, msg); // Call the updated unexpected message handler
   }
 });
 
@@ -574,10 +578,11 @@ async function processPhoneNumber(chatId, phoneNumber) {
   const phoneRegex = /^09\d{8}$/;
 
   if (!phoneRegex.test(phoneNumber)) {
-    return bot.sendMessage(
+    await bot.sendMessage(
       chatId,
       "❌ Invalid phone number. Please enter a valid phone number starting with 09 and consisting of 10 digits."
     );
+    return; // Stop processing if the number is invalid
   }
 
   try {
