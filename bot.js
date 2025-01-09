@@ -595,9 +595,11 @@ async function processPhoneNumber(chatId, phoneNumber) {
 }
 
 // Confirm phone number
+// Confirm phone number
 async function confirmPhoneNumber(chatId, response) {
+  const phoneNumber = userStates[chatId].phoneNumber; // Retrieve the stored phone number
+
   if (response.toLowerCase() === "yes") {
-    const phoneNumber = userStates[chatId].phoneNumber;
     try {
       const user = await addUser(
         chatId,
@@ -629,7 +631,6 @@ async function confirmPhoneNumber(chatId, response) {
     userStates[chatId].step = 2; // Go back to the phone number step
   }
 }
-
 // Add a new user or return existing user
 async function addUser(chatId, userName, phoneNumber) {
   try {
