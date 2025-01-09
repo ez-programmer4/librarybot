@@ -518,11 +518,11 @@ bot.on("callback_query", async (query) => {
         parse_mode: "Markdown",
       });
     } catch (error) {
-      await handleError(
-        chatId,
-        "⚠️ An error occurred during registration. Please try again.",
-        `Error during registration initiation: ${error.message}`
-      );
+      // await handleError(
+      //   chatId,
+      //   "⚠️ An error occurred during registration. Please try again.",
+      //   `Error during registration initiation: ${error.message}`
+      // );
     }
   } else if (query.data === "help") {
     const helpMessage = `
@@ -624,14 +624,15 @@ async function processPhoneNumber(chatId, phoneNumber) {
       `✅ Registration successful! Welcome, *${user.userName}*! 🎉`,
       { parse_mode: "Markdown" }
     );
+    askLanguageSelection(chatId);
     delete userStates[chatId]; // Clear the registration state
   } catch (error) {
     console.error(`Error during registration saving: ${error.message}`); // Log detailed error
-    await handleError(
-      chatId,
-      "⚠️ An error occurred while saving your registration. Please try again.",
-      `Error during registration saving: ${error.message}`
-    );
+    // await handleError(
+    //   chatId,
+    //   "⚠️ An error occurred while saving your registration. Please try again.",
+    //   `Error during registration saving: ${error.message}`
+    // );
   }
 }
 
