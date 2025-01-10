@@ -149,7 +149,7 @@ async function handleReserveCommand(chatId, bookId) {
     // Confirmation message without formatting
     const confirmationMessage = await bot.sendMessage(
       chatId,
-      `✅ Successfully reserved: "${book.title}".\nPickup time: after isha salah.\n📚 To view current reservation, type /my_reservation.`
+      `✅ Successfully reserved: "${book.title}".\nPickup time: after isha salah.\n📚 To view current reservation, type /my_reservations.`
     );
 
     const backButton = {
@@ -353,7 +353,7 @@ For more questions, feel free to reach out to us via @IrshadComments_bot! 📩
   // Handle language selection
   if (validLanguages.includes(callbackData)) {
     userStates[chatId] = { language: callbackData };
-    await bot.editMessageText(`🌐 You have selected *${callbackData}*.!`, {
+    await bot.editMessageText(`🌐 You have selected *${callbackData}*.`, {
       chat_id: chatId,
       message_id: messageId,
       parse_mode: "Markdown",
@@ -576,7 +576,7 @@ async function handleNameStep(chatId, userName) {
   userStates[chatId].userName = userName; // Save the user's full name
   userStates[chatId].step = 2; // Move to the next step
 
-  await bot.sendMessage(chatId, `Welcome, ${userStates[chatId].userName}!`);
+  await bot.sendMessage(chatId, `✅ Welcome, ${userStates[chatId].userName}!`);
 }
 
 async function handlePhonePrompt(chatId) {
@@ -801,7 +801,7 @@ bot.onText(/\/my_reservations/, async (msg) => {
     })
     .join("\n");
 
-  const message = `✨ Your Reservations: ✨\n\n${reservationList}\n⟫⟫  To cancel a reservation, use  /cancel_reservation <book_id>.`;
+  const message = `✨ Your Reservations: ✨\n\n${reservationList}\n⟫⟫  To cancel a reservation, \n use  /cancel_reservation <book_id>.`;
 
   // Send message in chunks if necessary
   await sendMessageInChunks(chatId, message);
