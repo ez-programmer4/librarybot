@@ -317,23 +317,22 @@ async function handleCallbackQuery(chatId, callbackData, messageId, queryId) {
     
     Here are the commands you can use:
     
-    ➡️ 📚 /start: to start the bot and register.
+    📚 /start: to start the bot and register.
    Example: /start
     
-    ➡️ 🌐 /select_language: Change your preferred language.
+    🌐 /select_language: Change your preferred language.
        Example: /change_language
     
-    
-    ➡️ 📖 /reserve <book_id>: Reserve a specific book.
+    📖 /reserve <book_id>: Reserve a specific book.
        Example: /reserve_book 112
     
-    ➡️ 📝 /my_reservations: View your current reservations.
+    📝 /my_reservations: View your current reservations.
        Example: /my_reservations
     
-    ➡️ ❌ /cancel_reservation <book_id>: Cancel a specific reservation by book id.
+    ❌ /cancel_reservation <book_id>: Cancel a specific reservation by book id.
        Example: /cancel_reservation 112
 
-    ➡️ ❓ /help: Get help on using the bot.
+    ❓ /help: Get help on using the bot.
       Example: /help
     
     For more questions, feel free to reach out to us via @IrshadComments_bot! 📩
@@ -804,7 +803,7 @@ bot.onText(/\/my_reservations/, async (msg) => {
     })
     .join("\n");
 
-  const message = `✨ Your Reservations: ✨\n\n${reservationList}\n\n ❌ To cancel a reservation, \n type cancel_reservation <book_id>.`;
+  const message = `✨ Your Reservations: ✨\n\n${reservationList}\n\n ❌ To cancel a reservation, \n type /cancel_reservation <book_id>.`;
 
   // Send message in chunks if necessary
   await sendMessageInChunks(chatId, message);
@@ -1158,23 +1157,22 @@ bot.onText(/\/help/, (msg) => {
   
   Here are the commands you can use:
   
-  ➡️ 📚 /start: to start the bot and register.
+  📚 /start: to start the bot and register.
  Example: /start
   
-  ➡️ 🌐 /select_language: Change your preferred language.
+  🌐 /select_language: Change your preferred language.
      Example: /change_language
   
-  
-  ➡️ 📖 /reserve <book_id>: Reserve a specific book.
+  📖 /reserve <book_id>: Reserve a specific book.
      Example: /reserve_book 112
   
-  ➡️ 📝 /my_reservations: View your current reservations.
+  📝 /my_reservations: View your current reservations.
      Example: /my_reservations
   
-  ➡️ ❌ /cancel_reservation <book_id>: Cancel a specific reservation by book id.
+  ❌ /cancel_reservation <book_id>: Cancel a specific reservation by book id.
      Example: /cancel_reservation 112
 
-  ➡️ ❓ /help: Get help on using the bot.
+  ❓ /help: Get help on using the bot.
     Example: /help
   
   For more questions, feel free to reach out to us via @IrshadComments_bot! 📩
