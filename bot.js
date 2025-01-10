@@ -933,17 +933,8 @@ bot.onText(
     }
 
     const userName = match[1]; // User name
-    const bookId = match[2]; // Book ID (make sure this is numeric)
+    const bookId = match[2]; // Book ID
     const pickupTime = match[3] || "after isha salah"; // Optional pickup time
-
-    // Check if the user is registered
-    const user = await User.findOne({ userName });
-    if (!user) {
-      return bot.sendMessage(
-        chatId,
-        "👤 User not found. Registration is required before reserving a book."
-      );
-    }
 
     // Find the book by ID
     const book = await Book.findOne({ id: bookId });
@@ -955,9 +946,9 @@ bot.onText(
       );
     }
 
-    // Create the reservation
+    // Create the reservation without checking for user registration
     const reservation = new Reservation({
-      userId: user._id,
+      userName, // Store the username directly
       bookId: book._id,
       pickupTime,
     });
@@ -967,12 +958,12 @@ bot.onText(
     await book.save();
 
     await notifyLibrarian(
-      `🆕 New manual reservation for ${user.userName} for "${book.title}".`,
-      { parse_mode: "Markdown" } // Specify parse_mode if needed
+      `🆕 New manual reservation for ${userName} for "${book.title}".`,
+      { parse_mode: "Markdown" }
     );
     bot.sendMessage(
       chatId,
-      `✅ Successfully added reservation for *${user.userName}* for *"${book.title}"*.`,
+      `✅ Successfully added reservation for *${userName}* for *"${book.title}"*.`,
       { parse_mode: "Markdown" }
     );
   }
