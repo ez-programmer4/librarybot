@@ -313,29 +313,28 @@ async function handleCallbackQuery(chatId, callbackData, messageId, queryId) {
   if (callbackData === "help") {
     await bot.deleteMessage(chatId, messageId);
     const helpMessage = `
-🤖 Library Bot Help
-
-Here are the commands you can use:
-
-➡️ 📋 /register: Register yourself to start using the library services.
-   Example: /register
-
-➡️ 🌐 /change_language: Change your preferred language.
-   Example: /change_language
-
-➡️ 📚 /select_category: Choose a category for books.
-
-➡️ 📖 /reserve_book <book_id>: Reserve a specific book.
-   Example: /reserve_book 112
-
-➡️ 📝 /my_reservations: View your current reservations.
-   Example: /my_reservations
-
-➡️ ❌ /cancel_reservation <number>: Cancel a specific reservation by its number.
-   Example: /cancel_reservation 1
-
-For more questions, feel free to reach out to us via @IrshadComments_bot! 📩
-`;
+    🤖 Library Bot Help
+    
+    Here are the commands you can use:
+    
+    ➡️ 📋 /register: Register yourself to start using the library services.
+       Example: /register
+    
+    ➡️ 🌐 /select_language: Change your preferred language.
+       Example: /change_language
+    
+    
+    ➡️ 📖 /reserve <book_id>: Reserve a specific book.
+       Example: /reserve_book 112
+    
+    ➡️ 📝 /my_reservations: View your current reservations.
+       Example: /my_reservations
+    
+    ➡️ ❌ /cancel_reservation <number>: Cancel a specific reservation by its number.
+       Example: /cancel_reservation 1
+    
+    For more questions, feel free to reach out to us via @IrshadComments_bot! 📩
+    `;
     await bot.sendMessage(chatId, helpMessage);
     return;
   }
@@ -528,16 +527,14 @@ bot.on("callback_query", async (query) => {
     const helpMessage = `
 🤖 *Library Bot Help*
 Here are the commands you can use:
-➡️ 📋 */register*: Register yourself to start using the library services.  
-   Example: */register*
-➡️ 🌐 */change_language*: Change your preferred language.  
+ 🌐 */change_language*: Change your preferred language.  
    Example: */change_language*
-➡️ 📚 */select_category*: Choose a category for books.
-➡️ 📖 */reserve_book* <book_id>: Reserve a specific book.  
+ 📚 */select_category*: Choose a category for books.
+ 📖 */reserve* <book_id>: Reserve a specific book.  
    Example: */reserve_book 112*
-➡️ 📝 */my_reservations*: View your current reservations.  
+ 📝 */my_reservations*: View your current reservations.  
    Example: */my_reservations*
-➡️ ❌ */cancel_reservation* <number>: Cancel a specific reservation by its number.  
+ ❌ */cancel_reservation* <number>: Cancel a specific reservation by its number.  
    Example: */cancel_reservation 1*
 For more questions, feel free to reach out to us via *@IrshadComments_bot*! 📩
 `;
@@ -1175,12 +1172,11 @@ Here are the commands you can use:
 ➡️ 📋 /register: Register yourself to start using the library services.
    Example: /register
 
-➡️ 🌐 /change_language: Change your preferred language.
+➡️ 🌐 /select_language: Change your preferred language.
    Example: /change_language
 
-➡️ 📚 /select_category: Choose a category for books.
 
-➡️ 📖 /reserve_book <book_id>: Reserve a specific book.
+➡️ 📖 /reserve <book_id>: Reserve a specific book.
    Example: /reserve_book 112
 
 ➡️ 📝 /my_reservations: View your current reservations.
