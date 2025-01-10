@@ -317,8 +317,8 @@ async function handleCallbackQuery(chatId, callbackData, messageId, queryId) {
     
     Here are the commands you can use:
     
-    ➡️ 📋 /register: Register yourself to start using the library services.
-       Example: /register
+    ➡️ 📚 /start: to start the bot and register.
+   Example: /start
     
     ➡️ 🌐 /select_language: Change your preferred language.
        Example: /change_language
@@ -330,8 +330,11 @@ async function handleCallbackQuery(chatId, callbackData, messageId, queryId) {
     ➡️ 📝 /my_reservations: View your current reservations.
        Example: /my_reservations
     
-    ➡️ ❌ /cancel_reservation <number>: Cancel a specific reservation by its number.
-       Example: /cancel_reservation 1
+    ➡️ ❌ /cancel_reservation <book_id>: Cancel a specific reservation by book id.
+       Example: /cancel_reservation 112
+
+    ➡️ ❓ /help: Get help on using the bot.
+      Example: /help
     
     For more questions, feel free to reach out to us via @IrshadComments_bot! 📩
     `;
@@ -527,15 +530,18 @@ bot.on("callback_query", async (query) => {
     const helpMessage = `
 🤖 *Library Bot Help*
 Here are the commands you can use:
- 🌐 */change_language*: Change your preferred language.  
-   Example: */change_language*
- 📚 */select_category*: Choose a category for books.
+ 📚 */start*: To start the bot and register  
+   Example: */start*
+ 🌐 */select_language*: select your preferred language.  
+   Example: */select_language*
  📖 */reserve* <book_id>: Reserve a specific book.  
    Example: */reserve_book 112*
  📝 */my_reservations*: View your current reservations.  
    Example: */my_reservations*
  ❌ */cancel_reservation* <number>: Cancel a specific reservation by its number.  
    Example: */cancel_reservation 1*
+ ❓ */help*:  Get help on using the bot.
+   Example: */help*
 For more questions, feel free to reach out to us via *@IrshadComments_bot*! 📩
 `;
     await bot.sendMessage(chatId, helpMessage, { parse_mode: "Markdown" });
@@ -798,7 +804,7 @@ bot.onText(/\/my_reservations/, async (msg) => {
     })
     .join("\n");
 
-  const message = `✨ Your Reservations: ✨\n\n${reservationList}\n 📄 To cancel a reservation, \n type ${"/cancel_reservation"} <book_id>.`;
+  const message = `✨ Your Reservations: ✨\n\n${reservationList}\n\n ❌ To cancel a reservation, \n type cancel_reservation <book_id>.`;
 
   // Send message in chunks if necessary
   await sendMessageInChunks(chatId, message);
@@ -1148,28 +1154,31 @@ bot.onText(/\/help/, (msg) => {
   const chatId = msg.chat.id;
 
   const helpMessage = `
-🤖 Library Bot Help
+  🤖 Library Bot Help
+  
+  Here are the commands you can use:
+  
+  ➡️ 📚 /start: to start the bot and register.
+ Example: /start
+  
+  ➡️ 🌐 /select_language: Change your preferred language.
+     Example: /change_language
+  
+  
+  ➡️ 📖 /reserve <book_id>: Reserve a specific book.
+     Example: /reserve_book 112
+  
+  ➡️ 📝 /my_reservations: View your current reservations.
+     Example: /my_reservations
+  
+  ➡️ ❌ /cancel_reservation <book_id>: Cancel a specific reservation by book id.
+     Example: /cancel_reservation 112
 
-Here are the commands you can use:
-
-➡️ 📋 /register: Register yourself to start using the library services.
-   Example: /register
-
-➡️ 🌐 /select_language: Change your preferred language.
-   Example: /change_language
-
-
-➡️ 📖 /reserve <book_id>: Reserve a specific book.
-   Example: /reserve_book 112
-
-➡️ 📝 /my_reservations: View your current reservations.
-   Example: /my_reservations
-
-➡️ ❌ /cancel_reservation <number>: Cancel a specific reservation by its number.
-   Example: /cancel_reservation 1
-
-For more questions, feel free to reach out to us via @IrshadComments_bot! 📩
-`;
+  ➡️ ❓ /help: Get help on using the bot.
+    Example: /help
+  
+  For more questions, feel free to reach out to us via @IrshadComments_bot! 📩
+  `;
 
   bot.sendMessage(chatId, helpMessage);
 });
