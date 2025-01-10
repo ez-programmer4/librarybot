@@ -137,7 +137,7 @@ async function handleReserveCommand(chatId, bookId) {
     console.log(`Book ID ${bookId} marked as unavailable.`);
 
     // Prepare message without formatting
-    const messageToLibrarian = `🆕 New reservation by: ${user.userName}\n(Phone: ${user.phoneNumber})\nfor "${book.title}".`;
+    const messageToLibrarian = `📩 New reservation:\n-Book ID:"${book.id}" \n- Title:"${book.title}" \n- Name: ${user.userName}\n- Phone: ${user.phoneNumber}`;
     console.log("Message to Librarian:", messageToLibrarian); // Log the message
 
     // Notify the librarian without Markdown
