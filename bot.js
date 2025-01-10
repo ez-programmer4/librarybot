@@ -1055,7 +1055,7 @@ bot.on("message", async (msg) => {
   }
 });
 
-bot.onText(/\/remove_book (\w+) (.+) (\d+)/, async (msg, match) => {
+bot.onText(/\/remove_book (\d+)/, async (msg, match) => {
   const chatId = msg.chat.id;
 
   // Debugging: Log the incoming message
@@ -1074,40 +1074,32 @@ bot.onText(/\/remove_book (\w+) (.+) (\d+)/, async (msg, match) => {
   }
 
   // Check if match array is valid
-  if (!match || match.length < 4) {
+  if (!match || match.length < 2) {
     console.log(`Invalid command syntax: ${msg.text}`);
     return bot.sendMessage(
       chatId,
-      "❌ Invalid command syntax. Please use: /remove_book <language> <category> <id>."
+      "❌ Invalid command syntax. Please use: /remove_book <id>."
     );
   }
 
-  const language = match[1].trim();
-  const category = match[2].trim();
-  const id = parseInt(match[3], 10);
+  const id = parseInt(match[1], 10);
 
   // Debugging: Log the parameters
-  console.log(
-    `Attempting to remove book  Language: ${language}, Category: ${category}, ID: ${id}`
-  );
+  console.log(`Attempting to remove book with ID: ${id}`);
 
-  // Attempt to find and remove the book
-  const book = await Book.findOneAndDelete({ id, language, category });
+  // Attempt to find and remove the book by ID
+  const book = await Book.findOneAndDelete({ id });
   if (!book) {
-    console.log(`No book found with ID ${id} in category "${category}".`);
-    return bot.sendMessage(
-      chatId,
-      `❌ No book found with ID *${id}* in category *"${category}".*`,
-      { parse_mode: "Markdown" }
-    );
+    console.log(`No book found with ID ${id}.`);
+    return bot.sendMessage(chatId, `❌ No book found with ID *${id}*.`, {
+      parse_mode: "Markdown",
+    });
   }
 
-  console.log(
-    `Book with ID ${id} has been removed from category "${category}".`
-  );
+  console.log(`Book with ID ${id} has been removed.`);
   bot.sendMessage(
     chatId,
-    `✅ Book with ID *${id}* has been removed from category *"${category}"* in *${language}*.`,
+    `✅ Book with ID *${id}* has been removed successfully.`,
     { parse_mode: "Markdown" }
   );
 });
