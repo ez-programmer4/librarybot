@@ -801,7 +801,7 @@ bot.onText(/\/my_reservations/, async (msg) => {
     })
     .join("\n");
 
-  const message = `✨ Your Reservations: ✨\n\n${reservationList}\n⟫⟫  To cancel a reservation, \n use  /cancel_reservation <book_id>.`;
+  const message = `✨ Your Reservations: ✨\n\n${reservationList}\n⟫⟫  To cancel a reservation, \n type /cancel_reservation <book_id>.`;
 
   // Send message in chunks if necessary
   await sendMessageInChunks(chatId, message);
