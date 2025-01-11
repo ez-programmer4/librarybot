@@ -689,16 +689,12 @@ async function handleLanguageSelection(chatId, language) {
       },
     ]);
 
-    await bot.sendMessage(
-      chatId,
-      `🌐 You selected *${language}*. Please choose a *category*:`,
-      {
-        reply_markup: {
-          inline_keyboard: inlineButtons,
-        },
-        parse_mode: "Markdown", // Specify the parse mode
-      }
-    );
+    await bot.sendMessage(chatId, `📚 Please choose a *category*:`, {
+      reply_markup: {
+        inline_keyboard: inlineButtons,
+      },
+      parse_mode: "Markdown", // Specify the parse mode
+    });
   }
 }
 
