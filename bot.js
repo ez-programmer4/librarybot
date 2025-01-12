@@ -893,36 +893,34 @@ bot.onText(/\/view_reservations/, async (msg) => {
     return `🔖 Book ID: *${res.bookId.id}* → User: *${userName}* → Book: *"${res.bookId.title}"* → Pickup Time: *${res.pickupTime}*`;
   });
 
-  // Function to send messages in chunks
-  async function sendMessageInChunks(chatId, message) {
-    const maxLength = 4096; // Telegram message character limit
-    if (message.length <= maxLength) {
-      await bot.sendMessage(chatId, message, { parse_mode: "Markdown" });
-    } else {
-      // Split message into chunks
-      const chunks = [];
-      let currentChunk = "";
+  // Debug log
+  console.log("Reservation List:", reservationList);
 
-      const messages = message.split("\n"); // Split by line for better chunking
-      for (const line of messages) {
-        if ((currentChunk + line).length <= maxLength) {
-          currentChunk += line + "\n";
-        } else {
-          chunks.push(currentChunk);
-          currentChunk = line + "\n"; // Start a new chunk
-        }
-      }
-      // Push the last chunk if it has content
-      if (currentChunk) {
-        chunks.push(currentChunk);
-      }
-
-      // Send each chunk as a separate message
-      for (const chunk of chunks) {
-        await bot.sendMessage(chatId, chunk, { parse_mode: "Markdown" });
-      }
-    }
+  // Check if reservation list has content
+  if (reservationList.length === 0) {
+    return bot.sendMessage(chatId, "📅 There are no reservations to display.");
   }
+
+  // Function to send messages in chunks
+  const sendMessageInChunks = async (chatId, messages) => {
+    const maxLength = 4096; // Telegram's max length per message
+    let chunk = "";
+
+    for (const message of messages) {
+      if (chunk.length + message.length > maxLength) {
+        if (chunk.length > 0) {
+          await bot.sendMessage(chatId, chunk, { parse_mode: "Markdown" });
+        }
+        chunk = ""; // Reset chunk
+      }
+      chunk += message + "\n";
+    }
+
+    // Send any remaining messages
+    if (chunk.length > 0) {
+      await bot.sendMessage(chatId, chunk, { parse_mode: "Markdown" });
+    }
+  };
 
   // Send the list of reservations in chunks
   await sendMessageInChunks(chatId, [
