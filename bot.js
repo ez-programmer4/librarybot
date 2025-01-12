@@ -790,15 +790,29 @@ bot.onText(/\/my_reservations/, async (msg) => {
     return bot.sendMessage(chatId, "📭 You currently have no reservations.");
   }
 
+  const escapeMarkdown = (text) => {
+    return text
+      .replace(/_/g, "\\_") // Escape underscores
+      .replace(/\*/g, "\\*") // Escape asterisks
+      .replace(/~/g, "\\~") // Escape tildes
+      .replace(/`/g, "\\`") // Escape backticks
+      .replace(/>/g, "\\>") // Escape greater-than
+      .replace(/#/g, "\\#") // Escape hashtags
+      .replace(/-/g, "\\-") // Escape hyphens
+      .replace(/\+/g, "\\+") // Escape pluses
+      .replace(/=/g, "\\=") // Escape equals
+      .replace(/!/g, "\\!"); // Escape exclamation marks
+  };
+
   const reservationList = userReservations
     .map((res) => {
-      const title = res.bookId.title;
+      const title = escapeMarkdown(res.bookId.title);
       const bookId = res.bookId.id;
       return `📚 Book ID: ${bookId}\n 📄 Title: "${title}"\n ⌚ Pickup: ${res.pickupTime}\n`;
     })
     .join("\n");
 
-  const message = `✨ Your Reservations: ✨\n\n${reservationList}\n\n ❌ To cancel a reservation \n type /help <book_id>.`;
+  const message = `✨ Your Reservations: ✨\n\n${reservationList}\n\n ❌ To cancel a reservation \n type _/cancel_reservation_ <book_id>.`;
 
   // Send message in chunks if necessary
   await sendMessageInChunks(chatId, message);
