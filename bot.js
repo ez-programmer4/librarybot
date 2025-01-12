@@ -896,38 +896,35 @@ bot.onText(/\/view_reservations/, async (msg) => {
   // Debug log
   console.log("Reservation List:", reservationList);
 
-  // Check if reservation list has content
-  if (reservationList.length === 0) {
-    return bot.sendMessage(chatId, "📅 There are no reservations to display.");
-  }
-
   // Function to send messages in chunks
   const sendMessageInChunks = async (chatId, messages) => {
     const maxLength = 4096; // Telegram's max length per message
-    let chunk = "";
 
+    let chunk = "";
     for (const message of messages) {
       if (chunk.length + message.length > maxLength) {
         if (chunk.length > 0) {
           await bot.sendMessage(chatId, chunk, { parse_mode: "Markdown" });
         }
-        chunk = ""; // Reset chunk
+        chunk = message + "\n"; // Start a new chunk
+      } else {
+        chunk += message + "\n";
       }
-      chunk += message + "\n";
     }
 
-    // Send any remaining messages
+    // Send any remaining chunk
     if (chunk.length > 0) {
       await bot.sendMessage(chatId, chunk, { parse_mode: "Markdown" });
     }
   };
 
-  // Send the list of reservations in chunks
-  await sendMessageInChunks(chatId, [
-    `📚 Current Reservations:\n\n${reservationList.join("\n")}`,
-  ]);
-});
+  // Prepare the message header
+  const header = `📚 Current Reservations:\n\n`;
+  const fullMessage = [header, ...reservationList];
 
+  // Send the list of reservations in chunks
+  await sendMessageInChunks(chatId, fullMessage);
+});
 bot.onText(
   /\/librarian_add_reservation (\S+) (\d+) ?(.*)?/,
   async (msg, match) => {
