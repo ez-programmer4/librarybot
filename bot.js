@@ -812,7 +812,7 @@ bot.onText(/\/my_reservations/, async (msg) => {
     })
     .join("\n");
 
-  const message = `✨ Your Reservations: ✨\n\n${reservationList}\n\nIf you wish to cancel a reservation, simply type /cancel_reservation <book_id>. \n\nFor a list of other commands, feel free to check out /help! 😊`;
+  const message = `✨ Your Reservations: ✨\n\n${reservationList}\n\nIf you wish to cancel a reservation, simply type /cancel\\_reservation <book_id>. \n\nFor a list of other commands, feel free to check out /help! 😊`;
 
   // Escape the entire message
   const escapedMessage = escapeMarkdown(message);
