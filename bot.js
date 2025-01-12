@@ -820,8 +820,8 @@ bot.onText(/\/my_reservations/, async (msg) => {
   // Send message in chunks if necessary
   await sendMessageInChunks(chatId, escapedMessage);
 
-  // Send message in chunks if necessary
-  await sendMessageInChunks(chatId, message);
+  // // Send message in chunks if necessary
+  // await sendMessageInChunks(chatId, message);
 });
 // Helper function to send messages in chunks if they are too long
 async function sendMessageInChunks(chatId, message) {
