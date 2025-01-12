@@ -771,7 +771,6 @@ bot.onText(/\/add_books (.+)/, async (msg, match) => {
     });
   }
 });
-
 bot.onText(/\/my_reservations/, async (msg) => {
   const chatId = msg.chat.id;
   const user = await User.findOne({ chatId });
@@ -799,12 +798,10 @@ bot.onText(/\/my_reservations/, async (msg) => {
     })
     .join("\n");
 
-  const message = `✨ Your Reservations: ✨\n\n${reservationList}\n\n`;
-  const message1 = ` ❌ To cancel a reservation, \n type ${`/cancel_reservation`} <book_id>.`;
+  const message = `✨ Your Reservations: ✨\n\n${reservationList}\n\n ❌ To cancel a reservation \n type _/cancel_reservation_ <book_id>.`;
 
   // Send message in chunks if necessary
   await sendMessageInChunks(chatId, message);
-  await sendMessage(chatId, message1);
 });
 // Helper function to send messages in chunks if they are too long
 async function sendMessageInChunks(chatId, message) {
