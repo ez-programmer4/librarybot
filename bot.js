@@ -893,6 +893,11 @@ bot.onText(/\/view_reservations/, async (msg) => {
     return `🔖 Book ID: *${res.bookId.id}* → User: *${userName}* → Book: *"${res.bookId.title}"* → Pickup Time: *${res.pickupTime}*`;
   });
 
+  // Check if the reservation list is empty after mapping
+  if (reservationList.length === 0) {
+    return bot.sendMessage(chatId, "📅 There are no reservations to display.");
+  }
+
   // Function to send messages in chunks
   const sendMessageInChunks = async (chatId, messages) => {
     const maxLength = 4096; // Telegram's max length per message
@@ -917,7 +922,6 @@ bot.onText(/\/view_reservations/, async (msg) => {
     `📚 Current Reservations:\n\n${reservationList.join("\n")}`,
   ]);
 });
-
 // Function to send messages in chunks
 async function sendMessageInChunks(chatId, message) {
   const maxLength = 4096; // Telegram message character limit
