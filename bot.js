@@ -479,7 +479,7 @@ bot.onText(/\/start/, (msg) => {
   
   Please choose an option below:
       
-                 KJUMJ IRSHAD 1445
+                 KJUMJ IRSHAD 1445/46
         •┈┈••✦📖✦••┈┈••✦📖✦••┈┈•
   `;
 
