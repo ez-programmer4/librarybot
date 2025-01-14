@@ -686,13 +686,13 @@ function encryptPhoneNumber(phoneNumber) {
 // Update the addUser function
 async function addUser(chatId, userName, phoneNumber) {
   try {
-    const { encryptedPhoneNumber, key, iv } = encryptPhoneNumber(phoneNumber); // Encrypt the phone number
+    const { encryptedPhoneNumber, key, iv } = encryptPhoneNumber(phoneNumber);
     const user = new User({
       userName,
-      phoneNumber: encryptedPhoneNumber,
+      phoneNumber: encryptedPhoneNumber, // Store encrypted phone number
       chatId,
-      key,
-      iv,
+      key, // Ensure key is saved
+      iv, // Ensure iv is saved
     });
     await user.save();
     console.log(
@@ -704,7 +704,6 @@ async function addUser(chatId, userName, phoneNumber) {
     throw error; // Rethrow to handle in the calling function
   }
 }
-
 // Function to decrypt the phone number when needed
 function decryptPhoneNumber(encryptedPhoneNumber, key, iv) {
   const algorithm = "aes-256-cbc";
