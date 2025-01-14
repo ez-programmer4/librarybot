@@ -125,6 +125,13 @@ async function handleReserveCommand(chatId, bookId) {
       );
     }
 
+    // Decrypt the phone number
+    const decryptedPhoneNumber = decryptPhoneNumber(
+      user.phoneNumber,
+      user.key,
+      user.iv
+    );
+
     const reservation = new Reservation({
       userId: user._id,
       bookId: book._id,
@@ -137,8 +144,8 @@ async function handleReserveCommand(chatId, bookId) {
     await book.save();
     console.log(`Book ID ${bookId} marked as unavailable.`);
 
-    // Prepare message without formatting
-    const messageToLibrarian = `📩 New reservation:\n-Book ID:"${book.id}" \n- Title:"${book.title}" \n-Name: ${user.userName}\n-Phone: ${phoneNumber}`;
+    // Prepare message with decrypted phone number
+    const messageToLibrarian = `📩 New reservation:\n- Book ID: "${book.id}"\n- Title: "${book.title}"\n- Name: ${user.userName}\n- Phone: ${decryptedPhoneNumber}`;
     console.log("Message to Librarian:", messageToLibrarian); // Log the message
 
     // Notify the librarian without Markdown
