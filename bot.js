@@ -234,6 +234,13 @@ async function handleCancelReservation(chatId, bookId) {
     await book.save();
     await Reservation.findByIdAndDelete(reservation._id);
 
+    // Decrypt the phone number for the notification
+    const decryptedPhoneNumber = decryptPhoneNumber(
+      user.phoneNumber,
+      user.key,
+      user.iv
+    );
+
     // Create an inline keyboard for the back button
     const backButton = {
       reply_markup: {
@@ -254,8 +261,9 @@ async function handleCancelReservation(chatId, bookId) {
       { parse_mode: "Markdown", ...backButton }
     );
 
+    // Notify the librarian with formatted message
     await notifyLibrarian(
-      `📩 User has canceled a reservation:\n- Title:"${book.title}" \n- User ID: ${user._id}\n- Name: ${user.userName}\n- Phone: ${user.phoneNumber}`,
+      `📩 User has canceled a reservation:\n- Title: "${book.title}"\n- User ID: ${user._id}\n- Name: ${user.userName}\n- Phone: ${decryptedPhoneNumber}`,
       { parse_mode: "Markdown" }
     );
   } catch (error) {
