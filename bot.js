@@ -125,6 +125,18 @@ async function handleReserveCommand(chatId, bookId) {
       );
     }
 
+    // Log user details for debugging
+    console.log(`User details: ${JSON.stringify(user)}`);
+
+    // Check for key and iv
+    if (!user.key || !user.iv || !user.phoneNumber) {
+      console.error(`Missing key, iv, or phoneNumber for user ${chatId}.`);
+      return bot.sendMessage(
+        chatId,
+        "⚠️ Unable to retrieve your details. Please register again."
+      );
+    }
+
     // Decrypt the phone number
     const decryptedPhoneNumber = decryptPhoneNumber(
       user.phoneNumber,
